@@ -10,10 +10,12 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@types/three": "^0.185.1",
     "@vitejs/plugin-react": "latest",
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "three": "^0.185.1",
     "typescript": "^7.0.2",
     "vite": "latest"
   },
@@ -21,6 +23,7 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "playwright": "^1.62.1",
     "vitest": "^4.1.10"
   }
 }

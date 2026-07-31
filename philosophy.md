@@ -17,8 +17,5 @@
 | 1. 经济系统 | [docs/philosophy/economy.md](docs/philosophy/economy.md) | 资源规则、单位人口消耗、资源价值、阶段供需审计。 |
 | 2. 建筑系统 | [docs/philosophy/buildings.md](docs/philosophy/buildings.md) | 建筑分类、生产方式编码、建筑配方、普通建筑与特殊建筑说明。 |
 | 3. 科技与政策 | [docs/philosophy/technology-policy.md](docs/philosophy/technology-policy.md) | 科技类型、科技表、全局通用科技、特定建筑效率科技、王城政策。 |
-| 4. UI | [docs/philosophy/ui.md](docs/philosophy/ui.md) | 全局导航、设施详情页、特殊设施界面、科技与政策入口。 |
-
-## 暂不展开
-
-人物事件暂不作为下一章展开。后续需要恢复时，应作为独立章节文件新增，并明确它与人口引入、科技交换、贸易补充和长期策略偏移之间的边界。
+| 4. 角色与事件链 | [docs/philosophy/characters-events.md](docs/philosophy/characters-events.md) | 外星角色、事件链、互动类型、简单偶遇与长链人物。 |
+| 5. UI | [docs/philosophy/ui.md](docs/philosophy/ui.md) | 全局导航、设施详情页、特殊设施界面、科技、政策与角色入口。 |

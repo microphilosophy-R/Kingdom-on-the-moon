@@ -79,6 +79,36 @@ describe('economy catalog', () => {
     expect(upgraded.oxygen).toBe(1.2)
   })
 
+  it('keeps new production method technologies gated and marked', () => {
+    expect(technologyCatalog['TC2-2']).toMatchObject({ name: '发现伊甸园', unlocks: 'MC2-2', alien: true, era: 'mid' })
+    expect(technologyCatalog['TB-2']).toMatchObject({ name: '无水栽培技术', unlocks: 'MB-2', era: 'early' })
+    expect(technologyCatalog['TF-1']).toMatchObject({ unlocks: 'MF-2', alien: true, era: 'mid' })
+    expect(technologyCatalog['TP-1']).toMatchObject({ name: '合金作物', unlocks: 'MP-2', alien: true, era: 'mid' })
+    expect(technologyCatalog['TG-1'].scope).toBe('G')
+    expect(technologyCatalog['TE1-2'].category).toBe('facility-efficiency')
+
+    expect(selectProductionMethod(facilityEconomySpecs.C2.productionMethods, ['TC2-0 西海采掘署建造许可']).id).toBe('MC2-1')
+    expect(selectProductionMethod(facilityEconomySpecs.C2.productionMethods, ['TC2-0 西海采掘署建造许可', 'TC2-2 发现伊甸园'], 'MC2-2').id).toBe('MC2-2')
+    expect(projectFacilityNet(facilityEconomySpecs.C2, 1, {}, ['TC2-0 西海采掘署建造许可', 'TC2-2 发现伊甸园'], 'MC2-2')).toMatchObject({ power: -1.4, water: 0.8, regolith: 3.4, alloy: 1.2 })
+
+    expect(selectProductionMethod(facilityEconomySpecs.B.productionMethods, ['TB-0 水培生态球建造许可', 'TB-2 无水栽培技术'], 'MB-2').id).toBe('MB-2')
+    expect(projectFacilityNet(facilityEconomySpecs.B, 1, {}, ['TB-0 水培生态球建造许可', 'TB-2 无水栽培技术'], 'MB-2')).toMatchObject({ regolith: -0.6, oxygen: 2.6, biomass: 1.8 })
+
+    expect(projectFacilityNet(facilityEconomySpecs.F, 1, {}, ['TF-0 天工精炼署建造许可', 'TF-1 重原子炼金术'], 'MF-2')).toMatchObject({ power: -1.2, regolith: -1.6, alloy: 2.2, oxygen: 0.4, currency: 1.0 })
+    expect(projectFacilityNet(facilityEconomySpecs.P, 1, {}, ['TP-0 伊犁河谷建造许可'])).toMatchObject({ water: -0.6, regolith: -1, oxygen: 1.2, biomass: 1.8 })
+    expect(projectFacilityNet(facilityEconomySpecs.P, 1, {}, ['TP-0 伊犁河谷建造许可', 'TP-1 合金作物'], 'MP-2')).toMatchObject({ water: -0.6, regolith: -1, oxygen: 0.8, biomass: 1.0, alloy: 0.4 })
+  })
+
+  it('applies solidified efficiency and global technologies to facility net output', () => {
+    expect(projectFacilityNet(facilityEconomySpecs.E1, 1, {}, ['TE1-0 日冕能源署建造许可', 'TE1-2 光伏阵列校准']).power).toBeCloseTo(6.3)
+    expect(projectFacilityNet(facilityEconomySpecs.C1, 1, {}, ['TC1-0 静海采掘署建造许可', 'TC1-1 月面钻头阵列']).regolith).toBeCloseTo(4.41)
+    const anchored = projectFacilityNet(facilityEconomySpecs.C2, 1, {}, ['TC2-0 西海采掘署建造许可', 'TC2-1 小行星锚定索'])
+    expect(anchored.alloy).toBeCloseTo(1.26)
+    expect(anchored.oxygen).toBeCloseTo(-0.42)
+    expect(projectFacilityNet(facilityEconomySpecs.B, 1, {}, ['TB-0 水培生态球建造许可', 'TB-1 闭环藻膜培养']).biomass).toBeCloseTo(1.89)
+    expect(projectFacilityNet(facilityEconomySpecs.F, 1, {}, ['TF-0 天工精炼署建造许可', 'TG-2 空间微波散热学']).power).toBeCloseTo(-1.14)
+  })
+
   it('keeps production method and technology codes synchronized', () => {
     const allMethods = facilityOrder.flatMap(id => facilityEconomySpecs[id].productionMethods.map(method => [id, method.id, method.unlockedBy] as const))
     const buildingTechs = Object.values(technologyCatalog).filter(tech => tech.unlocksFacility)

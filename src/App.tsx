@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ComponentType } from 'react'
 import {
-  ArrowLeftRight, ArrowUpRight, Bot, Check, ChevronRight, CircleDot, Crown, Factory,
+  ArrowLeftRight, ArrowUpRight, Bot, Check, ChevronLeft, ChevronRight, CircleDot, Crown, Factory,
   FlaskConical, House, Landmark, Leaf, LockKeyhole, Menu, Mountain, Orbit,
   Pause, Pickaxe, Play, Rocket, Sparkles, Sprout, Sun, Theater, Waves, X, Zap,
   type LucideProps,
@@ -31,8 +31,17 @@ import {
   type ResourceKey,
   type Resources,
 } from './economy'
+import {
+  buildEncounter,
+  getAvailableEventChains,
+  roles,
+  rolesById,
+  type Encounter,
+  type Role,
+} from './events'
+import { PlanetScene, planetTextures } from './PlanetScene'
 
-type AppView = 'overview' | 'facilities' | 'palace' | 'visitors'
+type AppView = 'facilities' | 'palace' | 'research' | 'ecology' | 'starport' | 'ship' | 'visitors'
 type Icon = ComponentType<LucideProps>
 type RegionId = FacilityId
 
@@ -49,18 +58,6 @@ type Region = FacilityState & {
   cost: Partial<Resources>
   parentIds: RegionId[]
   position: { x: number; y: number }
-}
-
-type Visitor = {
-  id: string
-  name: string
-  species: string
-  glyph: string
-  portrait: string
-  specialty: RegionId
-  boost: number
-  quote: string
-  offer: { give: Partial<Resources>; take: Partial<Resources>; tech?: string }
 }
 
 const initialResources: Resources = {
@@ -122,92 +119,23 @@ const regionTemplate: Region[] = facilityOrder.map(id => {
   }
 })
 
-const visitors: Visitor[] = [
-  {
-    id: 'sava',
-    name: '萨瓦·碎光',
-    species: '折光甲壳人',
-    glyph: '◈',
-    portrait: '冰裂色甲壳，掌中托着一枚会逆向燃烧的晶体',
-    specialty: 'E1',
-    boost: 0.42,
-    quote: '“你们把恒星装进了贡箱，我可以让它少吃一点。”',
-    offer: { give: { quantumCore: 3, knowledge: 6 }, take: { water: 6 }, tech: 'TE1-1 纳米光催化剂' },
-  },
-  {
-    id: 'melu',
-    name: '梅露·第九孢',
-    species: '浮游菌落使节',
-    glyph: '❋',
-    portrait: '以琥珀孢囊维持人形，靠近时能听见雨声',
-    specialty: 'B',
-    boost: 0.48,
-    quote: '“土壤记得每一位被埋葬的王。你们的还很年轻。”',
-    offer: { give: { oxygen: 16, biomass: 12 }, take: { power: 10 }, tech: 'TL-1 原子阵列光刻机' },
-  },
-  {
-    id: 'orri',
-    name: '欧里·无重力',
-    species: '轨道鲸后裔',
-    glyph: '☾',
-    portrait: '一团悬浮的银灰潮汐，发声时舱壁会轻轻共振',
-    specialty: 'D',
-    boost: 0.55,
-    quote: '“星舰的骨骼不该只记得重力，也要记得离开它。”',
-    offer: { give: { alloy: 22, quantumCore: 2 }, take: { regolith: 8, power: 12 }, tech: 'TE3-0 外星科技：微型黑洞约束' },
-  },
-  {
-    id: 'nix',
-    name: '尼克斯·二十七',
-    species: '退役礼仪机',
-    glyph: '⌘',
-    portrait: '黄铜面孔上的旧王徽仍在缓慢闪烁',
-    specialty: 'K',
-    boost: 0.4,
-    quote: '“我曾侍奉过七位不朽君主，结果都差不多。”',
-    offer: { give: { knowledge: 14, currency: 8 }, take: { alloy: 10 }, tech: 'TS-1 星际劳工' },
-  },
-  {
-    id: 'taro',
-    name: '塔罗·掘井者',
-    species: '硅酸盐游牧民',
-    glyph: '◇',
-    portrait: '石英皮肤上刻满失落小行星的矿脉图',
-    specialty: 'C1',
-    boost: 0.46,
-    quote: '“月亮不是死的，只是它把话说得很慢。”',
-    offer: { give: { regolith: 30, alloy: 9 }, take: { oxygen: 7 }, tech: 'TF-1 重原子炼金术' },
-  },
-  {
-    id: 'evi',
-    name: '伊芙·回声',
-    species: '声学群体',
-    glyph: '≈',
-    portrait: '数十条细小波纹在王冠形扬声器中彼此回答',
-    specialty: 'H',
-    boost: 0.5,
-    quote: '“我听见你们把孤独叫作秩序，所以来收集一点。”',
-    offer: { give: { biomass: 10, luxury: 8 }, take: { power: 9 }, tech: 'TS-2 知识传输协议' },
-  },
-  {
-    id: 'rosa',
-    name: '罗莎·花冠',
-    species: '玫瑰星球商团',
-    glyph: '✦',
-    portrait: '礼服像一层薄雾，袖口封着来自玫瑰星球的香料账册',
-    specialty: 'S',
-    boost: 0.44,
-    quote: '“奢侈品不是多余之物。它们是文明愿意承认自己仍有余裕。”',
-    offer: { give: { luxury: 12, currency: 12 }, take: { biomass: 8, knowledge: 4 }, tech: 'TS-3 玫瑰星球' },
-  },
+const navItems: { id: AppView; label: string; icon: Icon }[] = [
+  { id: 'facilities', label: '设施', icon: Orbit },
+  { id: 'palace', label: '政策', icon: Landmark },
+  { id: 'research', label: '科技', icon: FlaskConical },
+  { id: 'ecology', label: '生态', icon: Waves },
+  { id: 'starport', label: '贸易', icon: ArrowLeftRight },
+  { id: 'ship', label: '星舰', icon: Rocket },
+  { id: 'visitors', label: '异客', icon: Sparkles },
 ]
 
-const navItems: { id: AppView; label: string; icon: Icon }[] = [
-  { id: 'overview', label: '王国总览', icon: Orbit },
-  { id: 'facilities', label: '设施树', icon: Factory },
-  { id: 'palace', label: '王城政令', icon: Landmark },
-  { id: 'visitors', label: '异客档案', icon: Sparkles },
-]
+const specialFacilityViews: Partial<Record<RegionId, AppView>> = {
+  K: 'palace',
+  L: 'research',
+  R: 'ecology',
+  S: 'starport',
+  D: 'ship',
+}
 
 const resourceUiMeta: Record<ResourceKey, { label: string; icon: Icon; tone: string }> = {
   power: { label: resourceMeta.power.label, icon: Zap, tone: 'gold' },
@@ -232,16 +160,19 @@ function App() {
   const [regions, setRegions] = useState(regionTemplate)
   const [year, setYear] = useState(1)
   const [isRunning, setRunning] = useState(true)
-  const [view, setView] = useState<AppView>('overview')
+  const [view, setView] = useState<AppView>('facilities')
   const [selected, setSelected] = useState<RegionId>('E1')
-  const [visitor, setVisitor] = useState<Visitor | null>(null)
-  const [roster, setRoster] = useState<Visitor[]>([])
+  const [planetDocked, setPlanetDocked] = useState(false)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [planetTexture] = useState(() => planetTextures[Math.floor(Math.random() * planetTextures.length)])
+  const [visitor, setVisitor] = useState<Encounter | null>(null)
+  const [roster, setRoster] = useState<Role[]>([])
   const [assigned, setAssigned] = useState<Record<RegionId, string | undefined>>(Object.fromEntries(facilityOrder.map(id => [id, undefined])) as Record<RegionId, string | undefined>)
+  const [chainProgress, setChainProgress] = useState<Record<string, number>>({})
   const [techs, setTechs] = useState<string[]>(defaultStartingTechs)
   const [productionMethods, setProductionMethods] = useState<Record<RegionId, ProductionMethodId>>(initialProductionMethods)
   const [policy, setPolicy] = useState<'ration' | 'mandate' | 'festival'>('ration')
   const [log, setLog] = useState<string[]>(['纪元 01：月面行宫已就位，御座号的第一根龙骨等待铸造。'])
-  const [menuOpen, setMenuOpen] = useState(false)
   const [artOpen, setArtOpen] = useState(false)
 
   const selectedRegion = regions.find(region => region.id === selected)!
@@ -256,7 +187,7 @@ function App() {
     [regions],
   )
   const workerByFacility = useMemo(
-    () => Object.fromEntries(regions.map(region => [region.id, roster.find(item => item.id === assigned[region.id])])) as Partial<Record<RegionId, Visitor>>,
+    () => Object.fromEntries(regions.map(region => [region.id, roster.find(item => item.id === assigned[region.id])])) as Partial<Record<RegionId, Role>>,
     [regions, roster, assigned],
   )
   const facilityModifiers = useMemo(
@@ -290,8 +221,19 @@ function App() {
   const writeLog = (line: string) => setLog(previous => [line, ...previous].slice(0, 5))
 
   const chooseVisitor = () => {
-    const available = visitors.filter(item => !roster.some(member => member.id === item.id))
-    if (available.length) setVisitor(available[Math.floor(Math.random() * available.length)])
+    const available = getAvailableEventChains(chainProgress)
+    if (available.length) {
+      const chain = available[Math.floor(Math.random() * available.length)]
+      setVisitor(buildEncounter(chain, chainProgress[chain.id] ?? 0))
+    }
+  }
+
+  const advanceEncounter = (encounter: Encounter, completed = false) => {
+    setChainProgress(previous => {
+      const nextStep = completed ? encounter.chain.events.length : Math.min((previous[encounter.chain.id] ?? 0) + 1, encounter.chain.events.length)
+      return { ...previous, [encounter.chain.id]: nextStep }
+    })
+    setVisitor(null)
   }
 
   const advanceYear = () => {
@@ -313,7 +255,16 @@ function App() {
 
   const selectFacility = (id: RegionId) => {
     setSelected(id)
+    const specialView = specialFacilityViews[id]
+    if (specialView) {
+      setView(specialView)
+      setPlanetDocked(true)
+      setDetailOpen(false)
+      return
+    }
     setView('facilities')
+    setPlanetDocked(true)
+    setDetailOpen(true)
   }
 
   const upgrade = (id: RegionId) => {
@@ -334,21 +285,23 @@ function App() {
     if (!visitor || !canPay(resources, visitor.offer.take)) return
     setResources(previous => apply(apply(previous, visitor.offer.take, -1), visitor.offer.give))
     if (visitor.offer.tech) setTechs(previous => previous.includes(visitor.offer.tech!) ? previous : [...previous, visitor.offer.tech!])
-    writeLog(`纪元 ${String(year).padStart(2, '0')}：与${visitor.name}完成交换${visitor.offer.tech ? `，取得「${visitor.offer.tech}」` : ''}。`)
-    setVisitor(null)
+    writeLog(`纪元 ${String(year).padStart(2, '0')}：${visitor.event.title}落定，${visitor.name}${visitor.offer.tech ? `交出「${visitor.offer.tech}」` : '留下新的回声'}。`)
+    advanceEncounter(visitor)
   }
 
   const employ = () => {
     if (!visitor) return
-    setRoster(previous => [...previous, visitor])
+    if (!canPay(resources, visitor.retainerCost)) return
+    setResources(previous => apply(previous, visitor.retainerCost, -1))
+    setRoster(previous => previous.some(member => member.id === visitor.id) ? previous : [...previous, rolesById[visitor.id]])
     setAssigned(previous => ({ ...previous, [visitor.specialty]: visitor.id }))
     writeLog(`纪元 ${String(year).padStart(2, '0')}：${visitor.name}宣誓效忠，入职${regions.find(region => region.id === visitor.specialty)?.name}。`)
-    setVisitor(null)
+    advanceEncounter(visitor, visitor.chain.arc === 'simple')
   }
 
   const dismiss = () => {
-    if (visitor) writeLog(`纪元 ${String(year).padStart(2, '0')}：${visitor.name}离开了月面。对方的信标仍会在未来重现。`)
-    setVisitor(null)
+    if (visitor) writeLog(`纪元 ${String(year).padStart(2, '0')}：${visitor.name}离开了月面，信标从本轮记录中熄灭。`)
+    if (visitor) advanceEncounter(visitor, true)
   }
 
   return <main className="app-shell">
@@ -357,10 +310,6 @@ function App() {
         <div className="brand-seal"><Crown size={23} /></div>
         <div><p>月面主权局 · 100年封闭试验</p><h1>月冠纪元</h1></div>
       </div>
-      <button className="mobile-menu" onClick={() => setMenuOpen(!menuOpen)} aria-label="打开导航菜单"><Menu size={19} /></button>
-      <nav className={menuOpen ? 'main-nav open' : 'main-nav'} aria-label="游戏主导航">
-        {navItems.map(item => { const NavIcon = item.icon; return <button key={item.id} className={view === item.id ? 'active' : ''} onClick={() => { setView(item.id); setMenuOpen(false) }}><NavIcon size={16} />{item.label}</button> })}
-      </nav>
       <div className="reign-control">
         <span>御历</span><strong>{String(Math.min(year, 100)).padStart(3, '0')}</strong><small>/ 100</small>
         <button onClick={() => setRunning(!isRunning)} aria-label={isRunning ? '暂停纪元' : '恢复纪元'}>{isRunning ? <Pause size={15} /> : <Play size={15} />}{isRunning ? '暂停' : '恢复'}</button>
@@ -371,18 +320,21 @@ function App() {
       {resourceGroups.map(group => <div className="resource-group" key={group.label}><span className="group-label">{group.label}</span>{group.keys.map(key => { const meta = resourceUiMeta[key]; const ResourceIcon = meta.icon; const net = yearlyNet[key] ?? 0; return <div className="resource" key={key}><ResourceIcon className={meta.tone} size={17} /><div><small>{meta.label}</small><strong className={resources[key] < 0 ? 'negative' : ''}>{fmt(resources[key])}</strong></div><em className={net < 0 ? 'negative' : ''}>{net >= 0 ? '+' : ''}{net.toFixed(1)}/年</em></div> })}</div>)}
     </section>
 
-    {visitor && <section className="diplomatic-letter" aria-live="polite"><div className="letter-symbol">{visitor.glyph}</div><div className="letter-copy"><span>外交来函 · {visitor.species}</span><strong>{visitor.name}正在静候回音</strong><small>索取：{resourceText(visitor.offer.take)}，回赠：{resourceText(visitor.offer.give)}</small></div><div className="letter-actions"><button onClick={dismiss}>礼送</button><button onClick={acceptTrade} disabled={!canPay(resources, visitor.offer.take)}>交换</button><button className="primary" onClick={employ}>留任</button></div><button className="letter-close" onClick={dismiss} aria-label="关闭来函"><X size={16} /></button></section>}
+    {visitor && <div className="event-scrim" role="presentation"><section className="diplomatic-letter event-modal" aria-live="polite" aria-modal="true" role="dialog"><div className="letter-symbol">{visitor.glyph}</div><div className="letter-copy"><span>外交来函 · {visitor.species} · {visitor.chain.arc === 'long' ? `链 ${Math.min((chainProgress[visitor.chain.id] ?? 0) + 1, visitor.chain.events.length)}/${visitor.chain.events.length}` : '偶遇'}</span><strong>{visitor.event.title}</strong><p className="letter-body">{visitor.event.body}</p>{visitor.event.note && <p className="letter-note">{visitor.event.note}</p>}<small>{visitor.event.concealed ? `结果需从来函文字中推断。留任：${resourceText(visitor.retainerCost) || '无'}` : `索取：${resourceText(visitor.offer.take) || '无'}，回赠：${resourceText(visitor.offer.give) || '无'}，留任：${resourceText(visitor.retainerCost) || '无'}`}</small></div><div className="letter-actions"><button onClick={dismiss}>礼送</button><button onClick={acceptTrade} disabled={!canPay(resources, visitor.offer.take)}>{visitor.event.interaction === 'gift' ? '收下' : visitor.event.interaction === 'accident' ? '接入' : visitor.event.interaction === 'request' ? '准许' : '交换'}</button><button className="primary" onClick={employ} disabled={!canPay(resources, visitor.retainerCost)}>留任</button></div><button className="letter-close" onClick={dismiss} aria-label="关闭来函"><X size={16} /></button></section></div>}
 
     <section className="page-content">
-      {view === 'overview' && <Overview regions={regions} log={log} shipProgress={shipProgress} score={score} visitor={visitor} selectFacility={selectFacility} onViewFacilities={() => setView('facilities')} />}
-      {view === 'facilities' && <Facilities regions={regions} selected={selected} year={year} techs={techs} productionMethods={productionMethods} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} yearlyNet={yearlyNet} automationPlan={automationPlan} onSelect={setSelected} onUpgrade={upgrade} onMethod={(methodId) => setProductionMethods(previous => ({ ...previous, [selectedRegion.id]: methodId }))} onAssignment={visitorId => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))} />}
+      {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={year} techs={techs} productionMethods={productionMethods} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} yearlyNet={yearlyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onSelect={selectFacility} onUpgrade={upgrade} onMethod={(methodId) => setProductionMethods(previous => ({ ...previous, [selectedRegion.id]: methodId }))} onAssignment={visitorId => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))} />}
       {view === 'palace' && <Palace policy={policy} palaceLevel={palaceLevel} techs={techs} onPolicy={setPolicy} onSelectPalace={() => selectFacility('K')} />}
+      {view === 'research' && <ResearchLab techs={techs} onSelectLab={() => setSelected('L')} />}
+      {view === 'ecology' && <EcologyRing regions={regions} onSelectRing={() => setSelected('R')} />}
+      {view === 'starport' && <Starport techs={techs} onSelectPort={() => setSelected('S')} />}
+      {view === 'ship' && <Shipyard shipProgress={shipProgress} score={score} onSelectShip={() => setSelected('D')} />}
       {view === 'visitors' && <Visitors roster={roster} assigned={assigned} regions={regions} visitor={visitor} onSelect={selectFacility} onAssignment={(regionId, visitorId) => setAssigned(previous => ({ ...previous, [regionId]: visitorId }))} />}
     </section>
 
-    <footer className="command-deck">
+    <footer className="command-deck bottom-tabs">
       <div className="scoreline"><span>国祚评分</span><strong>{score}</strong><small>星舰进度权重最高</small></div>
-      <p>{completed ? `百年试验完毕。御座号完成 ${shipProgress}%，最终国祚评分 ${score}。` : '每 1.25 秒为一御历，资源自动结算。暂停后可从容审阅每一项诏令。'}</p>
+      <nav className="tab-nav" aria-label="底部系统菜单">{navItems.map(item => { const NavIcon = item.icon; return <button key={item.id} className={view === item.id ? 'active' : ''} onClick={() => setView(item.id)}><NavIcon size={16} />{item.label}</button> })}</nav>
       <button className="advance-year" onClick={advanceYear} disabled={completed}>推进一岁 <ArrowUpRight size={17} /></button>
       <button className="art-button" onClick={() => setArtOpen(!artOpen)}>素材提示词</button>
     </footer>
@@ -391,7 +343,85 @@ function App() {
   </main>
 }
 
-function Overview({ regions, log, shipProgress, score, visitor, selectFacility, onViewFacilities }: { regions: Region[]; log: string[]; shipProgress: number; score: number; visitor: Visitor | null; selectFacility: (id: RegionId) => void; onViewFacilities: () => void }) {
+function PlanetFacilities({ regions, selected, year, techs, productionMethods, roster, assigned, selectedRegion, selectedCost, resources, yearlyNet, automationPlan, planetTexture, docked, detailOpen, onDock, onBack, onSelect, onUpgrade, onMethod, onAssignment }: { regions: Region[]; selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; roster: Role[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; yearlyNet: Partial<Resources>; automationPlan: ReturnType<typeof planFacilityAutomation>; planetTexture: typeof planetTextures[number]; docked: boolean; detailOpen: boolean; onDock: () => void; onBack: () => void; onSelect: (id: RegionId) => void; onUpgrade: (id: RegionId) => void; onMethod: (methodId: ProductionMethodId) => void; onAssignment: (visitorId: string | undefined) => void }) {
+  if (!docked) {
+    return <div className="planet-home">
+      <div className="planet-stage">
+        <PlanetScene texture={planetTexture} onActivate={onDock} />
+        <div className="planet-title"><span className="eyebrow">殖民星球 · {planetTexture.name}</span><h2>静海王国</h2><p>御历 {String(year).padStart(3, '0')} · 已启动 {regions.filter(region => region.level > 0).length}/{regions.length} 座设施</p><button onClick={onDock}>展开设施名录 <ChevronRight size={16} /></button></div>
+      </div>
+    </div>
+  }
+
+  return <div className={detailOpen ? 'planet-workbench detail-mode' : 'planet-workbench'}>
+    <section className="planet-dock"><PlanetScene texture={planetTexture} compact onActivate={() => onBack()} /><div><span className="eyebrow">殖民星球</span><h2>{planetTexture.name}</h2><p>御历 {String(year).padStart(3, '0')}，国祚仍在设施、政策与星舰之间被重新分配。</p></div></section>
+    {detailOpen ? <FacilityDetailPanel selected={selected} year={year} techs={techs} productionMethods={productionMethods} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} yearlyNet={yearlyNet} automationPlan={automationPlan} regions={regions} onBack={onBack} onUpgrade={onUpgrade} onMethod={onMethod} onAssignment={onAssignment} /> : <FacilityList regions={regions} selected={selected} assigned={assigned} roster={roster} onSelect={onSelect} />}
+  </div>
+}
+
+function FacilityList({ regions, selected, assigned, roster, onSelect }: { regions: Region[]; selected: RegionId; assigned: Record<RegionId, string | undefined>; roster: Role[]; onSelect: (id: RegionId) => void }) {
+  return <section className="facility-ledger">
+    <div className="section-heading"><div><span className="eyebrow">主要设施</span><h2>建筑名录</h2></div><p>D/R/S/K/L 进入专属系统页。</p></div>
+    <div className="facility-ledger-list">{regions.map(region => {
+      const RegionIcon = region.icon
+      const worker = roster.find(item => item.id === assigned[region.id])
+      const special = specialFacilityViews[region.id]
+      return <button key={region.id} className={`${selected === region.id ? 'selected' : ''} ${special ? 'special' : ''}`} onClick={() => onSelect(region.id)}>
+        <span className="ledger-icon"><RegionIcon size={19} /></span>
+        <div><b>{region.name}</b><small>{special ? navItems.find(item => item.id === special)?.label : region.subtitle}</small></div>
+        <em>{region.level ? `${region.level}/${region.max}` : '未建'}</em>
+        {worker && <i>{worker.glyph}</i>}
+      </button>
+    })}</div>
+  </section>
+}
+
+function FacilityDetailPanel({ selected, year, techs, productionMethods, roster, assigned, selectedRegion, selectedCost, resources, yearlyNet, automationPlan, regions, onBack, onUpgrade, onMethod, onAssignment }: { selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; roster: Role[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; yearlyNet: Partial<Resources>; automationPlan: ReturnType<typeof planFacilityAutomation>; regions: Region[]; onBack: () => void; onUpgrade: (id: RegionId) => void; onMethod: (methodId: ProductionMethodId) => void; onAssignment: (visitorId: string | undefined) => void }) {
+  const selectedWorker = roster.find(item => item.id === assigned[selectedRegion.id])
+  const SelectIcon = selectedRegion.icon
+  const selectedSpec = facilityEconomySpecs[selectedRegion.id]
+  const selectedMethod = selectProductionMethod(selectedSpec.productionMethods, techs, productionMethods[selectedRegion.id])
+  const selectedYield = projectFacilityNet(selectedSpec, selectedRegion.level, {}, techs, selectedMethod.id)
+  const selectedBuildable = canBuildFacility(selectedSpec, year, techs)
+  const selectedRequiredTech = selectedSpec.requiredTech ? technologyCatalog[selectedSpec.requiredTech] : undefined
+  const parents = selectedRegion.parentIds.map(id => regions.find(region => region.id === id)?.name).filter(Boolean)
+  const workerChoices = roster.filter(item => item.specialty === selectedRegion.id)
+
+  return <aside className="inspector facility-detail-page">
+    <button className="back-button" onClick={onBack}><ChevronLeft size={16} />建筑名录</button>
+    <div className="inspector-head"><span className="facility-icon"><SelectIcon size={23} /></span><div><span className="eyebrow">建筑详情 · {selected}</span><h2>{selectedRegion.name}</h2><p>{selectedRegion.subtitle}</p></div></div>
+    <p className="inspector-description">{selectedRegion.note}</p>
+    <p className="inspector-description">{selectedRegion.interfaceDuty}</p>
+    {selectedRegion.phaseNotes?.length ? <div className="phase-list">{selectedRegion.phaseNotes.map(phase => <p key={phase.name}><b>{phase.name}</b><span>{phase.note}</span></p>)}</div> : null}
+    <div className="production-table"><span>生产方式</span><table><thead><tr><th>代号</th><th>输入 / 输出</th><th>状态</th></tr></thead><tbody>{selectedSpec.productionMethods.map(method => { const methodReady = hasTech(techs, method.unlockedBy) && method.autoSelect !== false; const condition = method.unlockedBy ? `${method.unlockedBy} · ${methodReady ? '已解锁' : '未解锁'}` : method.condition ?? '默认'; return <tr key={method.id} className={method.id === selectedMethod.id && methodReady ? 'active' : ''}><td>{method.id}<small>{method.name}</small></td><td>{methodText(method)}<small>{method.note}</small></td><td>{method.id === selectedMethod.id && methodReady ? '使用中' : <button onClick={() => onMethod(method.id)} disabled={!methodReady}>切换</button>}<small>{condition}</small></td></tr> })}</tbody></table></div>
+    <div className="stat-block"><span>年度结算</span><div>{Object.entries(selectedYield).map(([key, value]) => { const meta = resourceUiMeta[key as ResourceKey]; const ResourceIcon = meta.icon; return <b key={key} className={(value ?? 0) < 0 ? 'cost' : ''}><ResourceIcon size={13} />{(value ?? 0) > 0 ? '+' : ''}{value}</b> })}</div></div>
+    <div className="stat-block"><span>扩建至第 {selectedRegion.level + 1} 阶</span><div>{Object.entries(selectedCost).map(([key, value]) => { const meta = resourceUiMeta[key as ResourceKey]; const ResourceIcon = meta.icon; return <b key={key}><ResourceIcon size={13} />{fmt(value ?? 0)}</b> })}</div></div>
+    <div className="stat-block"><span>自动规划</span><div><b>{automationPlan.mode === 'auto' ? '自动' : '手动'}</b><b>{automationPlan.mode === 'auto' ? `加权利润 ${automationPlan.weightedProfit.toFixed(1)}` : automationPlan.reason ?? '最低要求未满足'}</b><b>{automationPlan.actions.length ? `${automationPlan.actions[0].id} +${automationPlan.actions[0].fromLevel}→${automationPlan.actions[0].toLevel}` : '无可执行动作'}</b></div></div>
+    <div className="path-note"><Orbit size={15} /><span>{parents.length ? `发展路径：${parents.join('、')} → 本设施` : '发展路径：殖民地基础设施'}</span></div>
+    {selectedWorker ? <div className="worker-card"><span>{selectedWorker.glyph}</span><div><b>{selectedWorker.name} 正在执勤</b><small>专属区域年产出 +{Math.round(selectedWorker.boost * 100)}%</small></div><button onClick={() => onAssignment(undefined)}>待命</button></div> : workerChoices.length ? <div className="worker-card"><span>{workerChoices[0].glyph}</span><div><b>{workerChoices[0].name} 可派驻</b><small>专属区域年产出 +{Math.round(workerChoices[0].boost * 100)}%</small></div><button onClick={() => onAssignment(workerChoices[0].id)}>派驻</button></div> : null}
+    <button className="upgrade-button" onClick={() => onUpgrade(selectedRegion.id)} disabled={!selectedBuildable || selectedRegion.level >= selectedRegion.max || !canPay(resources, selectedCost)}>{selectedRequiredTech && !hasTech(techs, selectedSpec.requiredTech) ? `需要 ${selectedSpec.requiredTech} ${selectedRequiredTech.name}` : selectedRegion.level >= selectedRegion.max ? '已至现行最高阶' : `签发扩建诏令 · 年净值 ${Object.values(yearlyNet).filter(Boolean).length} 项`}</button>
+  </aside>
+}
+
+function ResearchLab({ techs, onSelectLab }: { techs: string[]; onSelectLab: () => void }) {
+  return <div className="system-page"><section className="system-hero"><FlaskConical size={42} /><span className="eyebrow">L 问天研究实验室</span><h2>科技档案</h2><p>生产方式、设施效率、全局工业软件与外星科技都在此入库。</p><button onClick={onSelectLab}>定位问天研究实验室</button></section><section className="tech-cabinet system-panel"><span className="eyebrow">已获技术</span>{techs.length ? techs.map(tech => <p key={tech}><FlaskConical size={15} />{tech}</p>) : <p className="empty-tech">尚无科技入库。</p>}</section></div>
+}
+
+function EcologyRing({ regions, onSelectRing }: { regions: Region[]; onSelectRing: () => void }) {
+  const ring = regions.find(region => region.id === 'R')!
+  return <div className="system-page"><section className="system-hero"><Waves size={42} /><span className="eyebrow">R 月穹生态环</span><h2>生态阶段</h2><p>月穹生态环按阶段改变生态、人口与工业结构。</p><button onClick={onSelectRing}>定位月穹生态环</button></section><section className="system-panel phase-list">{ring.phaseNotes?.map(phase => <p key={phase.name}><b>{phase.name}</b><span>{phase.note}</span></p>)}</section></div>
+}
+
+function Starport({ techs, onSelectPort }: { techs: string[]; onSelectPort: () => void }) {
+  const tradeTechs = techs.filter(tech => tech.startsWith('TS-'))
+  return <div className="system-page"><section className="system-hero"><ArrowLeftRight size={42} /><span className="eyebrow">S 星海交易港</span><h2>双向贸易</h2><p>星港科技会固定添加人口、知识、奢侈品等双向贸易权限。</p><button onClick={onSelectPort}>定位星海交易港</button></section><section className="system-panel trade-board">{['TS-1 星际劳工', 'TS-2 知识传输协议', 'TS-3 玫瑰星球'].map(tech => <p key={tech} className={tradeTechs.some(item => item.startsWith(tech.split(' ')[0])) ? 'active' : ''}><ArrowLeftRight size={15} />{tech}</p>)}</section></div>
+}
+
+function Shipyard({ shipProgress, score, onSelectShip }: { shipProgress: number; score: number; onSelectShip: () => void }) {
+  return <div className="system-page"><section className="system-hero ship-system"><Rocket size={46} /><span className="eyebrow">D 冠冕星舰坞</span><h2>御座号工程</h2><p>百年试验以星舰完成度为核心结算。</p><button onClick={onSelectShip}>定位冠冕星舰坞</button></section><section className="system-panel ship-meter"><strong>{shipProgress}<small>%</small></strong><div className="ship-progress"><i style={{ width: `${shipProgress}%` }} /></div><p>当前国祚评分 {score}</p></section></div>
+}
+
+function Overview({ regions, log, shipProgress, score, visitor, selectFacility, onViewFacilities }: { regions: Region[]; log: string[]; shipProgress: number; score: number; visitor: Encounter | null; selectFacility: (id: RegionId) => void; onViewFacilities: () => void }) {
   const built = regions.filter(region => region.level > 0).length
   return <div className="overview-grid">
     <section className="welcome-panel"><span className="eyebrow">第一个百年 · 统治摘要</span><h2>将一块无人认领的月壤<br />编译成可远航的王国。</h2><p>你既是月球的君主，也是维生系统的最后一位运维者。每一项繁荣，都需在氧气、秩序与离开家园之间签字。</p><div className="overview-actions"><button className="primary-action" onClick={onViewFacilities}>审阅设施树 <ChevronRight size={17} /></button><span><b>{built}</b> / {regions.length} 座设施已启动</span></div></section>
@@ -402,7 +432,7 @@ function Overview({ regions, log, shipProgress, score, visitor, selectFacility, 
   </div>
 }
 
-function Facilities({ regions, selected, year, techs, productionMethods, roster, assigned, selectedRegion, selectedCost, resources, yearlyNet, automationPlan, onSelect, onUpgrade, onMethod, onAssignment }: { regions: Region[]; selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; roster: Visitor[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; yearlyNet: Partial<Resources>; automationPlan: ReturnType<typeof planFacilityAutomation>; onSelect: (id: RegionId) => void; onUpgrade: (id: RegionId) => void; onMethod: (methodId: ProductionMethodId) => void; onAssignment: (visitorId: string | undefined) => void }) {
+function Facilities({ regions, selected, year, techs, productionMethods, roster, assigned, selectedRegion, selectedCost, resources, yearlyNet, automationPlan, onSelect, onUpgrade, onMethod, onAssignment }: { regions: Region[]; selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; roster: Role[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; yearlyNet: Partial<Resources>; automationPlan: ReturnType<typeof planFacilityAutomation>; onSelect: (id: RegionId) => void; onUpgrade: (id: RegionId) => void; onMethod: (methodId: ProductionMethodId) => void; onAssignment: (visitorId: string | undefined) => void }) {
   const selectedWorker = roster.find(item => item.id === assigned[selectedRegion.id])
   const SelectIcon = selectedRegion.icon
   const selectedSpec = facilityEconomySpecs[selectedRegion.id]
@@ -447,8 +477,8 @@ function Palace({ policy, palaceLevel, techs, onPolicy, onSelectPalace }: { poli
   return <div className="palace-layout"><section className="palace-hero"><div className="palace-mark"><Crown size={48} /></div><span className="eyebrow">月面王城 · 政策界面</span><h2>容纳人口，<br />提供税收。</h2><p>月面王城可以容纳人口、提供税收、制定政策，并显示政策界面。星海货币与人口成正比。</p><button onClick={onSelectPalace}>审阅王城设施 <ChevronRight size={17} /></button></section><section className="policy-board"><div className="section-heading"><div><span className="eyebrow">可签发政令</span><h2>王城等级 {palaceLevel}/3</h2></div><p>同一时间只能执行一项政策。</p></div><div className="policy-cards">{policies.map(item => { const PolicyIcon = item.icon; const unlocked = palaceLevel >= item.level; return <button key={item.id} disabled={!unlocked} className={`${policy === item.id ? 'selected' : ''} ${!unlocked ? 'locked' : ''}`} onClick={() => onPolicy(item.id)}><span><PolicyIcon size={22} /></span><div><small>{unlocked ? `王城 ${item.level} 级已授权` : `王城 ${item.level} 级解锁`}</small><h3>{item.name}</h3><p>{item.detail}</p></div>{policy === item.id && <Check size={18} />}</button> })}</div></section><section className="tech-cabinet"><span className="eyebrow">档案柜 · 已获技术</span>{techs.length ? techs.map(tech => <p key={tech}><FlaskConical size={15} />{tech}</p>) : <p className="empty-tech">尚无科技入库。科技会解锁可选生产方式。</p>}</section></div>
 }
 
-function Visitors({ roster, assigned, regions, visitor, onSelect, onAssignment }: { roster: Visitor[]; assigned: Record<RegionId, string | undefined>; regions: Region[]; visitor: Visitor | null; onSelect: (id: RegionId) => void; onAssignment: (regionId: RegionId, visitorId: string | undefined) => void }) {
-  return <div className="visitor-layout"><section className="visitor-hero"><span className="eyebrow">异客留任簿 · {roster.length}/{visitors.length}</span><h2>陌生人不是资源。<br />他们只是懂得让资源更好地工作。</h2><p>每一位来访者都有独立的族群、需求与专长。选择留任后，他们将持续改变一座设施的产出。</p>{visitor && <div className="pending-visitor"><span>{visitor.glyph}</span><div><b>{visitor.name} 正在等待</b><small>{visitor.species}，请在顶部外交来函中决定去留。</small></div></div>}</section><section className="roster-board">{roster.length ? roster.map(member => { const region = regions.find(item => item.id === member.specialty)!; const RegionIcon = region.icon; const active = assigned[member.specialty] === member.id; return <article key={member.id} className={active ? 'retainer active' : 'retainer'}><div className="retainer-glyph">{member.glyph}</div><div className="retainer-copy"><span>{member.species}</span><h3>{member.name}</h3><p>{member.portrait}</p><button onClick={() => onSelect(member.specialty)}><RegionIcon size={14} />{region.name}</button></div><div className="retainer-duty"><b>+{Math.round(member.boost * 100)}%</b><small>专属区域产出</small><button onClick={() => onAssignment(member.specialty, active ? undefined : member.id)}>{active ? '改为待命' : '安排执勤'}</button></div></article> }) : <div className="empty-roster"><Sparkles size={27} /><h3>留任簿仍为空白</h3><p>信标会随机抵达。交换可取得技术，留任则会带来长期区域增益。</p></div>}</section></div>
+function Visitors({ roster, assigned, regions, visitor, onSelect, onAssignment }: { roster: Role[]; assigned: Record<RegionId, string | undefined>; regions: Region[]; visitor: Encounter | null; onSelect: (id: RegionId) => void; onAssignment: (regionId: RegionId, visitorId: string | undefined) => void }) {
+  return <div className="visitor-layout"><section className="visitor-hero"><span className="eyebrow">异客留任簿 · {roster.length}/{roles.length}</span><h2>陌生人不是资源。<br />他们只是懂得让资源更好地工作。</h2><p>每一位来访者都有独立的族群、需求与专长。选择留任后，他们将持续改变一座设施的产出。</p>{visitor && <div className="pending-visitor"><span>{visitor.glyph}</span><div><b>{visitor.name} 正在等待</b><small>{visitor.species}，请在顶部外交来函中决定去留。</small></div></div>}</section><section className="roster-board">{roster.length ? roster.map(member => { const region = regions.find(item => item.id === member.specialty)!; const RegionIcon = region.icon; const active = assigned[member.specialty] === member.id; return <article key={member.id} className={active ? 'retainer active' : 'retainer'}><div className="retainer-glyph">{member.glyph}</div><div className="retainer-copy"><span>{member.species}</span><h3>{member.name}</h3><p>{member.portrait}</p><button onClick={() => onSelect(member.specialty)}><RegionIcon size={14} />{region.name}</button></div><div className="retainer-duty"><b>+{Math.round(member.boost * 100)}%</b><small>专属区域产出</small><button onClick={() => onAssignment(member.specialty, active ? undefined : member.id)}>{active ? '改为待命' : '安排执勤'}</button></div></article> }) : <div className="empty-roster"><Sparkles size={27} /><h3>留任簿仍为空白</h3><p>信标会随机抵达。交换可取得技术，留任则会带来长期区域增益。</p></div>}</section></div>
 }
 
 export default App

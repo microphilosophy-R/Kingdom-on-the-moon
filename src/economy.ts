@@ -54,6 +54,9 @@ export type TechnologySpec = {
   id: TechnologyId
   name: string
   scope: FacilityId | 'G'
+  category?: 'construction' | 'production-method' | 'facility-efficiency' | 'global' | 'trade'
+  era?: 'early' | 'mid' | 'late'
+  alien?: boolean
   unlocksFacility?: FacilityId
   unlocks?: ProductionMethodId
   note: string
@@ -174,7 +177,7 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
   oxygen: {
     label: '氧气',
     category: 'life',
-    source: 'B 水培生态球、F 天工精炼署、E1 日冕能源署、R 月穹生态环、S 星海交易港',
+    source: 'B 水培生态球、F 天工精炼署、E1 日冕能源署、P 伊犁河谷、R 月穹生态环、S 星海交易港',
     coreUse: '生命维持与生产。',
     deficit: '人口下降，相关建筑重新调整直到恢复盈余。',
     tradeRule: '可交易，可由交易港补充。',
@@ -200,7 +203,7 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
   regolith: {
     label: '月壤',
     category: 'matter',
-    source: 'C1 静海采掘署、C2 西海采掘署、P 伊犁河谷、S 星海交易港',
+    source: 'C1 静海采掘署、C2 西海采掘署、S 星海交易港',
     coreUse: '初级工业品、前期贸易出口与基础建设。',
     deficit: '相关生产建筑停止运行，直到恢复盈余。',
     tradeRule: '可交易；后期可逐渐成为进口资源。',
@@ -331,6 +334,8 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TE1-0',
     name: '日冕能源署建造许可',
     scope: 'E1',
+    category: 'construction',
+    era: 'early',
     unlocksFacility: 'E1',
     note: '解锁 E1 日冕能源署建造。初始默认具备。',
   },
@@ -338,13 +343,25 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TE1-1',
     name: '纳米光催化剂',
     scope: 'E1',
+    category: 'production-method',
+    era: 'early',
     unlocks: 'ME1-2',
     note: '解锁 E1 日冕能源署可选生产方式：增加水资源输入与氧气输出。',
+  },
+  'TE1-2': {
+    id: 'TE1-2',
+    name: '光伏阵列校准',
+    scope: 'E1',
+    category: 'facility-efficiency',
+    era: 'early',
+    note: 'E1 日冕能源署电力输出 +5%。',
   },
   'TE2-0': {
     id: 'TE2-0',
     name: '月冕能源署建造许可',
     scope: 'E2',
+    category: 'construction',
+    era: 'mid',
     unlocksFacility: 'E2',
     note: '解锁 E2 月冕能源署建造。',
   },
@@ -352,6 +369,9 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TE3-0',
     name: '外星科技：微型黑洞约束',
     scope: 'E3',
+    category: 'production-method',
+    era: 'late',
+    alien: true,
     unlocksFacility: 'E3',
     unlocks: 'ME3-1',
     note: '解锁 E3 归元装置建造与 ME3-1 生产方式；以微型黑洞压缩物质获取能量，不消耗资源。',
@@ -360,27 +380,78 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TC1-0',
     name: '静海采掘署建造许可',
     scope: 'C1',
+    category: 'construction',
+    era: 'early',
     unlocksFacility: 'C1',
     note: '解锁 C1 静海采掘署建造。初始默认具备。',
+  },
+  'TC1-1': {
+    id: 'TC1-1',
+    name: '月面钻头阵列',
+    scope: 'C1',
+    category: 'facility-efficiency',
+    era: 'early',
+    note: 'C1 静海采掘署 MC1-1 月壤输出 +5%。',
   },
   'TC2-0': {
     id: 'TC2-0',
     name: '西海采掘署建造许可',
     scope: 'C2',
+    category: 'construction',
+    era: 'mid',
     unlocksFacility: 'C2',
     note: '解锁 C2 西海采掘署建造。',
+  },
+  'TC2-1': {
+    id: 'TC2-1',
+    name: '小行星锚定索',
+    scope: 'C2',
+    category: 'facility-efficiency',
+    era: 'mid',
+    note: 'C2 西海采掘署 MC2-1 合金输出 +5%，氧气消耗 +5%。',
+  },
+  'TC2-2': {
+    id: 'TC2-2',
+    name: '发现伊甸园',
+    scope: 'C2',
+    category: 'production-method',
+    era: 'mid',
+    alien: true,
+    unlocks: 'MC2-2',
+    note: '外星科技，中期；解锁 MC2-2 生态行星资源采集，不再额外消耗水、氧气和生物质。',
   },
   'TB-0': {
     id: 'TB-0',
     name: '水培生态球建造许可',
     scope: 'B',
+    category: 'construction',
+    era: 'early',
     unlocksFacility: 'B',
     note: '解锁 B 水培生态球建造。',
+  },
+  'TB-1': {
+    id: 'TB-1',
+    name: '闭环藻膜培养',
+    scope: 'B',
+    category: 'facility-efficiency',
+    era: 'early',
+    note: 'B 水培生态球 MB-1 生物质输出 +5%。',
+  },
+  'TB-2': {
+    id: 'TB-2',
+    name: '无水栽培技术',
+    scope: 'B',
+    category: 'production-method',
+    era: 'early',
+    unlocks: 'MB-2',
+    note: '早期非开局科技；解锁 MB-2 无水栽培循环，以略低价值的月壤消耗替代水消耗。',
   },
   'TF-0': {
     id: 'TF-0',
     name: '天工精炼署建造许可',
     scope: 'F',
+    category: 'construction',
+    era: 'mid',
     unlocksFacility: 'F',
     note: '解锁 F 天工精炼署建造。',
   },
@@ -388,20 +459,37 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TF-1',
     name: '重原子炼金术',
     scope: 'F',
+    category: 'production-method',
+    era: 'mid',
+    alien: true,
     unlocks: 'MF-2',
-    note: '解锁 F 天工精炼署可选生产方式，使其后期可获得星海货币。',
+    note: '外星科技，中期；解锁 MF-2 重原子炼金，在默认精炼产出基础上额外产出星海货币。',
   },
   'TP-0': {
     id: 'TP-0',
     name: '伊犁河谷建造许可',
     scope: 'P',
+    category: 'construction',
+    era: 'mid',
     unlocksFacility: 'P',
     note: '解锁 P 伊犁河谷建造。',
+  },
+  'TP-1': {
+    id: 'TP-1',
+    name: '合金作物',
+    scope: 'P',
+    category: 'production-method',
+    era: 'mid',
+    alien: true,
+    unlocks: 'MP-2',
+    note: '外星科技，中期；解锁 MP-2 合金作物，产出较少生物质和氧气，并额外产出合金。',
   },
   'TR-0': {
     id: 'TR-0',
     name: '月穹生态环建造许可',
     scope: 'R',
+    category: 'construction',
+    era: 'mid',
     unlocksFacility: 'R',
     note: '解锁 R 月穹生态环建造。',
   },
@@ -409,6 +497,8 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TS-0',
     name: '星海交易港建造许可',
     scope: 'S',
+    category: 'construction',
+    era: 'mid',
     unlocksFacility: 'S',
     note: '解锁 S 星海交易港建造。',
   },
@@ -416,6 +506,8 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TK-0',
     name: '月面王城建造许可',
     scope: 'K',
+    category: 'construction',
+    era: 'early',
     unlocksFacility: 'K',
     note: '解锁 K 月面王城建造。初始默认具备。',
   },
@@ -423,6 +515,8 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TL-0',
     name: '问天研究实验室建造许可',
     scope: 'L',
+    category: 'construction',
+    era: 'early',
     unlocksFacility: 'L',
     note: '解锁 L 问天研究实验室建造。',
   },
@@ -430,6 +524,8 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TL-1',
     name: '原子阵列光刻机',
     scope: 'L',
+    category: 'production-method',
+    era: 'late',
     unlocks: 'ML-2',
     note: '解锁 L 问天研究实验室可选生产方式，使其可生产量子计算核心。',
   },
@@ -437,6 +533,8 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TH-0',
     name: '翡翠宫建造许可',
     scope: 'H',
+    category: 'construction',
+    era: 'mid',
     unlocksFacility: 'H',
     note: '解锁 H 翡翠宫建造。',
   },
@@ -444,6 +542,8 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TM-0',
     name: '新月府建造许可',
     scope: 'M',
+    category: 'construction',
+    era: 'late',
     unlocksFacility: 'M',
     note: '解锁 M 新月府建造；该科技应在月穹生态环完成后取得。',
   },
@@ -451,26 +551,77 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TD-0',
     name: '冠冕星舰坞建造许可',
     scope: 'D',
+    category: 'construction',
+    era: 'late',
     unlocksFacility: 'D',
     note: '解锁 D 冠冕星舰坞建造。',
+  },
+  'TD-1': {
+    id: 'TD-1',
+    name: '舰坞总装排程',
+    scope: 'D',
+    category: 'facility-efficiency',
+    era: 'late',
+    note: 'D 冠冕星舰坞 MD-1 项目推进效率 +5%。',
   },
   'TS-1': {
     id: 'TS-1',
     name: '星际劳工',
     scope: 'S',
+    category: 'trade',
+    era: 'mid',
+    alien: true,
     note: '解锁星海交易港处理其它星域人力资源的双向贸易。',
   },
   'TS-2': {
     id: 'TS-2',
     name: '知识传输协议',
     scope: 'S',
+    category: 'trade',
+    era: 'mid',
+    alien: true,
     note: '解锁星海交易港处理知识的双向贸易。',
   },
   'TS-3': {
     id: 'TS-3',
     name: '玫瑰星球',
     scope: 'S',
+    category: 'trade',
+    era: 'mid',
+    alien: true,
     note: '解锁星海交易港处理艺术奢侈品的双向贸易。',
+  },
+  'TG-1': {
+    id: 'TG-1',
+    name: '天工工业软件套装',
+    scope: 'G',
+    category: 'global',
+    era: 'mid',
+    note: '全局生产效率 +1%；建筑扩大 / 缩小时间 -5%。',
+  },
+  'TG-2': {
+    id: 'TG-2',
+    name: '空间微波散热学',
+    scope: 'G',
+    category: 'global',
+    era: 'mid',
+    note: '所有建筑电力消耗 -5%。',
+  },
+  'TG-3': {
+    id: 'TG-3',
+    name: '通用建筑预制件',
+    scope: 'G',
+    category: 'global',
+    era: 'mid',
+    note: '所有建筑扩大成本 -5%；扩大 / 缩小时间 -10%。',
+  },
+  'TG-4': {
+    id: 'TG-4',
+    name: '星海会计协议',
+    scope: 'G',
+    category: 'global',
+    era: 'mid',
+    note: '交易手续费 -5%；自动购买溢价 -5%。',
   },
 }
 
@@ -514,6 +665,39 @@ export const selectProductionMethod = (
   const selectedMethod = selectedMethodId ? methods.find(method => method.id === selectedMethodId) : undefined
   if (selectedMethod && canUseProductionMethod(selectedMethod, techs)) return selectedMethod
   return methods.find(method => !method.unlockedBy && method.autoSelect !== false) ?? methods.find(method => canUseProductionMethod(method, techs)) ?? methods[0]
+}
+
+const scaleBundleResource = (bundle: Partial<Resources>, key: ResourceKey, multiplier: number) => {
+  if (!bundle[key]) return
+  bundle[key] = bundle[key]! * multiplier
+}
+
+const applyTechnologyToMethod = (
+  spec: FacilityEconomySpec,
+  method: ProductionMethod,
+  techs: string[] = [],
+) => {
+  const input = { ...method.input }
+  const output = { ...method.output }
+
+  if (hasTech(techs, 'TG-1')) {
+    resourceOrder.forEach(key => {
+      if (key === 'population') return
+      scaleBundleResource(output, key, 1.01)
+    })
+  }
+
+  if (hasTech(techs, 'TG-2')) scaleBundleResource(input, 'power', 0.95)
+
+  if (spec.id === 'E1' && hasTech(techs, 'TE1-2')) scaleBundleResource(output, 'power', 1.05)
+  if (spec.id === 'C1' && method.id === 'MC1-1' && hasTech(techs, 'TC1-1')) scaleBundleResource(output, 'regolith', 1.05)
+  if (spec.id === 'C2' && method.id === 'MC2-1' && hasTech(techs, 'TC2-1')) {
+    scaleBundleResource(output, 'alloy', 1.05)
+    scaleBundleResource(input, 'oxygen', 1.05)
+  }
+  if (spec.id === 'B' && method.id === 'MB-1' && hasTech(techs, 'TB-1')) scaleBundleResource(output, 'biomass', 1.05)
+
+  return { input, output }
 }
 
 export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
@@ -611,6 +795,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     note: '小行星带开采设施，水、月壤与合金来源之一。远征采掘消耗电力、水、氧气和生物质。',
     productionMethods: [
       { id: 'MC2-1', name: '西海小行星带采掘', input: { power: 1.4, water: 0.3, oxygen: 0.4, biomass: 0.2 }, output: { water: 0.8, regolith: 3.4, alloy: 1.2 }, note: '西海表示在小行星带开采；额外消耗水、氧气和生物质，产出水、月壤与合金。' },
+      { id: 'MC2-2', name: '生态行星资源采集', input: { power: 1.4 }, output: { water: 0.8, regolith: 3.4, alloy: 1.2 }, unlockedBy: 'TC2-2', note: 'TC2-2 外星科技解锁；与默认方式相比不再额外消耗水、氧气和生物质。' },
     ],
   },
   B: {
@@ -630,6 +815,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     note: '氧气与生物质来源之一。生产方式消耗水资源。',
     productionMethods: [
       { id: 'MB-1', name: '水培生态循环', input: { water: 0.8 }, output: { oxygen: 2.6, biomass: 1.8 }, note: '消耗水，产出氧气与生物质。' },
+      { id: 'MB-2', name: '无水栽培循环', input: { regolith: 0.6 }, output: { oxygen: 2.6, biomass: 1.8 }, unlockedBy: 'TB-2', note: 'TB-2 解锁；以略低价值的月壤消耗替代水消耗。' },
     ],
   },
   F: {
@@ -649,14 +835,14 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     note: '氧气、合金与后期星海货币来源之一。生产方式消耗电力和月壤。',
     productionMethods: [
       { id: 'MF-1', name: '天工精炼', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 2.2, oxygen: 0.4 }, note: '消耗电力与月壤，产出合金与氧气。' },
-      { id: 'MF-2', name: '重原子炼金', input: { power: 1.6, regolith: 1.4 }, output: { alloy: 1.8, oxygen: 0.3, currency: 1.0 }, unlockedBy: 'TF-1', note: 'TF-1 解锁后获得星海货币产出。' },
+      { id: 'MF-2', name: '重原子炼金', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 2.2, oxygen: 0.4, currency: 1.0 }, unlockedBy: 'TF-1', note: 'TF-1 外星科技解锁；在默认精炼产出基础上额外产出星海货币，不是策略切换。' },
     ],
   },
   P: {
     id: 'P',
     code: 'P',
     name: '伊犁河谷',
-    subtitle: '水 · 生物质 · 月壤 · 合金',
+    subtitle: '生物质 · 氧气 · 合金作物',
     role: 'ecology',
     unlockYear: 14,
     requiredTech: 'TP-0',
@@ -664,11 +850,12 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     baseUpgradeCost: { water: 8, regolith: 10, power: 6 },
     yieldGrowth: 0.05,
     priority: 7,
-    reserveFloor: { water: 10, biomass: 8 },
+    reserveFloor: { water: 10, biomass: 8, regolith: 8 },
     interfaceDuty: '一般设施页展示配方与产量。',
-    note: '水、生物质、月壤与合金来源之一；当前文档未定义额外输入。',
+    note: '消耗月壤和水，产出生物质与氧气；外星科技可解锁合金作物。',
     productionMethods: [
-      { id: 'MP-1', name: '河谷综合产出', input: {}, output: { water: 0.4, biomass: 1.8, regolith: 0.8, alloy: 0.3 }, note: '暂按文档来源表实现为综合产出。' },
+      { id: 'MP-1', name: '河谷生态培育', input: { regolith: 1, water: 0.6 }, output: { biomass: 1.8, oxygen: 1.2 }, note: '默认生产方式；消耗月壤和水，产生生物质和氧气。' },
+      { id: 'MP-2', name: '合金作物', input: { regolith: 1, water: 0.6 }, output: { biomass: 1.0, oxygen: 0.8, alloy: 0.4 }, unlockedBy: 'TP-1', note: 'TP-1 外星科技解锁；产生较少生物质和氧气，并额外产出合金。' },
     ],
   },
   R: {
@@ -875,7 +1062,8 @@ export function projectFacilityNet(
   if (!hasRequiredFacilityTech(spec, techs)) return {}
   const method = selectProductionMethod(spec.productionMethods, techs, selectedMethodId)
   if (!canUseProductionMethod(method, techs)) return {}
-  const baseYield = methodNet(method.input, method.output)
+  const adjustedMethod = applyTechnologyToMethod(spec, method, techs)
+  const baseYield = methodNet(adjustedMethod.input, adjustedMethod.output)
   const outputMultiplier = modifiers.outputMultiplier ?? 1
   const upkeepMultiplier = modifiers.upkeepMultiplier ?? 1
   const levelScale = level * (1 + Math.max(0, level - 1) * spec.yieldGrowth)
