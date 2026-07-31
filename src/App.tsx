@@ -5,20 +5,36 @@ import {
   Pause, Pickaxe, Play, Rocket, Sparkles, Sprout, Sun, Theater, Waves, X, Zap,
   type LucideProps,
 } from 'lucide-react'
+import {
+  applyBundle,
+  buildFacilityModifiers,
+  buildResearchBonus,
+  canAfford,
+  defaultReserveFloors,
+  facilityEconomySpecs,
+  facilityOrder,
+  projectAnnualNet,
+  projectFacilityCost,
+  projectFacilityNet,
+  planFacilityAutomation,
+  resourceGroups,
+  resourceMeta,
+  resourceText,
+  type FacilityId,
+  type FacilityState,
+  type ResourceKey,
+  type Resources,
+} from './economy'
 
-type ResourceKey = 'power' | 'fuel' | 'alloy' | 'regolith' | 'water' | 'oxygen' | 'food' | 'research'
-type Resources = Record<ResourceKey, number>
-type RegionId = 'energy' | 'mines' | 'biosphere' | 'habitats' | 'palace' | 'leisure' | 'exchange' | 'shipyard'
 type AppView = 'overview' | 'facilities' | 'palace' | 'visitors'
 type Icon = ComponentType<LucideProps>
+type RegionId = FacilityId
 
-type Region = {
-  id: RegionId
+type Region = FacilityState & {
   icon: Icon
   name: string
   subtitle: string
   unlock: number
-  level: number
   max: number
   note: string
   yields: Partial<Resources>
@@ -41,16 +57,36 @@ type Visitor = {
 
 const initialResources: Resources = { power: 24, fuel: 16, alloy: 12, regolith: 22, water: 10, oxygen: 12, food: 9, research: 0 }
 
-const regionTemplate: Region[] = [
-  { id: 'energy', icon: Sun, name: '日冕能源庭', subtitle: '燃料 · 光能 · 微型聚变', unlock: 0, level: 1, max: 5, note: '先以氦燃料点火，日冕镜阵在 II 级后加入，IV 级解锁微型聚变。', yields: { power: 5, fuel: -1 }, cost: { regolith: 10, alloy: 8 }, parentIds: [], position: { x: 13, y: 18 } },
-  { id: 'mines', icon: Pickaxe, name: '静海采掘署', subtitle: '能源矿物 · 建材 · 土壤', unlock: 0, level: 1, max: 5, note: '月壤、合金与氦-3 的来源。采掘越深，越依赖稳定氧气。', yields: { regolith: 5, alloy: 2, fuel: 2, oxygen: -1 }, cost: { power: 14, alloy: 5 }, parentIds: [], position: { x: 13, y: 67 } },
-  { id: 'biosphere', icon: Sprout, name: '翠穹生命环', subtitle: '水 · 氧气 · 农业', unlock: 8, level: 0, max: 5, note: '将冰矿、藻类与土壤转为可以呼吸的王国。', yields: { oxygen: 4, food: 3, water: -1, regolith: -1 }, cost: { power: 16, water: 6, regolith: 8 }, parentIds: ['energy', 'mines'], position: { x: 39, y: 18 } },
-  { id: 'habitats', icon: House, name: '月民穹居', subtitle: '人口 · 秩序 · 劳作', unlock: 14, level: 0, max: 5, note: '居住指标决定全域人力效能，每级为基础产出加 4%。', yields: { food: -2, oxygen: -2, research: 1 }, cost: { alloy: 16, regolith: 18, water: 8 }, parentIds: ['mines', 'biosphere'], position: { x: 39, y: 67 } },
-  { id: 'palace', icon: Crown, name: '钛金王城', subtitle: '政策 · 皇家增益', unlock: 22, level: 0, max: 3, note: '在计算机礼制之上签发政策。每级解锁一项常驻诏令。', yields: { research: 3, power: -2 }, cost: { alloy: 28, regolith: 24, power: 20 }, parentIds: ['habitats'], position: { x: 65, y: 16 } },
-  { id: 'leisure', icon: Theater, name: '低重力游乐廊', subtitle: '凝聚力 · 访客声望', unlock: 30, level: 0, max: 4, note: '让月民愿意留下，也让异客愿意把技术留在此处。', yields: { research: 2, food: -1, power: -1 }, cost: { alloy: 20, power: 22, food: 10 }, parentIds: ['habitats', 'palace'], position: { x: 65, y: 48 } },
-  { id: 'exchange', icon: ArrowLeftRight, name: '真空交易港', subtitle: '盈余转化 · 电力结算', unlock: 38, level: 0, max: 4, note: '电力是王国货币。每年自动出售充裕物资，并允许补给。', yields: { power: 3 }, cost: { alloy: 26, power: 26, food: 12 }, parentIds: ['leisure'], position: { x: 65, y: 80 } },
-  { id: 'shipyard', icon: Rocket, name: '冠冕星舰坞', subtitle: '终局工程 · 出航评分', unlock: 52, level: 0, max: 5, note: '以庞大物资推进“御座号”巨型星舰。王国的一切最终归于这艘船。', yields: { power: -5, alloy: -3, fuel: -2 }, cost: { alloy: 56, power: 60, fuel: 25, research: 15 }, parentIds: ['palace', 'exchange'], position: { x: 89, y: 48 } },
-]
+const regionLayout: Record<RegionId, { icon: Icon; parentIds: RegionId[]; position: { x: number; y: number } }> = {
+  energy: { icon: Sun, parentIds: [], position: { x: 13, y: 18 } },
+  mines: { icon: Pickaxe, parentIds: [], position: { x: 13, y: 67 } },
+  biosphere: { icon: Sprout, parentIds: ['energy', 'mines'], position: { x: 39, y: 18 } },
+  habitats: { icon: House, parentIds: ['mines', 'biosphere'], position: { x: 39, y: 67 } },
+  palace: { icon: Crown, parentIds: ['habitats'], position: { x: 65, y: 16 } },
+  leisure: { icon: Theater, parentIds: ['habitats', 'palace'], position: { x: 65, y: 48 } },
+  exchange: { icon: ArrowLeftRight, parentIds: ['leisure'], position: { x: 65, y: 80 } },
+  shipyard: { icon: Rocket, parentIds: ['palace', 'exchange'], position: { x: 89, y: 48 } },
+}
+
+const regionTemplate: Region[] = facilityOrder.map(id => {
+  const spec = facilityEconomySpecs[id]
+  const layout = regionLayout[id]
+  const level = id === 'energy' || id === 'mines' ? 1 : 0
+  return {
+    id,
+    level,
+    icon: layout.icon,
+    name: spec.name,
+    subtitle: spec.subtitle,
+    unlock: spec.unlockYear,
+    max: spec.maxLevel,
+    note: spec.note,
+    yields: projectFacilityNet(spec, level),
+    cost: projectFacilityCost(spec, level),
+    parentIds: layout.parentIds,
+    position: layout.position,
+  }
+})
 
 const visitors: Visitor[] = [
   { id: 'sava', name: '萨瓦·碎光', species: '折光甲壳人', glyph: '◈', portrait: '冰裂色甲壳，掌中托着一枚会逆向燃烧的晶体', specialty: 'energy', boost: 0.42, quote: '“你们把恒星装进了贡箱，我可以让它少吃一点。”', offer: { give: { fuel: 14, research: 6 }, take: { water: 6 }, tech: '日冕镜阵效率 +15%' } },
@@ -61,25 +97,24 @@ const visitors: Visitor[] = [
   { id: 'evi', name: '伊芙·回声', species: '声学群体', glyph: '≈', portrait: '数十条细小波纹在王冠形扬声器中彼此回答', specialty: 'leisure', boost: 0.5, quote: '“我听见你们把孤独叫作秩序，所以来收集一点。”', offer: { give: { food: 10, research: 8 }, take: { power: 9 }, tech: '娱乐区研究 +1' } },
 ]
 
-const resourceMeta: Record<ResourceKey, { label: string; icon: Icon; tone: string }> = {
-  power: { label: '电力', icon: Zap, tone: 'gold' }, fuel: { label: '氦燃料', icon: Fuel, tone: 'coral' }, alloy: { label: '合金', icon: Factory, tone: 'slate' }, regolith: { label: '月壤', icon: Mountain, tone: 'ochre' }, water: { label: '水', icon: Waves, tone: 'cyan' }, oxygen: { label: '氧气', icon: CircleDot, tone: 'cyan' }, food: { label: '食物', icon: Leaf, tone: 'green' }, research: { label: '研学', icon: FlaskConical, tone: 'violet' },
-}
-
-const resourceGroups: { label: string; keys: ResourceKey[] }[] = [
-  { label: '能源', keys: ['power', 'fuel'] }, { label: '物质', keys: ['alloy', 'regolith'] }, { label: '生命维持', keys: ['water', 'oxygen', 'food'] }, { label: '知识', keys: ['research'] },
-]
 const navItems: { id: AppView; label: string; icon: Icon }[] = [
   { id: 'overview', label: '王国总览', icon: Orbit }, { id: 'facilities', label: '设施树', icon: Factory }, { id: 'palace', label: '王城政令', icon: Landmark }, { id: 'visitors', label: '异客档案', icon: Sparkles },
 ]
 
-const fmt = (value: number) => Math.max(0, Math.floor(value)).toLocaleString('zh-CN')
-const canPay = (bank: Resources, price: Partial<Resources>) => Object.entries(price).every(([key, value]) => bank[key as ResourceKey] >= (value ?? 0))
-const apply = (bank: Resources, change: Partial<Resources>, direction = 1): Resources => {
-  const next = { ...bank }
-  Object.entries(change).forEach(([key, value]) => { next[key as ResourceKey] = Math.max(0, next[key as ResourceKey] + direction * (value ?? 0)) })
-  return next
+const resourceUiMeta: Record<ResourceKey, { label: string; icon: Icon; tone: string }> = {
+  power: { label: resourceMeta.power.label, icon: Zap, tone: 'gold' },
+  fuel: { label: resourceMeta.fuel.label, icon: Fuel, tone: 'coral' },
+  alloy: { label: resourceMeta.alloy.label, icon: Factory, tone: 'slate' },
+  regolith: { label: resourceMeta.regolith.label, icon: Mountain, tone: 'ochre' },
+  water: { label: resourceMeta.water.label, icon: Waves, tone: 'cyan' },
+  oxygen: { label: resourceMeta.oxygen.label, icon: CircleDot, tone: 'cyan' },
+  food: { label: resourceMeta.food.label, icon: Leaf, tone: 'green' },
+  research: { label: resourceMeta.research.label, icon: FlaskConical, tone: 'violet' },
 }
-const resourceText = (bundle: Partial<Resources>) => Object.entries(bundle).map(([key, value]) => `${resourceMeta[key as ResourceKey].label} ${value}`).join('、')
+
+const fmt = (value: number) => Math.max(0, Math.floor(value)).toLocaleString('zh-CN')
+const canPay = canAfford
+const apply = applyBundle
 
 function App() {
   const [resources, setResources] = useState<Resources>(initialResources)
@@ -98,32 +133,34 @@ function App() {
   const [artOpen, setArtOpen] = useState(false)
 
   const selectedRegion = regions.find(region => region.id === selected)!
-  const selectedCost = Object.fromEntries(Object.entries(selectedRegion.cost).map(([key, value]) => [key, (value ?? 0) * (selectedRegion.level + 1)])) as Partial<Resources>
+  const selectedCost = projectFacilityCost(facilityEconomySpecs[selectedRegion.id], selectedRegion.level)
   const palaceLevel = regions.find(region => region.id === 'palace')!.level
   const habitatLevel = regions.find(region => region.id === 'habitats')!.level
   const shipLevel = regions.find(region => region.id === 'shipyard')!.level
   const completed = year >= 100
-
-  const yearlyNet = useMemo(() => {
-    const net: Partial<Resources> = {}
-    const habitatBonus = 1 + habitatLevel * 0.04
-    const policyBonus = policy === 'mandate' ? 1.16 : policy === 'festival' ? 1.06 : 1
-    regions.forEach(region => {
-      if (!region.level) return
-      const worker = roster.find(item => item.id === assigned[region.id])
-      const workerBonus = worker?.specialty === region.id ? 1 + worker.boost : 1
-      Object.entries(region.yields).forEach(([key, amount]) => {
-        const base = amount ?? 0
-        const value = base * region.level * (base > 0 ? habitatBonus * policyBonus * workerBonus : 1)
-        net[key as ResourceKey] = (net[key as ResourceKey] ?? 0) + value
-      })
-    })
-    if (policy === 'ration') net.food = (net.food ?? 0) + 1
-    if (techs.some(tech => tech.includes('日冕'))) net.power = (net.power ?? 0) + 2
-    if (techs.some(tech => tech.includes('生态'))) net.water = (net.water ?? 0) + 1
-    return net
-  }, [regions, roster, assigned, habitatLevel, policy, techs])
-
+  const facilityStates = useMemo<Record<RegionId, FacilityState>>(() => Object.fromEntries(regions.map(region => [region.id, { id: region.id, level: region.level }])) as Record<RegionId, FacilityState>, [regions])
+  const workerByFacility = useMemo(() => Object.fromEntries(regions.map(region => {
+    const worker = roster.find(item => item.id === assigned[region.id])
+    return [region.id, worker]
+  })) as Partial<Record<RegionId, Visitor>>, [regions, roster, assigned])
+  const facilityModifiers = useMemo(() => Object.fromEntries(facilityOrder.map(id => {
+    const worker = workerByFacility[id]
+    return [id, buildFacilityModifiers(habitatLevel, policy, worker?.specialty === id ? 1 + worker.boost : 1)]
+  })) as Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>, [workerByFacility, habitatLevel, policy])
+  const yearlyNet = useMemo(() => projectAnnualNet({
+    facilities: facilityStates,
+    modifiers: facilityModifiers,
+    globalBonus: { ...buildResearchBonus(techs), ...(policy === 'ration' ? { food: 1 } : {}) },
+  }), [facilityStates, facilityModifiers, techs, policy])
+  const automationPlan = useMemo(() => planFacilityAutomation({
+    resources,
+    facilities: regions.map(region => ({ id: region.id, level: region.level })),
+    modifiers: facilityModifiers,
+    globalBonus: { ...buildResearchBonus(techs), ...(policy === 'ration' ? { food: 1 } : {}) },
+    reserveFloors: defaultReserveFloors,
+    year,
+    capitalHorizonYears: 5,
+  }), [resources, regions, facilityModifiers, techs, policy, year])
   const shipProgress = Math.min(100, Math.round(shipLevel * 17 + (techs.some(tech => tech.includes('星舰')) ? 8 : 0) + Math.min(20, resources.research / 10)))
   const score = Math.round(shipProgress * 8 + regions.reduce((sum, region) => sum + region.level * 12, 0) + roster.length * 25)
   const writeLog = (line: string) => setLog(previous => [line, ...previous].slice(0, 5))
@@ -183,14 +220,14 @@ function App() {
     </header>
 
     <section className="resource-rail" aria-label="王国库存">
-      {resourceGroups.map(group => <div className="resource-group" key={group.label}><span className="group-label">{group.label}</span>{group.keys.map(key => { const meta = resourceMeta[key]; const ResourceIcon = meta.icon; const net = yearlyNet[key] ?? 0; return <div className="resource" key={key}><ResourceIcon className={meta.tone} size={17} /><div><small>{meta.label}</small><strong>{fmt(resources[key])}</strong></div><em className={net < 0 ? 'negative' : ''}>{net >= 0 ? '+' : ''}{net.toFixed(1)}/年</em></div> })}</div>)}
+      {resourceGroups.map(group => <div className="resource-group" key={group.label}><span className="group-label">{group.label}</span>{group.keys.map(key => { const meta = resourceUiMeta[key]; const ResourceIcon = meta.icon; const net = yearlyNet[key] ?? 0; return <div className="resource" key={key}><ResourceIcon className={meta.tone} size={17} /><div><small>{meta.label}</small><strong>{fmt(resources[key])}</strong></div><em className={net < 0 ? 'negative' : ''}>{net >= 0 ? '+' : ''}{net.toFixed(1)}/年</em></div> })}</div>)}
     </section>
 
     {visitor && <section className="diplomatic-letter" aria-live="polite"><div className="letter-symbol">{visitor.glyph}</div><div className="letter-copy"><span>外交来函 · {visitor.species}</span><strong>{visitor.name}正在静候回音</strong><small>索取：{resourceText(visitor.offer.take)}，回赠：{resourceText(visitor.offer.give)}</small></div><div className="letter-actions"><button onClick={dismiss}>礼送</button><button onClick={acceptTrade} disabled={!canPay(resources, visitor.offer.take)}>交换</button><button className="primary" onClick={employ}>留任</button></div><button className="letter-close" onClick={dismiss} aria-label="关闭来函"><X size={16} /></button></section>}
 
     <section className="page-content">
       {view === 'overview' && <Overview regions={regions} log={log} shipProgress={shipProgress} score={score} visitor={visitor} selectFacility={selectFacility} onViewFacilities={() => setView('facilities')} />}
-      {view === 'facilities' && <Facilities regions={regions} selected={selected} year={year} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} yearlyNet={yearlyNet} onSelect={setSelected} onUpgrade={upgrade} onAssignment={(visitorId) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))} />}
+      {view === 'facilities' && <Facilities regions={regions} selected={selected} year={year} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} yearlyNet={yearlyNet} automationPlan={automationPlan} onSelect={setSelected} onUpgrade={upgrade} onAssignment={(visitorId) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))} />}
       {view === 'palace' && <Palace policy={policy} palaceLevel={palaceLevel} techs={techs} onPolicy={setPolicy} onSelectPalace={() => selectFacility('palace')} />}
       {view === 'visitors' && <Visitors roster={roster} assigned={assigned} regions={regions} visitor={visitor} onSelect={selectFacility} onAssignment={(regionId, visitorId) => setAssigned(previous => ({ ...previous, [regionId]: visitorId }))} />}
     </section>
@@ -211,9 +248,10 @@ function Overview({ regions, log, shipProgress, score, visitor, selectFacility, 
   </div>
 }
 
-function Facilities({ regions, selected, year, roster, assigned, selectedRegion, selectedCost, resources, yearlyNet, onSelect, onUpgrade, onAssignment }: { regions: Region[]; selected: RegionId; year: number; roster: Visitor[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; yearlyNet: Partial<Resources>; onSelect: (id: RegionId) => void; onUpgrade: (id: RegionId) => void; onAssignment: (visitorId: string | undefined) => void }) {
+function Facilities({ regions, selected, year, roster, assigned, selectedRegion, selectedCost, resources, yearlyNet, automationPlan, onSelect, onUpgrade, onAssignment }: { regions: Region[]; selected: RegionId; year: number; roster: Visitor[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; yearlyNet: Partial<Resources>; automationPlan: ReturnType<typeof planFacilityAutomation>; onSelect: (id: RegionId) => void; onUpgrade: (id: RegionId) => void; onAssignment: (visitorId: string | undefined) => void }) {
   const selectedWorker = roster.find(item => item.id === assigned[selectedRegion.id])
   const SelectIcon = selectedRegion.icon
+  const selectedYield = projectFacilityNet(facilityEconomySpecs[selectedRegion.id], selectedRegion.level)
   const parents = selectedRegion.parentIds.map(id => regions.find(region => region.id === id)?.name).filter(Boolean)
   const workerChoices = roster.filter(item => item.specialty === selectedRegion.id)
   return <div className="facilities-layout">
@@ -221,7 +259,7 @@ function Facilities({ regions, selected, year, roster, assigned, selectedRegion,
       <svg className="tree-lines" viewBox="0 0 1000 560" aria-hidden="true">{regions.flatMap(region => region.parentIds.map(parentId => { const parent = regions.find(item => item.id === parentId)!; const locked = year < region.unlock; const ready = region.level > 0; return <path key={`${parentId}-${region.id}`} className={ready ? 'built' : locked ? 'locked' : 'available'} d={`M ${parent.position.x * 10 + 75} ${parent.position.y * 5.6 + 34} C ${(parent.position.x * 10 + region.position.x * 10) / 2} ${parent.position.y * 5.6 + 34}, ${(parent.position.x * 10 + region.position.x * 10) / 2} ${region.position.y * 5.6 + 34}, ${region.position.x * 10 - 74} ${region.position.y * 5.6 + 34}`} /> }))}</svg>
       {regions.map(region => { const RegionIcon = region.icon; const locked = year < region.unlock; const worker = roster.find(item => item.id === assigned[region.id]); const state = locked ? 'locked' : region.level ? 'built' : 'available'; return <button key={region.id} className={`facility-node ${state} ${selected === region.id ? 'selected' : ''}`} style={{ left: `${region.position.x}%`, top: `${region.position.y}%` }} onClick={() => onSelect(region.id)}><span className="node-icon">{locked ? <LockKeyhole size={20} /> : <RegionIcon size={22} />}</span><span className="node-copy"><b>{region.name}</b><small>{locked ? `御历 ${region.unlock} 解锁` : `等级 ${region.level}/${region.max}`}</small></span>{worker && <span className="node-worker" title={`${worker.name}正在执勤`}>{worker.glyph}</span>}</button> })}
     </div></div><div className="tree-legend"><span><i className="built" />已建成</span><span><i className="available" />可规划</span><span><i className="locked" />御历未至</span></div></section>
-    <aside className="inspector"><div className="inspector-head"><span className="facility-icon"><SelectIcon size={23} /></span><div><span className="eyebrow">设施检查器</span><h2>{selectedRegion.name}</h2><p>{selectedRegion.subtitle}</p></div></div><p className="inspector-description">{selectedRegion.note}</p><div className="stat-block"><span>年度结算</span><div>{Object.entries(selectedRegion.yields).map(([key, value]) => { const meta = resourceMeta[key as ResourceKey]; const ResourceIcon = meta.icon; return <b key={key} className={(value ?? 0) < 0 ? 'cost' : ''}><ResourceIcon size={13} />{(value ?? 0) > 0 ? '+' : ''}{value}</b> })}</div></div><div className="stat-block"><span>扩建至第 {selectedRegion.level + 1} 阶</span><div>{Object.entries(selectedCost).map(([key, value]) => { const meta = resourceMeta[key as ResourceKey]; const ResourceIcon = meta.icon; return <b key={key}><ResourceIcon size={13} />{fmt(value ?? 0)}</b> })}</div></div><div className="path-note"><Orbit size={15} /><span>{parents.length ? `发展路径：${parents.join('、')} → 本设施` : '发展路径：殖民地基础设施'}</span></div>{selectedWorker ? <div className="worker-card"><span>{selectedWorker.glyph}</span><div><b>{selectedWorker.name} 正在执勤</b><small>专属区域年产出 +{Math.round(selectedWorker.boost * 100)}%</small></div><button onClick={() => onAssignment(undefined)}>待命</button></div> : workerChoices.length ? <div className="worker-card"><span>{workerChoices[0].glyph}</span><div><b>{workerChoices[0].name} 可派驻</b><small>专属区域年产出 +{Math.round(workerChoices[0].boost * 100)}%</small></div><button onClick={() => onAssignment(workerChoices[0].id)}>派驻</button></div> : null}<button className="upgrade-button" onClick={() => onUpgrade(selectedRegion.id)} disabled={year < selectedRegion.unlock || selectedRegion.level >= selectedRegion.max || !canPay(resources, selectedCost)}>{year < selectedRegion.unlock ? `御历 ${selectedRegion.unlock} 才可颁建` : selectedRegion.level >= selectedRegion.max ? '已至现行最高阶' : `签发扩建诏令 · 年净值 ${Object.values(yearlyNet).filter(Boolean).length} 项`}</button></aside>
+    <aside className="inspector"><div className="inspector-head"><span className="facility-icon"><SelectIcon size={23} /></span><div><span className="eyebrow">设施检查器</span><h2>{selectedRegion.name}</h2><p>{selectedRegion.subtitle}</p></div></div><p className="inspector-description">{selectedRegion.note}</p><div className="stat-block"><span>年度结算</span><div>{Object.entries(selectedYield).map(([key, value]) => { const meta = resourceUiMeta[key as ResourceKey]; const ResourceIcon = meta.icon; return <b key={key} className={(value ?? 0) < 0 ? 'cost' : ''}><ResourceIcon size={13} />{(value ?? 0) > 0 ? '+' : ''}{value}</b> })}</div></div><div className="stat-block"><span>扩建至第 {selectedRegion.level + 1} 阶</span><div>{Object.entries(selectedCost).map(([key, value]) => { const meta = resourceUiMeta[key as ResourceKey]; const ResourceIcon = meta.icon; return <b key={key}><ResourceIcon size={13} />{fmt(value ?? 0)}</b> })}</div></div><div className="stat-block"><span>自动规划</span><div><b>{automationPlan.mode === 'auto' ? '自动' : '手动'}</b><b>{automationPlan.mode === 'auto' ? `加权利润 ${automationPlan.weightedProfit.toFixed(1)}` : automationPlan.reason ?? '最低要求未满足'}</b><b>{automationPlan.actions.length ? `${automationPlan.actions[0].id} +${automationPlan.actions[0].fromLevel}→${automationPlan.actions[0].toLevel}` : '无可执行动作'}</b></div></div><div className="path-note"><Orbit size={15} /><span>{parents.length ? `发展路径：${parents.join('、')} → 本设施` : '发展路径：殖民地基础设施'}</span></div>{selectedWorker ? <div className="worker-card"><span>{selectedWorker.glyph}</span><div><b>{selectedWorker.name} 正在执勤</b><small>专属区域年产出 +{Math.round(selectedWorker.boost * 100)}%</small></div><button onClick={() => onAssignment(undefined)}>待命</button></div> : workerChoices.length ? <div className="worker-card"><span>{workerChoices[0].glyph}</span><div><b>{workerChoices[0].name} 可派驻</b><small>专属区域年产出 +{Math.round(workerChoices[0].boost * 100)}%</small></div><button onClick={() => onAssignment(workerChoices[0].id)}>派驻</button></div> : null}<button className="upgrade-button" onClick={() => onUpgrade(selectedRegion.id)} disabled={year < selectedRegion.unlock || selectedRegion.level >= selectedRegion.max || !canPay(resources, selectedCost)}>{year < selectedRegion.unlock ? `御历 ${selectedRegion.unlock} 才可颁建` : selectedRegion.level >= selectedRegion.max ? '已至现行最高阶' : `签发扩建诏令 · 年净值 ${Object.values(yearlyNet).filter(Boolean).length} 项`}</button></aside>
   </div>
 }
 
