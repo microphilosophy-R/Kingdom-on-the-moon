@@ -54,6 +54,7 @@ export type TechnologySpec = {
   id: TechnologyId
   name: string
   scope: FacilityId | 'G'
+  unlocksFacility?: FacilityId
   unlocks?: ProductionMethodId
   note: string
 }
@@ -92,6 +93,7 @@ export type AnnualContext = {
   modifiers: Partial<Record<FacilityId, FacilityModifiers>>
   globalBonus?: Partial<Resources>
   techs?: string[]
+  productionMethods?: Partial<Record<FacilityId, ProductionMethodId>>
 }
 
 export type AutomationAction = {
@@ -253,9 +255,9 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     source: 'K 月面王城、H 翡翠宫、M 新月府、S 星海交易港',
     coreUse: '居民总数与劳动力总量。',
     deficit: '建筑吞吐率按比例收缩。',
-    tradeRule: '不是普通库存品；星际劳工事件解锁后可在交易港手动购买。',
+    tradeRule: '不是普通库存品；解锁 TS-1 星际劳工后可在交易港处理人力资源双向贸易。',
     autoBuyRule: '不自动购买。',
-    tradable: false,
+    tradable: true,
     storable: true,
     reserveFloor: 10,
     weight: 3.6,
@@ -266,7 +268,7 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     source: 'L 问天研究实验室、S 星海交易港',
     coreUse: '解锁更先进的科技。',
     deficit: '不会直接停产，但会阻断科技推进。',
-    tradeRule: '可通过外星人事件与交易港补充。',
+    tradeRule: '解锁 TS-2 知识传输协议后可在交易港处理知识双向贸易。',
     autoBuyRule: '默认不自动购买。',
     tradable: false,
     storable: true,
@@ -279,7 +281,7 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     source: 'H 翡翠宫、S 星海交易港',
     coreUse: '外星人需求、贸易与外交。',
     deficit: '部分外星人事件无法满足，贸易收益下降。',
-    tradeRule: '可交易；相关事件解锁后可购买。',
+    tradeRule: '解锁 TS-3 玫瑰星球后可在交易港处理艺术奢侈品双向贸易。',
     autoBuyRule: '低优先级自动购买。',
     tradable: true,
     storable: true,
@@ -325,47 +327,158 @@ export const resourceWeights: Resources = {
 }
 
 export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
-  'TE-1': {
-    id: 'TE-1',
+  'TE1-0': {
+    id: 'TE1-0',
+    name: '日冕能源署建造许可',
+    scope: 'E1',
+    unlocksFacility: 'E1',
+    note: '解锁 E1 日冕能源署建造。初始默认具备。',
+  },
+  'TE1-1': {
+    id: 'TE1-1',
     name: '纳米光催化剂',
     scope: 'E1',
     unlocks: 'ME1-2',
-    note: '改变 E1 日冕能源署配方：增加水资源输入与氧气输出。',
+    note: '解锁 E1 日冕能源署可选生产方式：增加水资源输入与氧气输出。',
   },
-  'TE3-1': {
-    id: 'TE3-1',
+  'TE2-0': {
+    id: 'TE2-0',
+    name: '月冕能源署建造许可',
+    scope: 'E2',
+    unlocksFacility: 'E2',
+    note: '解锁 E2 月冕能源署建造。',
+  },
+  'TE3-0': {
+    id: 'TE3-0',
     name: '外星科技：微型黑洞约束',
     scope: 'E3',
+    unlocksFacility: 'E3',
     unlocks: 'ME3-1',
     note: '解锁 E3 归元装置建造与 ME3-1 生产方式；以微型黑洞压缩物质获取能量，不消耗资源。',
+  },
+  'TC1-0': {
+    id: 'TC1-0',
+    name: '静海采掘署建造许可',
+    scope: 'C1',
+    unlocksFacility: 'C1',
+    note: '解锁 C1 静海采掘署建造。初始默认具备。',
+  },
+  'TC2-0': {
+    id: 'TC2-0',
+    name: '西海采掘署建造许可',
+    scope: 'C2',
+    unlocksFacility: 'C2',
+    note: '解锁 C2 西海采掘署建造。',
+  },
+  'TB-0': {
+    id: 'TB-0',
+    name: '水培生态球建造许可',
+    scope: 'B',
+    unlocksFacility: 'B',
+    note: '解锁 B 水培生态球建造。',
+  },
+  'TF-0': {
+    id: 'TF-0',
+    name: '天工精炼署建造许可',
+    scope: 'F',
+    unlocksFacility: 'F',
+    note: '解锁 F 天工精炼署建造。',
   },
   'TF-1': {
     id: 'TF-1',
     name: '重原子炼金术',
     scope: 'F',
     unlocks: 'MF-2',
-    note: '改变 F 天工精炼署配方，使其后期可获得星海货币。',
+    note: '解锁 F 天工精炼署可选生产方式，使其后期可获得星海货币。',
+  },
+  'TP-0': {
+    id: 'TP-0',
+    name: '伊犁河谷建造许可',
+    scope: 'P',
+    unlocksFacility: 'P',
+    note: '解锁 P 伊犁河谷建造。',
+  },
+  'TR-0': {
+    id: 'TR-0',
+    name: '月穹生态环建造许可',
+    scope: 'R',
+    unlocksFacility: 'R',
+    note: '解锁 R 月穹生态环建造。',
+  },
+  'TS-0': {
+    id: 'TS-0',
+    name: '星海交易港建造许可',
+    scope: 'S',
+    unlocksFacility: 'S',
+    note: '解锁 S 星海交易港建造。',
+  },
+  'TK-0': {
+    id: 'TK-0',
+    name: '月面王城建造许可',
+    scope: 'K',
+    unlocksFacility: 'K',
+    note: '解锁 K 月面王城建造。初始默认具备。',
+  },
+  'TL-0': {
+    id: 'TL-0',
+    name: '问天研究实验室建造许可',
+    scope: 'L',
+    unlocksFacility: 'L',
+    note: '解锁 L 问天研究实验室建造。',
   },
   'TL-1': {
     id: 'TL-1',
     name: '原子阵列光刻机',
     scope: 'L',
     unlocks: 'ML-2',
-    note: '改变 L 问天研究实验室配方，使其可生产量子计算核心。',
+    note: '解锁 L 问天研究实验室可选生产方式，使其可生产量子计算核心。',
+  },
+  'TH-0': {
+    id: 'TH-0',
+    name: '翡翠宫建造许可',
+    scope: 'H',
+    unlocksFacility: 'H',
+    note: '解锁 H 翡翠宫建造。',
+  },
+  'TM-0': {
+    id: 'TM-0',
+    name: '新月府建造许可',
+    scope: 'M',
+    unlocksFacility: 'M',
+    note: '解锁 M 新月府建造；该科技应在月穹生态环完成后取得。',
+  },
+  'TD-0': {
+    id: 'TD-0',
+    name: '冠冕星舰坞建造许可',
+    scope: 'D',
+    unlocksFacility: 'D',
+    note: '解锁 D 冠冕星舰坞建造。',
   },
   'TS-1': {
     id: 'TS-1',
     name: '星际劳工',
     scope: 'S',
-    note: '解锁星海交易港手动购买其它星域的人力资源。',
+    note: '解锁星海交易港处理其它星域人力资源的双向贸易。',
   },
   'TS-2': {
     id: 'TS-2',
     name: '知识传输协议',
     scope: 'S',
-    note: '解锁星海交易港额外知识来源。',
+    note: '解锁星海交易港处理知识的双向贸易。',
+  },
+  'TS-3': {
+    id: 'TS-3',
+    name: '玫瑰星球',
+    scope: 'S',
+    note: '解锁星海交易港处理艺术奢侈品的双向贸易。',
   },
 }
+
+export const defaultStartingTechs = [
+  'TE1-0 日冕能源署建造许可',
+  'TC1-0 静海采掘署建造许可',
+  'TK-0 月面王城建造许可',
+]
 
 const methodNet = (input: Partial<Resources>, output: Partial<Resources>): Partial<Resources> => {
   const net: Partial<Resources> = {}
@@ -385,13 +498,23 @@ export const hasTech = (techs: string[] = [], techId?: TechnologyId) => {
 export const hasRequiredFacilityTech = (spec: FacilityEconomySpec, techs: string[] = []) =>
   hasTech(techs, spec.requiredTech)
 
-export const canBuildFacility = (spec: FacilityEconomySpec, year: number, techs: string[] = []) =>
-  year >= spec.unlockYear && hasRequiredFacilityTech(spec, techs)
+export const canBuildFacility = (spec: FacilityEconomySpec, year: number, techs: string[] = []) => {
+  void year
+  return hasRequiredFacilityTech(spec, techs)
+}
 
-export const selectProductionMethod = (methods: ProductionMethod[], techs: string[] = []) =>
-  methods
-    .filter(method => method.unlockedBy && hasTech(techs, method.unlockedBy))
-    .at(-1) ?? methods.find(method => !method.unlockedBy && method.autoSelect !== false) ?? methods[0]
+export const canUseProductionMethod = (method: ProductionMethod, techs: string[] = []) =>
+  method.autoSelect !== false && hasTech(techs, method.unlockedBy)
+
+export const selectProductionMethod = (
+  methods: ProductionMethod[],
+  techs: string[] = [],
+  selectedMethodId?: ProductionMethodId,
+) => {
+  const selectedMethod = selectedMethodId ? methods.find(method => method.id === selectedMethodId) : undefined
+  if (selectedMethod && canUseProductionMethod(selectedMethod, techs)) return selectedMethod
+  return methods.find(method => !method.unlockedBy && method.autoSelect !== false) ?? methods.find(method => canUseProductionMethod(method, techs)) ?? methods[0]
+}
 
 export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
   E1: {
@@ -401,6 +524,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '电力来源 · 光伏发电',
     role: 'energy',
     unlockYear: 0,
+    requiredTech: 'TE1-0',
     maxLevel: 5,
     baseUpgradeCost: { regolith: 10, alloy: 8 },
     yieldGrowth: 0.06,
@@ -410,7 +534,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     note: '电力来源之一。ME1-1 为光伏发电，无输入、输出电力。',
     productionMethods: [
       { id: 'ME1-1', name: '光伏发电', input: {}, output: { power: 6 }, note: '无资源输入，输出电力。' },
-      { id: 'ME1-2', name: '纳米光催化发电', input: { water: 0.6 }, output: { power: 6, oxygen: 1.2 }, unlockedBy: 'TE-1', note: 'TE-1 解锁后增加水资源输入和氧气输出。' },
+      { id: 'ME1-2', name: '纳米光催化发电', input: { water: 0.6 }, output: { power: 6, oxygen: 1.2 }, unlockedBy: 'TE1-1', note: 'TE1-1 解锁后增加水资源输入和氧气输出。' },
     ],
   },
   E2: {
@@ -420,6 +544,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '电力来源 · He3 聚变',
     role: 'energy',
     unlockYear: 8,
+    requiredTech: 'TE2-0',
     maxLevel: 5,
     baseUpgradeCost: { regolith: 12, alloy: 10, currency: 4 },
     yieldGrowth: 0.07,
@@ -438,7 +563,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '电力来源 · 外星科技解锁',
     role: 'energy',
     unlockYear: 36,
-    requiredTech: 'TE3-1',
+    requiredTech: 'TE3-0',
     maxLevel: 4,
     baseUpgradeCost: { alloy: 18, quantumCore: 2, currency: 6 },
     yieldGrowth: 0.1,
@@ -447,7 +572,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '一般设施页展示配方与产量。',
     note: '电力来源之一。由外星科技解锁，以微型黑洞压缩物质获取能量，不消耗资源。',
     productionMethods: [
-      { id: 'ME3-1', name: '微型黑洞压缩', input: {}, output: { power: 10 }, unlockedBy: 'TE3-1', note: 'TE3-1 解锁；不消耗资源，输出电力。' },
+      { id: 'ME3-1', name: '微型黑洞压缩', input: {}, output: { power: 10 }, unlockedBy: 'TE3-0', note: 'TE3-0 解锁；不消耗资源，输出电力。' },
     ],
   },
   C1: {
@@ -457,33 +582,35 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '水 · 月壤',
     role: 'extraction',
     unlockYear: 0,
+    requiredTech: 'TC1-0',
     maxLevel: 5,
     baseUpgradeCost: { power: 12, alloy: 4 },
     yieldGrowth: 0.05,
     priority: 8,
     reserveFloor: { power: 10 },
     interfaceDuty: '一般设施页展示配方与产量。',
-    note: '水与月壤来源之一。采掘运行消耗电力。',
+    note: '本地月面开采设施，水与月壤来源之一。采掘运行消耗电力。',
     productionMethods: [
-      { id: 'MC1-1', name: '静海浅层采掘', input: { power: 1 }, output: { water: 1.1, regolith: 4.2 }, note: '消耗电力，产出水与月壤。' },
+      { id: 'MC1-1', name: '静海月面采掘', input: { power: 1 }, output: { water: 1.1, regolith: 4.2 }, note: '静海表示在本地月面开采；消耗电力，产出水与月壤。' },
     ],
   },
   C2: {
     id: 'C2',
     code: 'C2',
     name: '西海采掘署',
-    subtitle: '水 · 月壤 · 合金',
+    subtitle: '小行星带 · 水 · 月壤 · 合金',
     role: 'extraction',
     unlockYear: 10,
+    requiredTech: 'TC2-0',
     maxLevel: 5,
     baseUpgradeCost: { power: 14, alloy: 6, currency: 3 },
     yieldGrowth: 0.06,
     priority: 8,
-    reserveFloor: { power: 10 },
+    reserveFloor: { power: 10, water: 6, oxygen: 6, biomass: 4 },
     interfaceDuty: '一般设施页展示配方与产量。',
-    note: '水、月壤与合金来源之一。采掘运行消耗电力。',
+    note: '小行星带开采设施，水、月壤与合金来源之一。远征采掘消耗电力、水、氧气和生物质。',
     productionMethods: [
-      { id: 'MC2-1', name: '西海深层采掘', input: { power: 1.4 }, output: { water: 0.8, regolith: 3.4, alloy: 1.2 }, note: '消耗电力，产出水、月壤与合金。' },
+      { id: 'MC2-1', name: '西海小行星带采掘', input: { power: 1.4, water: 0.3, oxygen: 0.4, biomass: 0.2 }, output: { water: 0.8, regolith: 3.4, alloy: 1.2 }, note: '西海表示在小行星带开采；额外消耗水、氧气和生物质，产出水、月壤与合金。' },
     ],
   },
   B: {
@@ -493,6 +620,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '氧气 · 生物质',
     role: 'life',
     unlockYear: 4,
+    requiredTech: 'TB-0',
     maxLevel: 5,
     baseUpgradeCost: { power: 16, water: 6, regolith: 8 },
     yieldGrowth: 0.07,
@@ -511,6 +639,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '氧气 · 合金 · 星海货币',
     role: 'industry',
     unlockYear: 12,
+    requiredTech: 'TF-0',
     maxLevel: 5,
     baseUpgradeCost: { regolith: 10, power: 12, currency: 4 },
     yieldGrowth: 0.07,
@@ -530,6 +659,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '水 · 生物质 · 月壤 · 合金',
     role: 'ecology',
     unlockYear: 14,
+    requiredTech: 'TP-0',
     maxLevel: 5,
     baseUpgradeCost: { water: 8, regolith: 10, power: 6 },
     yieldGrowth: 0.05,
@@ -548,6 +678,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '分阶段生态改造',
     role: 'ecology',
     unlockYear: 18,
+    requiredTech: 'TR-0',
     maxLevel: 4,
     baseUpgradeCost: { water: 10, biomass: 8, alloy: 10, power: 12 },
     yieldGrowth: 0.08,
@@ -572,22 +703,23 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     id: 'S',
     code: 'S',
     name: '星海交易港',
-    subtitle: '贸易 · 手动补充 · 自动购买',
+    subtitle: '双向贸易 · 手动补充 · 自动购买',
     role: 'trade',
     unlockYear: 20,
+    requiredTech: 'TS-0',
     maxLevel: 4,
     baseUpgradeCost: { alloy: 18, currency: 10, power: 10 },
     yieldGrowth: 0.05,
     priority: 6,
     reserveFloor: { currency: 8, power: 10 },
-    interfaceDuty: '特殊设施页展示买卖、手动补充与自动购买状态。',
-    note: '贸易建筑，不需要消耗人力运行；可买卖，也可手动补充其它星域资源。',
+    interfaceDuty: '特殊设施页展示双向贸易、手动补充与自动购买状态。',
+    note: '贸易建筑，不需要消耗人力运行；已解锁的星港科技均按双向贸易处理。',
     productionMethods: [
-      { id: 'MS-1', name: '贸易结算', input: {}, output: {}, note: '不产生固定年净值；交易由市场与自动购买规则处理。' },
+      { id: 'MS-1', name: '贸易结算', input: {}, output: {}, note: '不产生固定年净值；双向贸易由市场与自动购买规则处理。' },
     ],
     phaseNotes: [
-      { name: '买卖', note: '在此处进行资源买卖。' },
-      { name: '手动补充', note: '可以手动补充其它星域资源。' },
+      { name: '双向贸易', note: '星港科技解锁的贸易品类均可双向处理。' },
+      { name: '手动补充', note: '可以手动补充已开放贸易品类。' },
       { name: '自动购买', note: '星海货币赤字时暂停，恢复盈余后继续。' },
     ],
   },
@@ -598,6 +730,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '人口 · 税收 · 政策',
     role: 'government',
     unlockYear: 0,
+    requiredTech: 'TK-0',
     maxLevel: 3,
     baseUpgradeCost: { regolith: 12, alloy: 10, power: 10 },
     yieldGrowth: 0.08,
@@ -621,6 +754,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '知识 · 科技 · 量子计算核心',
     role: 'research',
     unlockYear: 22,
+    requiredTech: 'TL-0',
     maxLevel: 5,
     baseUpgradeCost: { power: 16, alloy: 16, currency: 8, population: 2 },
     yieldGrowth: 0.1,
@@ -644,6 +778,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '人口 · 艺术奢侈品',
     role: 'culture',
     unlockYear: 26,
+    requiredTech: 'TH-0',
     maxLevel: 4,
     baseUpgradeCost: { alloy: 14, power: 12, biomass: 6 },
     yieldGrowth: 0.07,
@@ -662,6 +797,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '后期人口 · 低消耗',
     role: 'habitat',
     unlockYear: 30,
+    requiredTech: 'TM-0',
     maxLevel: 5,
     baseUpgradeCost: { alloy: 18, regolith: 16, water: 8, population: 1 },
     yieldGrowth: 0.05,
@@ -680,6 +816,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     subtitle: '胜利目标 · 远洋星舰项目',
     role: 'ship',
     unlockYear: 48,
+    requiredTech: 'TD-0',
     maxLevel: 5,
     baseUpgradeCost: { alloy: 40, quantumCore: 6, currency: 16, population: 4 },
     yieldGrowth: 0.1,
@@ -732,11 +869,12 @@ export function projectFacilityNet(
   level: number,
   modifiers: FacilityModifiers = {},
   techs: string[] = [],
+  selectedMethodId?: ProductionMethodId,
 ): Partial<Resources> {
   if (level <= 0) return {}
   if (!hasRequiredFacilityTech(spec, techs)) return {}
-  const method = selectProductionMethod(spec.productionMethods, techs)
-  if (!hasTech(techs, method.unlockedBy)) return {}
+  const method = selectProductionMethod(spec.productionMethods, techs, selectedMethodId)
+  if (!canUseProductionMethod(method, techs)) return {}
   const baseYield = methodNet(method.input, method.output)
   const outputMultiplier = modifiers.outputMultiplier ?? 1
   const upkeepMultiplier = modifiers.upkeepMultiplier ?? 1
@@ -788,7 +926,7 @@ export function projectAnnualNet(context: AnnualContext): Resources {
     if (!facility || facility.level <= 0) return
     const spec = facilityEconomySpecs[id]
     const modifiers = context.modifiers[id] ?? {}
-    const contribution = projectFacilityNet(spec, facility.level, modifiers, context.techs)
+    const contribution = projectFacilityNet(spec, facility.level, modifiers, context.techs, context.productionMethods?.[id])
     resourceOrder.forEach(key => {
       total[key] += contribution[key] ?? 0
     })
@@ -811,6 +949,7 @@ export type PlanInput = {
   reserveFloors?: Partial<Resources>
   weights?: Partial<Resources>
   techs?: string[]
+  productionMethods?: Partial<Record<FacilityId, ProductionMethodId>>
   year?: number
   capitalHorizonYears?: number
 }
@@ -852,8 +991,8 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     if (!canAfford(workingResources, cost)) return null
 
     const modifiers = input.modifiers?.[id] ?? {}
-    const presentNet = projectFacilityNet(spec, current.level, modifiers, input.techs)
-    const upgradedNet = projectFacilityNet(spec, current.level + 1, modifiers, input.techs)
+    const presentNet = projectFacilityNet(spec, current.level, modifiers, input.techs, input.productionMethods?.[id])
+    const upgradedNet = projectFacilityNet(spec, current.level + 1, modifiers, input.techs, input.productionMethods?.[id])
     const annualGain = mergeBundles(upgradedNet)
     resourceOrder.forEach(key => {
       annualGain[key] = (upgradedNet[key] ?? 0) - (presentNet[key] ?? 0)
