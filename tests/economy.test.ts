@@ -6,12 +6,17 @@ import {
   defaultStartingTechs,
   facilityEconomySpecs,
   facilityOrder,
+  gameCalendar,
   planFacilityAutomation,
   projectAnnualNet,
+  projectDailyNet,
   projectFacilityNet,
   resourceMeta,
   resourceOrder,
+  resourceWeights,
   selectProductionMethod,
+  shipProjectStages,
+  shipProjectTotalValue,
   technologyCatalog,
   type FacilityState,
   type Resources,
@@ -46,6 +51,21 @@ describe('economy catalog', () => {
     expect(facilityEconomySpecs.K.name).toBe('月面王城')
     expect(facilityEconomySpecs.R.phaseNotes).toHaveLength(4)
     expect(facilityEconomySpecs.D.code).toBe('D')
+  })
+
+  it('uses the solidified day calendar and resource values', () => {
+    expect(gameCalendar).toMatchObject({
+      dayName: '御日',
+      finalDay: 1000,
+      normalMsPerDay: 1600,
+      fastMsPerDay: 1000,
+      optimizationIntervalDays: 20,
+      expectedRealMinutes: 60,
+    })
+    expect(projectAnnualNet).toBe(projectDailyNet)
+    expect(resourceWeights.regolith).toBe(1)
+    expect(resourceWeights.alloy).toBe(8)
+    expect(resourceWeights.quantumCore).toBe(128)
   })
 
   it('keeps starport technologies bidirectional', () => {
@@ -86,6 +106,8 @@ describe('economy catalog', () => {
     expect(technologyCatalog['TP-1']).toMatchObject({ name: '合金作物', unlocks: 'MP-2', alien: true, era: 'mid' })
     expect(technologyCatalog['TG-1'].scope).toBe('G')
     expect(technologyCatalog['TE1-2'].category).toBe('facility-efficiency')
+    expect(technologyCatalog['TL-2']).toMatchObject({ name: '研究吞吐量调度', category: 'facility-efficiency', era: 'mid' })
+    expect(technologyCatalog['TL-3']).toMatchObject({ name: '高能课题队列', category: 'facility-efficiency', era: 'late' })
 
     expect(selectProductionMethod(facilityEconomySpecs.C2.productionMethods, ['TC2-0 西海采掘署建造许可']).id).toBe('MC2-1')
     expect(selectProductionMethod(facilityEconomySpecs.C2.productionMethods, ['TC2-0 西海采掘署建造许可', 'TC2-2 发现伊甸园'], 'MC2-2').id).toBe('MC2-2')
@@ -107,6 +129,18 @@ describe('economy catalog', () => {
     expect(anchored.oxygen).toBeCloseTo(-0.42)
     expect(projectFacilityNet(facilityEconomySpecs.B, 1, {}, ['TB-0 水培生态球建造许可', 'TB-1 闭环藻膜培养']).biomass).toBeCloseTo(1.89)
     expect(projectFacilityNet(facilityEconomySpecs.F, 1, {}, ['TF-0 天工精炼署建造许可', 'TG-2 空间微波散热学']).power).toBeCloseTo(-1.14)
+    const basicResearch = projectFacilityNet(facilityEconomySpecs.L, 1, {}, ['TL-0 问天研究实验室建造许可'])
+    const throughputResearch = projectFacilityNet(facilityEconomySpecs.L, 1, {}, ['TL-0 问天研究实验室建造许可', 'TL-2 研究吞吐量调度'])
+    expect(throughputResearch.power).toBeLessThan(basicResearch.power!)
+    expect(throughputResearch.knowledge).toBeGreaterThan(basicResearch.knowledge!)
+  })
+
+  it('assigns computed technology value and research cost', () => {
+    expect(technologyCatalog['TE1-0'].value).toBe(0)
+    expect(technologyCatalog['TE1-0'].researchCost).toBe(0)
+    expect(technologyCatalog['TE1-2'].value).toBe(90)
+    expect(technologyCatalog['TG-1'].value).toBe(720)
+    expect(technologyCatalog['TL-2'].researchCost).toBeGreaterThan(0)
   })
 
   it('keeps production method and technology codes synchronized', () => {
@@ -145,6 +179,21 @@ describe('economy catalog', () => {
     expect(facilityEconomySpecs.C2.productionMethods[0].note).toContain('小行星带')
     expect(facilityEconomySpecs.B.productionMethods[0].input.water).toBeGreaterThan(0)
     expect(facilityEconomySpecs.F.productionMethods[0].input).toMatchObject({ power: 1.2, regolith: 1.6 })
+  })
+
+  it('splits the ship victory project into three material stages', () => {
+    expect(shipProjectStages).toEqual([
+      expect.objectContaining({ id: 1, input: { alloy: 120, oxygen: 80, power: 160 } }),
+      expect.objectContaining({ id: 2, input: { alloy: 180, power: 220, regolith: 160, biomass: 100 } }),
+      expect.objectContaining({ id: 3, input: { quantumCore: 12, power: 300, alloy: 240, water: 120, biomass: 140 } }),
+    ])
+    shipProjectStages.forEach(stage => {
+      expect(stage.input.currency).toBeUndefined()
+      expect(stage.input.population).toBeUndefined()
+    })
+    expect(shipProjectTotalValue).toBeGreaterThan(0)
+    expect(facilityEconomySpecs.D.productionMethods[0].input).toEqual({ power: 4, alloy: 3, oxygen: 2 })
+    expect(facilityEconomySpecs.D.productionMethods[0].output).toEqual({})
   })
 
   it('does not treat ecological ring later phases as default output', () => {

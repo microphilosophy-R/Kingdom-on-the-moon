@@ -59,6 +59,8 @@ export type TechnologySpec = {
   alien?: boolean
   unlocksFacility?: FacilityId
   unlocks?: ProductionMethodId
+  value?: number
+  researchCost?: number
   note: string
 }
 
@@ -117,6 +119,22 @@ export type AutomationPlan = {
   targetLevels: Record<FacilityId, number>
   weightedProfit: number
   projectedResources: Resources
+}
+
+export type ShipProjectStage = {
+  id: 1 | 2 | 3
+  name: string
+  input: Partial<Resources>
+  note: string
+}
+
+export const gameCalendar = {
+  dayName: '御日',
+  finalDay: 1000,
+  normalMsPerDay: 1600,
+  fastMsPerDay: 1000,
+  optimizationIntervalDays: 20,
+  expectedRealMinutes: 60,
 }
 
 export const resourceOrder: ResourceKey[] = [
@@ -316,18 +334,50 @@ export const defaultReserveFloors: Resources = {
 }
 
 export const resourceWeights: Resources = {
-  power: 4.2,
-  water: 2.2,
-  oxygen: 2.5,
-  biomass: 2.0,
-  regolith: 1.2,
-  alloy: 2.8,
-  quantumCore: 4.8,
-  currency: 2.6,
-  population: 3.6,
-  knowledge: 4.0,
-  luxury: 1.8,
+  power: 0.5,
+  water: 1.0,
+  oxygen: 1.0,
+  biomass: 1.0,
+  regolith: 1.0,
+  alloy: 8.0,
+  quantumCore: 128.0,
+  currency: 1.0,
+  population: 5.0,
+  knowledge: 2.0,
+  luxury: 3.0,
 }
+
+const eraPopulationScale: Record<NonNullable<TechnologySpec['era']>, number> = {
+  early: 5,
+  mid: 20,
+  late: 50,
+}
+
+const globalTechnologyScale: Record<NonNullable<TechnologySpec['era']>, number> = {
+  early: 20,
+  mid: 200,
+  late: 700,
+}
+
+const technologyMagnitude = (tech: TechnologySpec) => {
+  if (tech.category === 'construction') return 0
+  if (tech.category === 'global') return 0.01
+  if (tech.category === 'facility-efficiency') return 0.05
+  if (tech.category === 'production-method') return 0.08
+  if (tech.category === 'trade') return 0.04
+  return 0.03
+}
+
+const technologyBaseScale = (tech: TechnologySpec) => {
+  const era = tech.era ?? 'early'
+  return tech.scope === 'G' ? globalTechnologyScale[era] : eraPopulationScale[era]
+}
+
+export const estimateTechnologyValue = (tech: TechnologySpec) =>
+  Math.round(technologyBaseScale(tech) * technologyMagnitude(tech) * 360)
+
+export const estimateTechnologyResearchCost = (tech: TechnologySpec) =>
+  tech.category === 'construction' ? 0 : Math.max(8, Math.round(estimateTechnologyValue(tech) / 12))
 
 export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
   'TE1-0': {
@@ -529,6 +579,22 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     unlocks: 'ML-2',
     note: '解锁 L 问天研究实验室可选生产方式，使其可生产量子计算核心。',
   },
+  'TL-2': {
+    id: 'TL-2',
+    name: '研究吞吐量调度',
+    scope: 'L',
+    category: 'facility-efficiency',
+    era: 'mid',
+    note: 'L 问天研究实验室电力投入 +25%，知识产出 +35%；用于把盈余电力转化为更快研究速度。',
+  },
+  'TL-3': {
+    id: 'TL-3',
+    name: '高能课题队列',
+    scope: 'L',
+    category: 'facility-efficiency',
+    era: 'late',
+    note: 'L 问天研究实验室电力投入 +50%，知识产出 +70%；与 TL-2 叠加，用于后期高速研究。',
+  },
   'TH-0': {
     id: 'TH-0',
     name: '翡翠宫建造许可',
@@ -625,6 +691,11 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
   },
 }
 
+Object.values(technologyCatalog).forEach(tech => {
+  tech.value = estimateTechnologyValue(tech)
+  tech.researchCost = estimateTechnologyResearchCost(tech)
+})
+
 export const defaultStartingTechs = [
   'TE1-0 日冕能源署建造许可',
   'TC1-0 静海采掘署建造许可',
@@ -696,6 +767,14 @@ const applyTechnologyToMethod = (
     scaleBundleResource(input, 'oxygen', 1.05)
   }
   if (spec.id === 'B' && method.id === 'MB-1' && hasTech(techs, 'TB-1')) scaleBundleResource(output, 'biomass', 1.05)
+  if (spec.id === 'L' && hasTech(techs, 'TL-2')) {
+    scaleBundleResource(input, 'power', 1.25)
+    scaleBundleResource(output, 'knowledge', 1.35)
+  }
+  if (spec.id === 'L' && hasTech(techs, 'TL-3')) {
+    scaleBundleResource(input, 'power', 1.5)
+    scaleBundleResource(output, 'knowledge', 1.7)
+  }
 
   return { input, output }
 }
@@ -902,7 +981,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '特殊设施页展示双向贸易、手动补充与自动购买状态。',
     note: '贸易建筑，不需要消耗人力运行；已解锁的星港科技均按双向贸易处理。',
     productionMethods: [
-      { id: 'MS-1', name: '贸易结算', input: {}, output: {}, note: '不产生固定年净值；双向贸易由市场与自动购买规则处理。' },
+      { id: 'MS-1', name: '贸易结算', input: {}, output: {}, note: '不产生固定日净值；双向贸易由市场与自动购买规则处理。' },
     ],
     phaseNotes: [
       { name: '双向贸易', note: '星港科技解锁的贸易品类均可双向处理。' },
@@ -1012,17 +1091,38 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '特殊设施页展示星舰项目进度、物资与人力供应。',
     note: 'Demo 版本的胜利目标建筑；默认运行一个远洋星舰项目。',
     productionMethods: [
-      { id: 'MD-1', name: '远洋星舰建造', input: { power: 4, alloy: 3, quantumCore: 1, currency: 1, population: 0.5 }, output: {}, note: '扩大规模、解锁科技、保证物资与人力供应都可以加速项目推进。' },
+      { id: 'MD-1', name: '远洋星舰建造', input: { power: 4, alloy: 3, oxygen: 2 }, output: {}, note: '项目型生产方式；D 的实际胜利投入分为三阶段，由星舰界面展示。' },
     ],
     phaseNotes: [
-      { name: '项目', note: '默认运行一个远洋星舰项目。' },
-      { name: '加速', note: '扩大建筑规模、解锁科技、保证物资与人力供应都可以加速推进。' },
-      { name: '目标', note: '作为 Demo 版本游戏的胜利目标建筑。' },
+      { name: '第一阶段：龙骨与生命舱', note: '投入合金、氧气和电力。' },
+      { name: '第二阶段：远航壳层与循环农场', note: '投入合金、电力、月壤和生物质。' },
+      { name: '第三阶段：王座核心与深空储备', note: '投入量子计算核心、电力、合金、水和生物质。' },
     ],
   },
 }
 
 export const facilityOrder: FacilityId[] = ['E1', 'C1', 'K', 'B', 'E2', 'C2', 'F', 'P', 'R', 'L', 'H', 'M', 'S', 'E3', 'D']
+
+export const shipProjectStages: ShipProjectStage[] = [
+  {
+    id: 1,
+    name: '龙骨与生命舱',
+    input: { alloy: 120, oxygen: 80, power: 160 },
+    note: '第一阶段投入合金、氧气和电力，完成星舰基础结构与维生舱段。',
+  },
+  {
+    id: 2,
+    name: '远航壳层与循环农场',
+    input: { alloy: 180, power: 220, regolith: 160, biomass: 100 },
+    note: '第二阶段投入合金、电力、月壤和生物质，完成长期远航壳层与生态循环。',
+  },
+  {
+    id: 3,
+    name: '王座核心与深空储备',
+    input: { quantumCore: 12, power: 300, alloy: 240, water: 120, biomass: 140 },
+    note: '第三阶段投入量子计算核心、电力、合金、水和生物质，完成御座号核心。',
+  },
+]
 
 export const resourceText = (bundle: Partial<Resources>) =>
   resourceOrder
@@ -1050,6 +1150,8 @@ export const applyBundle = (bank: Resources, change: Partial<Resources>, directi
 
 export const weightedValue = (bundle: Partial<Resources>, weights: Resources = resourceWeights) =>
   resourceOrder.reduce((sum, key) => sum + (bundle[key] ?? 0) * weights[key], 0)
+
+export const shipProjectTotalValue = shipProjectStages.reduce((sum, stage) => sum + weightedValue(stage.input), 0)
 
 export function projectFacilityNet(
   spec: FacilityEconomySpec,
@@ -1106,7 +1208,7 @@ const meetsFloor = (resources: Resources, floors: Resources) =>
 const reserveBreach = (resources: Resources, floors: Resources) =>
   resourceOrder.find(key => resources[key] < floors[key])
 
-export function projectAnnualNet(context: AnnualContext): Resources {
+export function projectDailyNet(context: AnnualContext): Resources {
   const total = emptyResources()
 
   facilityOrder.forEach(id => {
@@ -1128,6 +1230,8 @@ export function projectAnnualNet(context: AnnualContext): Resources {
 
   return total
 }
+
+export const projectAnnualNet = projectDailyNet
 
 export type PlanInput = {
   resources: Resources
