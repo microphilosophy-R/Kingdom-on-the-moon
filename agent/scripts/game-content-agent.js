@@ -26,6 +26,7 @@ function parseArgs(argv) {
   for (let index = 1; index < argv.length; index += 1) {
     const value = argv[index]
     if (value === '--no-write') args.write = false
+    else if (value === '--files') args.files = argv[++index]
     else if (value.startsWith('--')) args[value.slice(2)] = argv[++index]
   }
   return args
@@ -34,7 +35,7 @@ function parseArgs(argv) {
 function usage() {
   return [
     '用法：',
-    '  npm run content-agent -- generate [--jobs all|text|art] [--focus roles|events|facilities|technologies|ship|all] [--count 12] [--out storage/game-content-agent/latest-draft.json]',
+    '  npm run content-agent -- generate [--jobs all|text|art] [--focus roles|events|facilities|technologies|ship|all] [--count 12] [--files src/events.ts,src/economy.ts] [--out storage/game-content-agent/latest-draft.json]',
     '  npm run content-agent -- prompt [--jobs all|text|art] [--focus all] [--count 12]',
     '',
     '环境变量：',
@@ -53,6 +54,7 @@ async function main() {
   const jobs = args.jobs || 'all'
   const focus = args.focus || 'all'
   const count = Number(args.count || 12)
+  const files = args.files ? String(args.files).split(',').map(item => item.trim()).filter(Boolean) : undefined
 
   if (args.command === 'prompt') {
     const messages = await agent.buildPrompt({ jobs, focus, count })
@@ -65,6 +67,7 @@ async function main() {
       jobs,
       focus,
       count,
+      files,
       outputFile: args.out || DEFAULT_OUTPUT_FILE,
       write: args.write !== false,
     })

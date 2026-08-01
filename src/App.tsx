@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ComponentType, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import {
   ArrowDownRight, ArrowLeftRight, ArrowRight, ArrowUpRight, BookOpen, Bot, Check, ChevronLeft, ChevronRight, CircleDot, Crown, Factory,
-  FlaskConical, House, Info, Landmark, Leaf, Lock, Minus, Mountain, Orbit,
-  Pause, Pickaxe, Play, Rocket, Sparkles, Sprout, Sun, Theater, Waves, X, Zap,
+  FlaskConical, FolderOpen, House, Info, Landmark, Leaf, Lock, LogOut, Minus, Mountain, Orbit,
+  Pause, Pickaxe, Play, Rocket, Save, Settings, Sparkles, Sprout, Sun, Theater, Volume2, Waves, X, Zap,
   type LucideProps,
 } from 'lucide-react'
 import {
@@ -58,6 +58,41 @@ type PolicyReport = {
   endDay: number
   delta: Partial<Resources>
   summary: string
+}
+
+type GameSaveState = {
+  version: 1
+  savedAt: string
+  gameStarted: boolean
+  resources: Resources
+  regionLevels: Record<RegionId, number>
+  day: number
+  isRunning: boolean
+  speed: 'normal' | 'fast'
+  view: AppView
+  selected: RegionId
+  planetDocked: boolean
+  detailOpen: boolean
+  planetTextureId: string
+  visitor: Encounter | null
+  roster: Role[]
+  assigned: Record<RegionId, string | undefined>
+  chainProgress: Record<string, number>
+  techs: string[]
+  activeResearch: TechnologyId
+  researchProgress: Partial<Record<TechnologyId, number>>
+  productionMethods: Record<RegionId, ProductionMethodId>
+  staffing: Record<RegionId, number>
+  facilityOrders: Record<RegionId, FacilityOrderMode>
+  facilityOrderStarted: Record<RegionId, number>
+  lastAutomatedAction: { id: RegionId; day: number; mode: FacilityOrderMode } | null
+  policy: PolicyId
+  policyLastChangedDay: number
+  policyReportStartedDay: number
+  policyReportBaseline: Resources
+  lastPolicyReport: PolicyReport | null
+  log: string[]
+  pendingMonthlyReport: string | null
 }
 
 type SpecialFacilityViewModel = {
@@ -234,10 +269,12 @@ const fmt = (value: number) => Math.round(value).toLocaleString('zh-CN')
 const fmtAmount = (value: number) => Number.isInteger(value) ? fmt(value) : value.toFixed(1)
 const canPay = canAfford
 const apply = applyBundle
+const musicSource = '/audio/Gravity_s_Edge.mp3'
+const saveKey = 'lunar-crown-save-v1'
+const musicVolumeKey = 'lunar-crown-music-volume'
 const formatDay = (day: number) => `御日 ${String(day).padStart(3, '0')}`
 const displayCopy = (text: string) => text.replace(/\b[TM][A-Z0-9]+-\d+\s*为/g, '').replace(/\b[TM][A-Z0-9]+-\d+\s*/g, '')
 const allResourceKeys = resourceGroups.flatMap(group => group.keys)
-const resourceGroupLabel = Object.fromEntries(resourceGroups.flatMap(group => group.keys.map(key => [key, group.label]))) as Record<ResourceKey, string>
 const weightedShipReadiness = (resources: Resources) => {
   const ratios = shipProjectStages.flatMap(stage =>
     Object.entries(stage.input).map(([key, required]) => Math.min(1, resources[key as ResourceKey] / (required || 1))),
@@ -270,13 +307,12 @@ const hasResearchPrerequisites = (techId: TechnologyId, techs: string[]) =>
   (technologyCatalog[techId].prerequisites ?? []).every(prerequisite => hasTech(techs, prerequisite))
 const techLabel = (techId: TechnologyId) => technologyCatalog[techId]?.name ?? techId
 
-function ResourceAtom({ resourceKey, value, net, compact = false, showGroup = false }: { resourceKey: ResourceKey; value: number; net?: number; compact?: boolean; showGroup?: boolean }) {
+function ResourceAtom({ resourceKey, value, net, compact = false }: { resourceKey: ResourceKey; value: number; net?: number; compact?: boolean }) {
   const meta = resourceUiMeta[resourceKey]
   const ResourceIcon = meta.icon
   return <span className={`resource-atom ${compact ? 'compact' : ''}`}>
     <ResourceIcon className={meta.tone} size={compact ? 13 : 17} />
     <span>
-      {showGroup && <small className="resource-family">{resourceGroupLabel[resourceKey]}</small>}
       <small>{meta.label}</small>
       <strong className={value < 0 ? 'negative' : ''}>{value > 0 && compact ? '+' : ''}{fmtAmount(value)}</strong>
     </span>
@@ -319,15 +355,61 @@ function ProductionFlow({ input, output }: { input: Partial<Resources>; output: 
 const throughputClass = (rate: number) => rate >= 1.1 ? 'surged' : rate >= 0.8 ? 'steady' : rate > 0 ? 'thin' : 'idle'
 const orderLabel = (mode: FacilityOrderMode) => mode === 'expand' ? '扩张中' : mode === 'shrink' ? '缩减中' : '保持'
 const orderIcon = (mode: FacilityOrderMode) => mode === 'expand' ? <ArrowUpRight size={13} /> : mode === 'shrink' ? <ArrowDownRight size={13} /> : <Minus size={13} />
+const loadStoredMusicVolume = () => {
+  if (typeof window === 'undefined') return 0.42
+  const stored = window.localStorage.getItem(musicVolumeKey)
+  const parsed = stored === null ? 0.42 : Number(stored)
+  return Number.isFinite(parsed) ? Math.max(0, Math.min(1, parsed)) : 0.42
+}
 
-function InfoToggle({ title, children }: { title: string; children: ReactNode }) {
-  return <details className="info-toggle">
-    <summary aria-label={title} title={title}><Info size={13} /></summary>
-    <div>{children}</div>
-  </details>
+function InfoToggle({ title, children, autoCloseMs = 7200 }: { title: string; children: ReactNode; autoCloseMs?: number }) {
+  const [open, setOpen] = useState(false)
+  const hostRef = useRef<HTMLSpanElement | null>(null)
+  const closeTimer = useRef<number | null>(null)
+
+  const clearCloseTimer = () => {
+    if (closeTimer.current !== null) {
+      window.clearTimeout(closeTimer.current)
+      closeTimer.current = null
+    }
+  }
+
+  const scheduleClose = () => {
+    clearCloseTimer()
+    closeTimer.current = window.setTimeout(() => setOpen(false), autoCloseMs)
+  }
+
+  useEffect(() => {
+    if (!open) {
+      clearCloseTimer()
+      return undefined
+    }
+
+    scheduleClose()
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!hostRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      clearCloseTimer()
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open, autoCloseMs])
+
+  return <span ref={hostRef} className={`info-toggle ${open ? 'open' : ''}`} onPointerDownCapture={() => open && scheduleClose()}>
+    <button type="button" aria-label={title} aria-expanded={open} title={title} onClick={() => setOpen(previous => !previous)}><Info size={13} /></button>
+    {open && <div role="tooltip">{children}</div>}
+  </span>
 }
 
 function App() {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [gameStarted, setGameStarted] = useState(false)
   const [resources, setResources] = useState<Resources>(initialResources)
   const [regions, setRegions] = useState(regionTemplate)
@@ -338,7 +420,7 @@ function App() {
   const [selected, setSelected] = useState<RegionId>('E1')
   const [planetDocked, setPlanetDocked] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
-  const [planetTexture] = useState(() => planetTextures[Math.floor(Math.random() * planetTextures.length)])
+  const [planetTexture, setPlanetTexture] = useState(() => planetTextures[Math.floor(Math.random() * planetTextures.length)])
   const [visitor, setVisitor] = useState<Encounter | null>(null)
   const [roster, setRoster] = useState<Role[]>([])
   const [assigned, setAssigned] = useState<Record<RegionId, string | undefined>>(Object.fromEntries(facilityOrder.map(id => [id, undefined])) as Record<RegionId, string | undefined>)
@@ -358,6 +440,9 @@ function App() {
   const [lastPolicyReport, setLastPolicyReport] = useState<PolicyReport | null>(null)
   const [log, setLog] = useState<string[]>(['御日 001：月面行宫已就位，御座号的第一根龙骨等待铸造。'])
   const [pendingMonthlyReport, setPendingMonthlyReport] = useState<string | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [musicVolume, setMusicVolume] = useState(loadStoredMusicVolume)
+  const [saveStatus, setSaveStatus] = useState('本机单槽存档')
 
   const selectedRegion = regions.find(region => region.id === selected)!
   const selectedCost = projectFacilityCost(facilityEconomySpecs[selectedRegion.id], selectedRegion.level)
@@ -425,7 +510,119 @@ function App() {
   }
   const palaceFacility = specialFacility('K')
 
+  useEffect(() => {
+    window.localStorage.setItem(musicVolumeKey, String(musicVolume))
+    const audio = audioRef.current
+    if (!audio) return
+    audio.volume = musicVolume
+    if (!gameStarted || musicVolume <= 0) {
+      audio.pause()
+      return
+    }
+    audio.play().catch(() => {
+      setSaveStatus('浏览器等待一次点击后再播放音乐')
+    })
+  }, [gameStarted, musicVolume])
+
   const writeLog = (line: string) => setLog(previous => [line, ...previous].slice(0, 5))
+
+  const currentSave = (): GameSaveState => ({
+    version: 1,
+    savedAt: new Date().toISOString(),
+    gameStarted,
+    resources,
+    regionLevels: Object.fromEntries(regions.map(region => [region.id, region.level])) as Record<RegionId, number>,
+    day,
+    isRunning,
+    speed,
+    view,
+    selected,
+    planetDocked,
+    detailOpen,
+    planetTextureId: planetTexture.id,
+    visitor,
+    roster,
+    assigned,
+    chainProgress,
+    techs,
+    activeResearch,
+    researchProgress,
+    productionMethods,
+    staffing,
+    facilityOrders,
+    facilityOrderStarted,
+    lastAutomatedAction,
+    policy,
+    policyLastChangedDay,
+    policyReportStartedDay,
+    policyReportBaseline,
+    lastPolicyReport,
+    log,
+    pendingMonthlyReport,
+  })
+
+  const applySave = (save: GameSaveState) => {
+    setResources(save.resources)
+    setRegions(regionTemplate.map(region => ({ ...region, level: save.regionLevels[region.id] ?? region.level })))
+    setDay(save.day)
+    setRunning(save.isRunning)
+    setSpeed(save.speed)
+    setView(save.view)
+    setSelected(save.selected)
+    setPlanetDocked(save.planetDocked)
+    setDetailOpen(save.detailOpen)
+    setPlanetTexture(planetTextures.find(texture => texture.id === save.planetTextureId) ?? planetTexture)
+    setVisitor(save.visitor)
+    setRoster(save.roster)
+    setAssigned(save.assigned)
+    setChainProgress(save.chainProgress)
+    setTechs(save.techs)
+    setActiveResearch(save.activeResearch)
+    setResearchProgress(save.researchProgress)
+    setProductionMethods(save.productionMethods)
+    setStaffing(save.staffing)
+    setFacilityOrders(save.facilityOrders)
+    setFacilityOrderStarted(save.facilityOrderStarted)
+    setLastAutomatedAction(save.lastAutomatedAction)
+    setPolicy(save.policy)
+    setPolicyLastChangedDay(save.policyLastChangedDay)
+    setPolicyReportStartedDay(save.policyReportStartedDay)
+    setPolicyReportBaseline(save.policyReportBaseline)
+    setLastPolicyReport(save.lastPolicyReport)
+    setLog(save.log)
+    setPendingMonthlyReport(save.pendingMonthlyReport)
+    setGameStarted(true)
+  }
+
+  const saveGame = () => {
+    const snapshot = currentSave()
+    window.localStorage.setItem(saveKey, JSON.stringify(snapshot))
+    setSaveStatus(`已存档：${formatDay(snapshot.day)}`)
+  }
+
+  const loadGame = () => {
+    const rawSave = window.localStorage.getItem(saveKey)
+    if (!rawSave) {
+      setSaveStatus('没有可读取的本机存档')
+      return
+    }
+    try {
+      const parsed = JSON.parse(rawSave) as GameSaveState
+      if (parsed.version !== 1 || !parsed.resources || !parsed.regionLevels) throw new Error('invalid save')
+      applySave(parsed)
+      setSettingsOpen(false)
+      setSaveStatus(`已读档：${formatDay(parsed.day)}`)
+    } catch {
+      setSaveStatus('存档格式无法读取')
+    }
+  }
+
+  const exitGame = () => {
+    setRunning(false)
+    setSettingsOpen(false)
+    setGameStarted(false)
+    audioRef.current?.pause()
+  }
 
   const chooseVisitor = () => {
     const available = getAvailableEventChains(chainProgress)
@@ -630,12 +827,10 @@ function App() {
         <div className="brand-seal"><Crown size={23} /></div>
         <div><p>月面主权局 · 1000御日试验</p><h1>月冠纪元</h1></div>
       </div>
-      <div className="reign-control">
-        <span>{gameCalendar.dayName}</span><strong>{String(Math.min(day, gameCalendar.finalDay)).padStart(3, '0')}</strong><small>/ {gameCalendar.finalDay}</small>
-        <button onClick={() => setRunning(!isRunning)} aria-label={isRunning ? '暂停日历' : '恢复日历'}>{isRunning ? <Pause size={15} /> : <Play size={15} />}{isRunning ? '暂停' : '恢复'}</button>
-        <button onClick={() => setSpeed(speed === 'normal' ? 'fast' : 'normal')} aria-label="切换时间速度">{speed === 'normal' ? '正常' : '加速'}</button>
-      </div>
+      <button className="settings-button" onClick={() => setSettingsOpen(true)}><Settings size={16} />设置</button>
     </header>
+
+    <audio ref={audioRef} src={musicSource} loop preload="auto" />
 
     <section className="resource-rail" aria-label="王国库存">
       {allResourceKeys.map(key => <ResourceAtom key={key} resourceKey={key} value={resources[key]} net={dailyNet[key] ?? 0} />)}
@@ -675,10 +870,17 @@ function App() {
       {view === 'visitors' && <Visitors roster={roster} assigned={assigned} regions={regions} visitor={visitor} onSelect={selectFacility} onAssignment={(regionId, visitorId) => setAssigned(previous => ({ ...previous, [regionId]: visitorId }))} />}
     </section>
 
+    {settingsOpen && <SettingsPanel volume={musicVolume} saveStatus={saveStatus} onVolume={setMusicVolume} onContinue={() => setSettingsOpen(false)} onSave={saveGame} onLoad={loadGame} onExit={exitGame} />}
+
     <footer className="command-deck bottom-tabs">
       <div className="scoreline"><span>国祚评分</span><strong>{score}</strong><small>星舰进度权重最高</small></div>
       <nav className="tab-nav" aria-label="底部系统菜单">{navItems.map(item => { const NavIcon = item.icon; return <button key={item.id} className={view === item.id ? 'active' : ''} onClick={() => setView(item.id)}><NavIcon size={16} />{item.label}</button> })}</nav>
-      <button className="advance-year" onClick={advanceDay} disabled={completed}>推进一日 <ArrowUpRight size={17} /></button>
+      <div className="time-dock" aria-label="时间控制">
+        <div className="day-counter"><span>{gameCalendar.dayName}</span><strong>{String(Math.min(day, gameCalendar.finalDay)).padStart(3, '0')}</strong><small>/ {gameCalendar.finalDay}</small></div>
+        <button onClick={() => setRunning(!isRunning)} aria-label={isRunning ? '暂停日历' : '恢复日历'}>{isRunning ? <Pause size={15} /> : <Play size={15} />}{isRunning ? '暂停' : '恢复'}</button>
+        <button onClick={() => setSpeed(speed === 'normal' ? 'fast' : 'normal')} aria-label="切换时间速度">{speed === 'normal' ? '正常' : '加速'}</button>
+        <button className="advance-year" onClick={advanceDay} disabled={completed}>推进一日 <ArrowUpRight size={17} /></button>
+      </div>
     </footer>
   </main>
 }
@@ -701,6 +903,36 @@ function StartGate({ planetTexture, onStart }: { planetTexture: typeof planetTex
       <button className="primary-action" onClick={onStart}><Play size={16} />开始执政</button>
     </section>
   </main>
+}
+
+function SettingsPanel({ volume, saveStatus, onVolume, onContinue, onSave, onLoad, onExit }: { volume: number; saveStatus: string; onVolume: (volume: number) => void; onContinue: () => void; onSave: () => void; onLoad: () => void; onExit: () => void }) {
+  return <div className="settings-scrim" role="presentation" onPointerDown={onContinue}>
+    <aside className="settings-panel" role="dialog" aria-modal="true" aria-label="游戏设置" onPointerDown={event => event.stopPropagation()}>
+      <header>
+        <div><span className="eyebrow">系统</span><h2>设置</h2></div>
+        <button className="icon-button" onClick={onContinue} aria-label="关闭设置"><X size={16} /></button>
+      </header>
+
+      <section className="settings-section">
+        <div className="settings-section-title"><Volume2 size={16} /><span>音乐</span><strong>{Math.round(volume * 100)}%</strong></div>
+        <input type="range" min="0" max="100" value={Math.round(volume * 100)} onChange={event => onVolume(Number(event.target.value) / 100)} aria-label="游戏音乐音量" />
+      </section>
+
+      <section className="settings-section">
+        <div className="settings-section-title"><Save size={16} /><span>存档读档</span></div>
+        <div className="settings-actions">
+          <button onClick={onSave}><Save size={15} />存档</button>
+          <button onClick={onLoad}><FolderOpen size={15} />读档</button>
+        </div>
+        <small>{saveStatus}</small>
+      </section>
+
+      <section className="settings-actions settings-main-actions">
+        <button className="primary-action" onClick={onContinue}><Play size={15} />继续游戏</button>
+        <button onClick={onExit}><LogOut size={15} />退出游戏</button>
+      </section>
+    </aside>
+  </div>
 }
 
 function PlanetFacilities({ regions, selected, year, techs, productionMethods, facilityOrders, facilityOrderStarted, staffing, allocatedPopulation, freePopulation, facilityModifiers, lastAutomatedAction, roster, assigned, selectedRegion, selectedCost, resources, dailyNet, automationPlan, planetTexture, docked, detailOpen, onDock, onBack, onSelect, onUpgrade, onHold, onShrink, onStaff, onMethod, onAssignment }: { regions: Region[]; selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; facilityOrders: Record<RegionId, FacilityOrderMode>; facilityOrderStarted: Record<RegionId, number>; staffing: Record<RegionId, number>; allocatedPopulation: number; freePopulation: number; facilityModifiers: Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>; lastAutomatedAction: { id: RegionId; day: number; mode: FacilityOrderMode } | null; roster: Role[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; dailyNet: Partial<Resources>; automationPlan: ReturnType<typeof planFacilityAutomation>; planetTexture: typeof planetTextures[number]; docked: boolean; detailOpen: boolean; onDock: () => void; onBack: () => void; onSelect: (id: RegionId) => void; onUpgrade: (id: RegionId) => void; onHold: (id: RegionId) => void; onShrink: (id: RegionId) => void; onStaff: (id: RegionId, delta: 1 | -1) => void; onMethod: (methodId: ProductionMethodId) => void; onAssignment: (visitorId: string | undefined) => void }) {
@@ -797,68 +1029,100 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
       : affordExpansion
         ? '库存满足扩建成本，扩张会立即消耗下列资源'
         : '库存不足，扩张按钮会保留判断但暂不可签发'
+  const hasNegativeYield = resourceOrder.some(key => (selectedYield[key] ?? 0) < 0)
+  const needsStaff = selectedRegion.level > assignedPopulation
+  const statusTone = !selectedBuildable || selectedRegion.level === 0 || throughput <= 0 ? 'attention' : needsStaff || throughput < 0.8 ? 'watch' : 'steady'
+  const interventionTone = !selectedBuildable || selectedRegion.level === 0 || needsStaff || !affordExpansion ? 'attention' : hasNegativeYield ? 'watch' : 'steady'
+  const situationTitle = !selectedBuildable
+    ? '尚未授权'
+    : selectedRegion.level === 0
+      ? '等待建造'
+      : needsStaff
+        ? '岗位未满'
+        : throughput >= 1
+          ? '运转充分'
+          : throughput > 0
+            ? '低负荷运行'
+            : '停摆'
+  const interventionCopy = !selectedBuildable
+    ? `先完成 ${selectedRequiredTech?.name ?? '对应科技'}，再考虑建造。`
+    : selectedRegion.level === 0
+      ? affordExpansion ? '可以直接签发扩张，建立第一级产能。' : '需要补齐扩建成本，暂不建议操作。'
+      : needsStaff
+        ? '优先增派人口，否则等级容量不会转化为产出。'
+        : !affordExpansion && selectedRegion.level < selectedRegion.max
+          ? '当前库存不足以继续扩张，建议保持或调整其他设施。'
+          : hasNegativeYield
+            ? '这座设施会消耗库存，确认全局净值能承受后再扩张。'
+            : '当前状态稳定，可按目标选择扩张或保持。'
 
-  return <aside className={`inspector facility-detail-page ${isSpecialDetail ? 'special-detail' : 'standard-detail'}`}>
-    <div className="facility-detail-toolbar">
+  return <aside className={`inspector facility-detail-page building-command-page ${isSpecialDetail ? 'special-detail' : 'standard-detail'}`}>
+    <header className="building-command-header">
       <button className="back-button" onClick={onBack}><ChevronLeft size={16} />建筑名录</button>
-      <InfoToggle title="建筑说明">
-        <p>{displayCopy(selectedRegion.note)}</p>
-        <p>{displayCopy(selectedRegion.interfaceDuty)}</p>
-        {selectedRegion.phaseNotes?.map(phase => <p key={phase.name}><b>{phase.name}</b>：{displayCopy(phase.note)}</p>)}
-      </InfoToggle>
-    </div>
-    <section className="facility-identity-panel">
-      <div className="building-art-slot" aria-label={`${selectedRegion.name}建筑图片占位`}>
-        <SelectIcon size={44} />
-        <span>建筑美术占位</span>
-      </div>
-      <div className="building-title-copy">
-        <span className="eyebrow">{isSpecialDetail ? '特殊建筑详情' : '普通建筑详情'} · {selected}</span>
-        <h2>{selectedRegion.name}</h2>
-        <p>{selectedRegion.subtitle}</p>
-        <div className="path-note compact"><Orbit size={15} /><span>{parents.length ? `${parents.join('、')} → 本设施` : '殖民地基础设施'}</span></div>
-      </div>
+      <div className={`building-status-chip ${statusTone}`}><span>{situationTitle}</span><small>{selected}</small></div>
+    </header>
+
+    <section className="building-answer-grid">
+      <article className="building-identity-block">
+        <div className="building-art-slot" aria-label={`${selectedRegion.name}建筑图片占位`}>
+          <SelectIcon size={44} />
+          <span>建筑美术占位</span>
+        </div>
+        <div className="building-title-copy">
+          <span className="eyebrow">{isSpecialDetail ? '特殊建筑' : '普通建筑'} · 这是什么</span>
+          <h2>{selectedRegion.name}</h2>
+          <p>{selectedRegion.subtitle}</p>
+          <p className="building-duty-copy">{displayCopy(selectedRegion.interfaceDuty)}</p>
+          <div className="path-note compact"><Orbit size={15} /><span>{parents.length ? `${parents.join('、')} → 本设施` : '殖民地基础设施'}</span></div>
+        </div>
+      </article>
+
+      <article className="building-status-block">
+        <div className="building-block-title"><span className="eyebrow">当前状况</span><h3>{situationTitle}</h3></div>
+        <div className="building-metric-grid">
+          <div><span>等级</span><strong>{selectedRegion.level}<small>/{selectedRegion.max}</small></strong></div>
+          <div><span>人口</span><strong>{assignedPopulation}<small>/{selectedRegion.level}</small></strong></div>
+          <div><span>吞吐</span><strong>{Math.round(throughput * 100)}<small>%</small></strong></div>
+        </div>
+        <div className="staffing-meter"><span style={{ width: `${selectedRegion.level ? Math.round(assignedPopulation / selectedRegion.level * 100) : 0}%` }} /><small>岗位占用 {selectedRegion.level ? Math.round(assignedPopulation / selectedRegion.level * 100) : 0}%</small></div>
+        <div className="building-net-row"><span>每日结算</span><ResourceBundle bundle={selectedYield} empty="无日结算" /></div>
+      </article>
     </section>
-    <section className="population-strip">
-      <div><span>岗位容量</span><strong>{selectedRegion.level}<small>/{selectedRegion.max}</small></strong><em>建筑可容纳人口</em></div>
-      <div><span>已分配人口</span><strong>{assignedPopulation}<small>/{selectedRegion.level}</small></strong><em>王国余闲 {freePopulation}</em></div>
-      <div><span>建筑状态</span><strong>{selectedBuildable ? (selectedRegion.level ? '运行中' : '可建造') : '未授权'}</strong><em>{selectedBuildable ? `${allocatedPopulation}/${fmt(resources.population)} 人口已派用` : selectedRequiredTech?.name ?? '科技锁定'}</em></div>
-    </section>
-    <section className="detail-operations">
-      <div className="staffing-control">
-        <div className="staffing-meter"><span style={{ width: `${selectedRegion.level ? Math.round(assignedPopulation / selectedRegion.level * 100) : 0}%` }} /><small>人口分配 {selectedRegion.level ? Math.round(assignedPopulation / selectedRegion.level * 100) : 0}%</small></div>
+
+    <section className={`building-intervention-block ${interventionTone}`}>
+      <div className="intervention-copy">
+        <span className="eyebrow">是否需要干预</span>
+        <h3>{interventionCopy}</h3>
+        <p>{actionReason}</p>
+      </div>
+      <div className="intervention-controls">
         <div className="staffing-buttons"><button onClick={() => onStaff(selectedRegion.id, -1)} disabled={assignedPopulation <= 0}>撤员</button><button onClick={() => onStaff(selectedRegion.id, 1)} disabled={selectedRegion.level <= assignedPopulation || freePopulation <= 0}>增员</button></div>
+        <div className="facility-actions">
+          <button className={`${currentOrder === 'expand' ? 'selected' : ''} ${recentAuto && lastAutomatedAction?.mode === 'expand' ? 'auto-feedback' : ''}`} onClick={() => onUpgrade(selectedRegion.id)} disabled={!selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />扩张</button>
+          <button className={currentOrder === 'hold' ? 'selected' : ''} onClick={() => onHold(selectedRegion.id)}><Minus size={15} />保持</button>
+          <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id)} disabled={selectedRegion.level <= 0}><ArrowDownRight size={15} />缩小</button>
+        </div>
       </div>
-      <div className={`throughput-panel throughput-${throughputClass(throughput)}`}>
-        <div><span>建筑吞吐率</span><strong>{Math.round(throughput * 100)}%</strong><em>{throughput >= 1 ? '满负荷或受加成' : throughput > 0 ? '低负荷运行' : '停摆'}</em></div>
-        <div><span>加成来源</span><p>{bonusSources.join('；')}</p></div>
-      </div>
-    </section>
-    <section className="action-brief">
-      <div className="section-heading"><div><span className="eyebrow">调度判断</span><h3>签发动作</h3></div><InfoToggle title="调度说明"><p>{actionReason}</p><p>{nextAutoAction ? `自动建议扩张至 ${nextAutoAction.toLevel}` : automationPlan.reason ?? '维持当前规模'}</p></InfoToggle></div>
-      <div className="action-facts">
+      <div className="intervention-progress">
         <div><span>扩建成本</span><ResourceBundle bundle={selectedCost} empty="无需成本" /></div>
         <div><span>自动建议</span><b>{nextAutoAction ? `扩张至 ${nextAutoAction.toLevel}` : '维持'}</b></div>
-        <div><span>当前状态</span><b>{currentOrder === 'expand' ? '扩张' : currentOrder === 'shrink' ? '缩小' : '保持'}</b></div>
+        <div><span>王国人口</span><b>{allocatedPopulation}/{fmt(resources.population)} 已派用，余闲 {freePopulation}</b></div>
       </div>
       <div className={`operation-progress operation-${currentOrder}`} title={currentOrder === 'hold' ? `优化署每 ${gameCalendar.optimizationIntervalDays} 御日复核一次` : orderLabel(currentOrder)}><span style={{ width: `${operationProgress}%` }} /><small>{currentOrder === 'hold' ? `复核周期 ${cycleProgress}%` : `${orderLabel(currentOrder)} ${operationProgress}%`}</small></div>
-      <div className="facility-actions">
-        <button className={`${currentOrder === 'expand' ? 'selected' : ''} ${recentAuto && lastAutomatedAction?.mode === 'expand' ? 'auto-feedback' : ''}`} onClick={() => onUpgrade(selectedRegion.id)} disabled={!selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />扩张</button>
-        <button className={currentOrder === 'hold' ? 'selected' : ''} onClick={() => onHold(selectedRegion.id)}><Minus size={15} />保持</button>
-        <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id)} disabled={selectedRegion.level <= 0}><ArrowDownRight size={15} />缩小</button>
-      </div>
     </section>
-    <section className="production-methods"><span>生产方式</span>{selectedSpec.productionMethods.map(method => {
+
+    <section className="building-production-block">
+      <div className="building-block-title"><span className="eyebrow">我能操作什么</span><h3>生产方式</h3></div>
+      <div className="production-methods">{selectedSpec.productionMethods.map(method => {
       const methodReady = hasTech(techs, method.unlockedBy) && method.autoSelect !== false
       const techName = method.unlockedBy ? technologyCatalog[method.unlockedBy]?.name : undefined
       return <article key={method.id} className={method.id === selectedMethod.id && methodReady ? 'active' : ''}>
         <div className="method-copy"><b>{method.name}</b><small>{methodReady ? '已解锁，可切换' : method.autoSelect === false ? '由阶段推进启用' : `需要 ${techName ?? '对应科技'}`}</small></div>
         <ProductionFlow input={method.input} output={method.output} />
-        <InfoToggle title={`${method.name}说明`}><p>{displayCopy(method.note)}</p></InfoToggle>
+        <p className="method-note">{displayCopy(method.note)}</p>
         {method.id === selectedMethod.id && methodReady ? <em>使用中</em> : <button onClick={() => onMethod(method.id)} disabled={!methodReady}>切换</button>}
       </article>
-    })}</section>
-    <section className="stat-block"><span>每日结算</span><div>{resourceOrder.filter(key => selectedYield[key]).map(key => <ResourceAtom key={key} resourceKey={key} value={selectedYield[key] ?? 0} compact />)}{!Object.values(selectedYield).filter(Boolean).length && <span className="resource-empty">无日结算</span>}</div></section>
+    })}</div></section>
     {selectedWorker ? <div className="worker-card"><span>{selectedWorker.glyph}</span><div><b>{selectedWorker.name} 正在执勤</b><small>专属区域日产出 +{Math.round(selectedWorker.boost * 100)}%</small></div><button onClick={() => onAssignment(undefined)}>待命</button></div> : workerChoices.length ? <div className="worker-card"><span>{workerChoices[0].glyph}</span><div><b>{workerChoices[0].name} 可派驻</b><small>专属区域日产出 +{Math.round(workerChoices[0].boost * 100)}%</small></div><button onClick={() => onAssignment(workerChoices[0].id)}>派驻</button></div> : null}
     <div className="inspector-footnote"><span>全局日净值 {Object.values(dailyNet).filter(Boolean).length} 项变化</span><InfoToggle title="自动操作说明"><p>系统自动操作会在调度按钮中短暂高亮。</p></InfoToggle></div>
   </aside>
@@ -868,12 +1132,20 @@ function SpecialFacilityPanel({ facility, tone, children, onSelectFacility }: { 
   const FacilityIcon = facility.region.icon
   const staffingPercent = facility.region.level ? Math.round(facility.assignedPopulation / facility.region.level * 100) : 0
   const throughputPercent = Math.round(facility.throughput * 100)
+  const statusLabel = facility.region.level <= 0 ? '尚未建造' : facility.assignedPopulation < facility.region.level ? '需要增员' : facility.throughput >= 1 ? '系统在线' : facility.throughput > 0 ? '低负荷' : '停摆'
+  const actionHint = facility.region.level <= 0
+    ? '先在设施详情中签发扩张，专属系统才会进入有效运作。'
+    : facility.assignedPopulation < facility.region.level
+      ? '建议进入设施详情补齐人口，再回到本系统做决策。'
+      : '建筑状态稳定。此页右侧工作台是主要操作区。'
 
   return <section className={`special-facility-panel ${tone}`}>
-    <div className="special-panel-head">
-      <span className="special-panel-icon"><FacilityIcon size={28} /></span>
-      <div><span className="eyebrow">{facility.region.id} 特殊设施 · 建筑状态</span><h2>{facility.region.name}</h2><p>{facility.region.subtitle}</p></div>
-      <InfoToggle title="特殊设施说明"><p>{displayCopy(facility.region.note)}</p></InfoToggle>
+    <div className="special-panel-head special-building-head">
+      <div className="building-art-slot special-art-slot" aria-label={`${facility.region.name}建筑图片占位`}>
+        <FacilityIcon size={42} />
+        <span>建筑美术占位</span>
+      </div>
+      <div><span className="eyebrow">特殊建筑 · 这是什么</span><h2>{facility.region.name}</h2><p>{facility.region.subtitle}</p><p className="special-building-note">{displayCopy(facility.region.note)}</p></div>
     </div>
     <div className="special-facility-stats">
       <div><span>设施等级</span><strong>{facility.region.level}<small>/{facility.region.max}</small></strong></div>
@@ -882,11 +1154,15 @@ function SpecialFacilityPanel({ facility, tone, children, onSelectFacility }: { 
     </div>
     <div className="special-staffing-meter"><span style={{ width: `${staffingPercent}%` }} /><small>岗位占用 {staffingPercent}%</small></div>
     <div className="special-production-row">
-      <div><span>当前生产方式</span><strong>{facility.methodName}</strong></div>
+      <div><span>当前状况</span><strong>{statusLabel}</strong></div>
       <div><span>每日结算</span><ResourceBundle bundle={facility.net} empty="暂无日结算" /></div>
     </div>
+    <div className="special-intervention-note">
+      <span>是否需要干预</span>
+      <p>{actionHint}</p>
+    </div>
     {children}
-    <button className="special-secondary-action" onClick={onSelectFacility}><Orbit size={15} />查看设施详情</button>
+    <button className="special-secondary-action" onClick={onSelectFacility}><Orbit size={15} />进入建筑调度</button>
   </section>
 }
 
@@ -935,7 +1211,7 @@ function TechnologyCard({ techId, techs, activeResearch, researchProgress, onRes
     <div className="tech-card-copy">
       <h3>{tech.name}</h3>
       <TechnologyTags tech={tech} />
-      <InfoToggle title={`${tech.name}说明`}><p>{displayCopy(tech.note)}</p></InfoToggle>
+      <p className="tech-card-note">{displayCopy(tech.note)}</p>
     </div>
     <div className="tech-prerequisites">
       <span>前置</span>
@@ -954,6 +1230,50 @@ function ResearchLab({ facility, techs, activeResearch, researchProgress, resear
   const currentTech = technologyCatalog[activeResearch]
   const currentCost = currentTech.researchCost ?? 0
   const currentProgress = hasTech(techs, activeResearch) ? currentCost : (researchProgress[activeResearch] ?? 0)
+  const treeScrollRef = useRef<HTMLDivElement | null>(null)
+  const treeDragRef = useRef({ pointerId: null as number | null, startX: 0, startScrollLeft: 0, moved: false })
+  const suppressTechClickRef = useRef(false)
+  const [treeDragging, setTreeDragging] = useState(false)
+
+  const beginTreeDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return
+    const scrollNode = treeScrollRef.current
+    if (!scrollNode) return
+    treeDragRef.current = { pointerId: event.pointerId, startX: event.clientX, startScrollLeft: scrollNode.scrollLeft, moved: false }
+    scrollNode.setPointerCapture(event.pointerId)
+    setTreeDragging(true)
+  }
+
+  const moveTreeDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const scrollNode = treeScrollRef.current
+    const dragState = treeDragRef.current
+    if (!scrollNode || dragState.pointerId !== event.pointerId) return
+    const deltaX = event.clientX - dragState.startX
+    if (Math.abs(deltaX) > 4) dragState.moved = true
+    if (!dragState.moved) return
+    event.preventDefault()
+    scrollNode.scrollLeft = dragState.startScrollLeft - deltaX
+  }
+
+  const endTreeDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const scrollNode = treeScrollRef.current
+    const dragState = treeDragRef.current
+    const wasMoved = dragState.pointerId === event.pointerId && dragState.moved
+    if (scrollNode?.hasPointerCapture(event.pointerId)) scrollNode.releasePointerCapture(event.pointerId)
+    treeDragRef.current.pointerId = null
+    setTreeDragging(false)
+    if (wasMoved) {
+      suppressTechClickRef.current = true
+      window.setTimeout(() => {
+        suppressTechClickRef.current = false
+      }, 80)
+    }
+  }
+
+  const selectResearch = (techId: TechnologyId) => {
+    if (!suppressTechClickRef.current) onResearch(techId)
+  }
+
   return <div className="special-system-page">
     <SpecialFacilityPanel facility={facility} tone="research" onSelectFacility={onSelectFacility}>
       <div className="research-rule-box">
@@ -965,13 +1285,21 @@ function ResearchLab({ facility, techs, activeResearch, researchProgress, resear
     </SpecialFacilityPanel>
     <section className="special-system-main technology-workbench">
       <div className="section-heading"><div><span className="eyebrow">L 问天研究实验室</span><h2>科技树</h2></div><p>从左到右按阶段推进，卡片只显示玩家需要判断的信息。</p></div>
-      <div className="technology-tree-scroll" aria-label="横向科技树">
+      <div
+        ref={treeScrollRef}
+        className={`technology-tree-scroll ${treeDragging ? 'dragging' : ''}`}
+        aria-label="横向科技树"
+        onPointerDown={beginTreeDrag}
+        onPointerMove={moveTreeDrag}
+        onPointerUp={endTreeDrag}
+        onPointerCancel={endTreeDrag}
+      >
         <div className="technology-tree">
           {researchEraSections.map(section => {
             const techIds = researchableTechIds.filter(id => (technologyCatalog[id].era ?? 'early') === section.id)
             return <section className="tech-era-column" key={section.id}>
               <header><span>{section.label}</span><small>{section.note}</small></header>
-              {techIds.map(id => <TechnologyCard key={id} techId={id} techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={onResearch} />)}
+              {techIds.map(id => <TechnologyCard key={id} techId={id} techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={selectResearch} />)}
             </section>
           })}
         </div>
@@ -1034,24 +1362,34 @@ function Palace({ policy, policyStartedDay, facility, cooldownRemaining, reportP
   const staffingPercent = palaceCapacity ? Math.round(facility.assignedPopulation / palaceCapacity * 100) : 0
   const throughputPercent = Math.round(facility.throughput * 100)
   const canChangePolicy = cooldownRemaining <= 0
+  const palaceStatus = facility.assignedPopulation < palaceCapacity ? '需要增员' : throughputPercent >= 100 ? '王城在线' : '低负荷'
+  const palaceIntervention = facility.assignedPopulation < palaceCapacity
+    ? '先进入建筑调度补齐人口，政策收益会更稳定。'
+    : canChangePolicy
+      ? '可以签发新政策。先比较冷却和下一轮报告，再决定是否改令。'
+      : `政策仍在冷却，${cooldownRemaining} 御日后再干预。`
 
   return <div className="palace-layout palace-command">
     <section className="palace-hero palace-building-panel">
-      <div className="palace-mark"><Crown size={48} /></div>
-      <span className="eyebrow">K 月面王城 · 建筑页</span>
-      <h2>{facility.region.name}</h2>
-      <div className="palace-note-line"><span>{facility.region.subtitle}</span><InfoToggle title="王城说明"><p>{displayCopy(facility.region.note)}</p></InfoToggle></div>
+      <div className="special-panel-head palace-summary-head">
+        <div className="building-art-slot special-art-slot palace-art-slot" aria-label={`${facility.region.name}建筑图片占位`}>
+          <Crown size={42} />
+          <span>建筑美术占位</span>
+        </div>
+        <div><span className="eyebrow">特殊建筑 · 这是什么</span><h2>{facility.region.name}</h2><p>{facility.region.subtitle}</p><p className="special-building-note">{displayCopy(facility.region.note)}</p></div>
+      </div>
       <div className="palace-building-stats">
         <div><span>王城等级</span><strong>{facility.region.level}<small>/{facility.region.max}</small></strong></div>
         <div><span>已分配人口</span><strong>{facility.assignedPopulation}<small>/{palaceCapacity}</small></strong></div>
         <div><span>吞吐率</span><strong>{throughputPercent}<small>%</small></strong></div>
       </div>
       <div className="palace-staffing-meter"><span style={{ width: `${staffingPercent}%` }} /><small>岗位占用 {staffingPercent}%</small></div>
-      <div className="palace-output">
-        <span>每日结算</span>
-        <ResourceBundle bundle={facility.net} empty="王城未产生净变动" />
+      <div className="special-production-row palace-production-row">
+        <div><span>当前状况</span><strong>{palaceStatus}</strong></div>
+        <div><span>每日结算</span><ResourceBundle bundle={facility.net} empty="王城未产生净变动" /></div>
       </div>
-      <button onClick={onSelectFacility}><Orbit size={15} />查看设施详情</button>
+      <div className="special-intervention-note"><span>是否需要干预</span><p>{palaceIntervention}</p></div>
+      <button onClick={onSelectFacility}><Orbit size={15} />进入建筑调度</button>
     </section>
 
     <section className="policy-board">

@@ -3,6 +3,7 @@ import {
   buildGameContentMessages,
   createGameContentAgent,
   normalizeDraft,
+  normalizeContextFiles,
   normalizeJobs,
   parseJsonObject,
   requestGameContentFromDeepSeek,
@@ -13,6 +14,11 @@ describe('game content agent', () => {
     expect(normalizeJobs('all')).toEqual(['text', 'art'])
     expect(normalizeJobs('texts,assets')).toEqual(['text', 'art'])
     expect(() => normalizeJobs('balance')).toThrow('--jobs')
+  })
+
+  it('normalizes project file selections', () => {
+    expect(normalizeContextFiles('src/events.ts, src/economy.ts', process.cwd())).toEqual(['src/events.ts', 'src/economy.ts'])
+    expect(() => normalizeContextFiles('../secrets.txt', process.cwd())).toThrow('--files')
   })
 
   it('parses fenced JSON responses', () => {
@@ -58,6 +64,25 @@ describe('game content agent', () => {
     expect(draft.warnings).toEqual(['needs review'])
   })
 
+  it('filters draft sections by requested jobs', () => {
+    const textOnly = normalizeDraft({
+      summary: 'ok',
+      textMaterials: [{ targetId: 'sava', proposedText: '新的台词' }],
+      artPrompts: [{ assetId: 'role-sava', promptZh: '月尘中的异客肖像' }],
+    }, { jobs: ['text'] })
+
+    const artOnly = normalizeDraft({
+      summary: 'ok',
+      textMaterials: [{ targetId: 'sava', proposedText: '新的台词' }],
+      artPrompts: [{ assetId: 'role-sava', promptZh: '月尘中的异客肖像' }],
+    }, { jobs: ['art'] })
+
+    expect(textOnly.textMaterials).toHaveLength(1)
+    expect(textOnly.artPrompts).toHaveLength(0)
+    expect(artOnly.textMaterials).toHaveLength(0)
+    expect(artOnly.artPrompts).toHaveLength(1)
+  })
+
   it('requests and parses DeepSeek JSON with a mocked fetch', async () => {
     const fetchImpl = async (url: string, init: RequestInit) => {
       expect(String(url)).toBe('https://api.deepseek.com/chat/completions')
@@ -96,7 +121,7 @@ describe('game content agent', () => {
       env: { DEEPSEEK_API_KEY: 'test-key', GAME_CONTENT_AGENT_MODEL: 'mock-model' },
       fetchImpl,
     })
-    const result = await agent.generate({ jobs: 'all', focus: 'roles', count: 2, write: false })
+    const result = await agent.generate({ jobs: 'all', focus: 'roles', count: 2, files: ['src/events.ts'], write: false })
 
     expect(result.mode).toBe('preview')
     expect(result.draft.summary).toBe('preview')

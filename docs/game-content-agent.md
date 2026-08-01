@@ -33,6 +33,12 @@ npm run content-agent -- prompt --jobs all --focus roles --count 8
 npm run content-agent -- generate --jobs all --focus all --count 16
 ```
 
+只读取你指定的当前项目文件：
+
+```bash
+npm run content-agent -- generate --jobs text --files src/events.ts,src/economy.ts --focus events
+```
+
 只生成文字素材：
 
 ```bash
@@ -74,3 +80,5 @@ npm run content-agent -- generate --jobs art --focus technologies --out storage/
 ```
 
 `textMaterials` 和 `artPrompts` 都带 `integrationHint`，方便后续人工挑选后再接入代码或资产目录。
+
+`textMaterials` 可以直接覆盖显示名称、简介、标题、台词、说明文案等非 ID 字段；保留不变的只有结构性 `ID / code / 代号 / 枚举值 / 数值平衡`。

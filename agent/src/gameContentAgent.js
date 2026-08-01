@@ -30,6 +30,24 @@ export function compact(value, max = 2000) {
   return String(value == null ? '' : value).replace(/\s+/g, ' ').trim().slice(0, max)
 }
 
+export function normalizeContextFiles(value, rootDir = process.cwd()) {
+  const source = Array.isArray(value) ? value : String(value || '').split(',')
+  const files = []
+
+  for (const item of source) {
+    const trimmed = compact(item, 260)
+    if (!trimmed) continue
+    const absolutePath = path.resolve(rootDir, trimmed)
+    const relativePath = path.relative(rootDir, absolutePath)
+    if (!relativePath || relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+      throw new Error(`--files 只能引用当前项目内的相对路径：${trimmed}`)
+    }
+    files.push(relativePath.replace(/\\/g, '/'))
+  }
+
+  return [...new Set(files)]
+}
+
 export function normalizeJobs(value = 'all') {
   const source = Array.isArray(value) ? value : String(value || 'all').split(',')
   const jobs = source.flatMap(item => JOB_ALIASES[String(item).trim()] ?? [String(item).trim()])
@@ -67,7 +85,7 @@ async function readProjectFile(rootDir, relativePath, maxChars) {
 
 export async function loadGameContext(options = {}) {
   const rootDir = options.rootDir || process.cwd()
-  const files = options.files || DEFAULT_CONTEXT_FILES
+  const files = options.files?.length ? normalizeContextFiles(options.files, rootDir) : DEFAULT_CONTEXT_FILES
   const maxCharsPerFile = Math.min(Math.max(Number(options.maxCharsPerFile || 18_000), 2000), 60_000)
   const sections = []
   const missing = []
@@ -128,6 +146,7 @@ export function buildGameContentMessages({ context, promptTemplate, jobs, focus 
           targetCount: Math.min(Math.max(Number(count) || 12, 1), 80),
           outputLanguage: 'zh-CN',
           missingContextFiles: context.missing,
+          contextFiles: context.sections.map(section => section.relativePath),
         },
         sourceFiles: sourceBundle,
       }),
@@ -165,15 +184,17 @@ function normalizeArtPrompts(value) {
 
 export function normalizeDraft(raw, metadata = {}) {
   const draft = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}
+  const jobs = Array.isArray(metadata.jobs) ? metadata.jobs : []
+  const enabledJobs = new Set(jobs)
   return {
     version: 1,
     generatedAt: metadata.generatedAt || new Date().toISOString(),
     model: metadata.model || null,
     focus: metadata.focus || 'all',
-    jobs: metadata.jobs || ['text', 'art'],
+    jobs: jobs.length ? jobs : ['text', 'art'],
     summary: compact(draft.summary, 1200),
-    textMaterials: normalizeTextMaterials(draft.textMaterials),
-    artPrompts: normalizeArtPrompts(draft.artPrompts),
+    textMaterials: enabledJobs.size && !enabledJobs.has('text') ? [] : normalizeTextMaterials(draft.textMaterials),
+    artPrompts: enabledJobs.size && !enabledJobs.has('art') ? [] : normalizeArtPrompts(draft.artPrompts),
     warnings: (Array.isArray(draft.warnings) ? draft.warnings : []).map(item => compact(item, 500)).filter(Boolean),
   }
 }
@@ -224,15 +245,17 @@ export function createGameContentAgent(options = {}) {
   const rootDir = options.rootDir || process.cwd()
 
   return {
-    async buildPrompt({ jobs = 'all', focus = 'all', count = 12 } = {}) {
-      const context = await loadGameContext({ rootDir })
+    async buildPrompt({ jobs = 'all', focus = 'all', count = 12, files } = {}) {
+      const normalizedFiles = files?.length ? normalizeContextFiles(files, rootDir) : []
+      const context = await loadGameContext({ rootDir, files: normalizedFiles.length ? normalizedFiles : undefined })
       const promptTemplate = await loadPromptTemplate(rootDir)
       return buildGameContentMessages({ context, promptTemplate, jobs, focus, count })
     },
 
-    async generate({ jobs = 'all', focus = 'all', count = 12, outputFile = DEFAULT_OUTPUT_FILE, write = true } = {}) {
+    async generate({ jobs = 'all', focus = 'all', count = 12, files, outputFile = DEFAULT_OUTPUT_FILE, write = true } = {}) {
       const normalizedJobs = normalizeJobs(jobs)
-      const context = await loadGameContext({ rootDir })
+      const normalizedFiles = files?.length ? normalizeContextFiles(files, rootDir) : []
+      const context = await loadGameContext({ rootDir, files: normalizedFiles.length ? normalizedFiles : undefined })
       const promptTemplate = await loadPromptTemplate(rootDir)
       const messages = buildGameContentMessages({ context, promptTemplate, jobs: normalizedJobs, focus, count })
       const generated = await requestGameContentFromDeepSeek({ env, messages, fetchImpl })

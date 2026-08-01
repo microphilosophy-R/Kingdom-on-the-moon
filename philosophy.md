@@ -14,6 +14,7 @@
 
 | 章节 | 文件 | 内容 |
 | --- | --- | --- |
+| 序章. 龙椅冤案 | [docs/philosophy/story.md](docs/philosophy/story.md) | 游戏背景故事：陈林被做局称王、困守月面、密造御座号归乡。 |
 | 1. 经济系统 | [docs/philosophy/economy.md](docs/philosophy/economy.md) | 资源规则、单位人口消耗、资源价值、阶段供需审计。 |
 | 2. 建筑系统 | [docs/philosophy/buildings.md](docs/philosophy/buildings.md) | 建筑分类、生产方式编码、建筑配方、普通建筑与特殊建筑说明。 |
 | 3. 科技与政策 | [docs/philosophy/technology-policy.md](docs/philosophy/technology-policy.md) | 科技类型、科技表、全局通用科技、特定建筑效率科技、王城政策。 |
