@@ -2,29 +2,41 @@
 
 ## Visual Theme
 
-月面政务舱内的指挥台。顶部是库存仪表，底部是系统 tab，中间是一颗可旋转观察的星球。深墨蓝灰像舷窗外的阴影，羊皮纸般的暖灰像御令，微量黄铜色只标记可行动事项。界面采用产品型信息密度，设施以名录和检查器承载，不再依赖营销式首页。
+月面政务舱内的暖灰仪表台。界面不是深色宇宙舱，而是被月尘、羊皮纸、陶瓷面板与低亮度黄铜控件共同照亮的殖民地执政桌面。冷色只作为舷窗阴影、科技状态、星海信号和少量风险提示出现，不能承载大面积工作区。
 
 ## Color Palette
 
-- ink: `oklch(13% 0.018 265)`
-- panel: `oklch(18% 0.018 260)`
-- lunar: `oklch(70% 0.018 82)`
-- brass: `oklch(76% 0.12 78)`
-- cyan: `oklch(76% 0.095 205)`
-- danger: `oklch(67% 0.16 25)`
+采用克制型产品配色。所有颜色使用 OKLCH，不使用纯黑或纯白。
+
+- shell: `oklch(92% 0.018 86)`，页面底色与大面积背景。
+- surface: `oklch(97% 0.010 86)`，普通面板、列表、卡片。
+- surface-raised: `oklch(94% 0.014 84)`，工具栏、资源条、选中前的弱层级。
+- parchment: `oklch(90% 0.022 82)`，报告、政策、事件正文等叙事区域。
+- ink: `oklch(24% 0.024 250)`，主文本。
+- muted: `oklch(47% 0.018 250)`，说明文字和次级数字。
+- line: `oklch(73% 0.018 84)`，1px 分隔线。
+- brass: `oklch(55% 0.105 76)`，主操作、当前选择、可执行状态。
+- brass-soft: `oklch(94% 0.040 78)`，选中背景和 hover。
+- signal: `oklch(52% 0.075 205)`，科技、信息、星海信号，不作为大面积背景。
+- success: `oklch(55% 0.090 145)`，吞吐正常、正收益。
+- danger: `oklch(56% 0.120 28)`，赤字、失败、缩减。
 
 ## Typography
 
-Headings: Noto Serif SC, Songti SC, serif. UI: Noto Sans SC, Microsoft YaHei, sans-serif. Numbers use ui-monospace.
+UI 主字体为 `Noto Sans SC`, `Microsoft YaHei UI`, `Segoe UI`, `system-ui`, `sans-serif`。标题可使用 `Noto Serif SC`, `Source Han Serif SC`, `Songti SC`, `serif` 保留王权气质。按钮、标签、数据、表格全部使用 UI 字体或等宽数字字体。
+
+字号使用固定 rem 阶梯，不随视口连续缩放：标签 0.68rem，辅助说明 0.72rem，正文 0.78rem，普通卡片标题 0.92rem，面板标题 1.18rem，页面标题 1.55rem。所有组件字距为 0，数字不使用负字距。
 
 ## Components
 
-Fine 1px outlines, square-to-soft corners, dark solid action controls, and selected states with a full amber surface rather than stripe accents. Buttons have clear focus rings and 180ms opacity/color transitions.
+圆角维持 4px 到 8px。普通面板使用暖灰或羊皮纸色，边框为 1px。主按钮是黄铜实底，次按钮是浅面板加暖灰边框，选中态使用完整浅黄铜背景和完整边框，不使用侧边色条。禁用态降低对比但仍保持可读。
+
+资源视图、建筑名录、政策页、科技树、特殊建筑页、异客弹窗和底部 tab 必须共享同一套色彩令牌。冷蓝、紫色和深蓝只能用于图标、连线、进度或遮罩，不允许成为默认卡片或页面底色。
 
 ## 3D Surface
 
-Three.js 星球是主界面的第一视觉对象。默认居中，可拖拽旋转；展开设施后缩小停靠左侧。贴图来自本地 `public/textures/planets/`，每次开局随机选择一张。Canvas 必须有稳定尺寸，避免加载或响应式布局导致空白。
+Three.js 星球是第一视觉对象。默认居中，可拖拽旋转；展开设施后缩小并停靠左侧。星球周围 UI 不使用边框卡片包裹，避免和球体割裂。贴图来自本地 `public/textures/planets/`，每次开局随机选择一张。Canvas 必须有稳定尺寸，避免加载或响应式布局导致空白。
 
 ## Navigation
 
-顶部只保留品牌、御日和资源视图。底部固定 tab 作为主要系统入口：设施、政策、科技、生态、贸易、星舰、异客。外星人事件使用弹窗，不挤占资源视图或底部菜单。
+顶部只保留品牌、御日和资源视图。底部固定 tab 作为主要系统入口：设施、政策、科技、生态、贸易、星舰、异客。底部 tab 使用暖灰半透明工具条，当前页用黄铜浅底加深色文字表示。外星人事件使用弹窗，但弹窗正文仍遵循暖灰叙事面板，不再使用整块深冷色。

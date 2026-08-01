@@ -57,6 +57,7 @@ export type TechnologySpec = {
   category?: 'construction' | 'production-method' | 'facility-efficiency' | 'global' | 'trade'
   era?: 'early' | 'mid' | 'late'
   alien?: boolean
+  prerequisites?: TechnologyId[]
   unlocksFacility?: FacilityId
   unlocks?: ProductionMethodId
   value?: number
@@ -691,7 +692,41 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
   },
 }
 
+const technologyPrerequisites: Partial<Record<TechnologyId, TechnologyId[]>> = {
+  'TE1-1': ['TE1-0'],
+  'TE1-2': ['TE1-1'],
+  'TB-1': ['TB-0'],
+  'TB-2': ['TB-1'],
+  'TC1-1': ['TC1-0'],
+  'TE2-0': ['TE1-1'],
+  'TC2-0': ['TC1-1', 'TB-0'],
+  'TF-0': ['TC2-0', 'TE2-0'],
+  'TP-0': ['TC1-1', 'TB-0'],
+  'TR-0': ['TB-1', 'TP-0'],
+  'TL-2': ['TL-0'],
+  'TS-0': ['TK-0', 'TL-0'],
+  'TH-0': ['TK-0', 'TB-1'],
+  'TC2-1': ['TC2-0'],
+  'TC2-2': ['TC2-0', 'TS-0'],
+  'TF-1': ['TF-0', 'TS-0'],
+  'TP-1': ['TP-0', 'TS-0'],
+  'TS-1': ['TS-0'],
+  'TS-2': ['TS-0', 'TL-2'],
+  'TS-3': ['TS-0', 'TH-0'],
+  'TG-1': ['TL-2', 'TF-0'],
+  'TG-2': ['TE2-0', 'TL-2'],
+  'TG-3': ['TF-0', 'TG-1'],
+  'TG-4': ['TS-0', 'TG-1'],
+  'TL-1': ['TL-2', 'TF-1'],
+  'TL-3': ['TL-1', 'TG-2'],
+  'TM-0': ['TR-0', 'TH-0'],
+  'TD-0': ['TF-1', 'TL-1', 'TS-0'],
+  'TD-1': ['TD-0', 'TG-3'],
+  'TE3-0': ['TE2-0', 'TF-1', 'TL-3'],
+}
+
 Object.values(technologyCatalog).forEach(tech => {
+  tech.prerequisites = technologyPrerequisites[tech.id] ?? []
   tech.value = estimateTechnologyValue(tech)
   tech.researchCost = estimateTechnologyResearchCost(tech)
 })

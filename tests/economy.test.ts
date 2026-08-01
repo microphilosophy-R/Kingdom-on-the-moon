@@ -143,6 +143,18 @@ describe('economy catalog', () => {
     expect(technologyCatalog['TL-2'].researchCost).toBeGreaterThan(0)
   })
 
+  it('defines technology prerequisites for the staged research tree', () => {
+    expect(technologyCatalog['TE1-2'].prerequisites).toEqual(['TE1-1'])
+    expect(technologyCatalog['TC2-2'].prerequisites).toEqual(['TC2-0', 'TS-0'])
+    expect(technologyCatalog['TL-3'].prerequisites).toEqual(['TL-1', 'TG-2'])
+    expect(technologyCatalog['TD-0'].prerequisites).toEqual(['TF-1', 'TL-1', 'TS-0'])
+    Object.values(technologyCatalog).forEach(tech => {
+      tech.prerequisites?.forEach(prerequisite => {
+        expect(technologyCatalog[prerequisite]).toBeDefined()
+      })
+    })
+  })
+
   it('keeps production method and technology codes synchronized', () => {
     const allMethods = facilityOrder.flatMap(id => facilityEconomySpecs[id].productionMethods.map(method => [id, method.id, method.unlockedBy] as const))
     const buildingTechs = Object.values(technologyCatalog).filter(tech => tech.unlocksFacility)
