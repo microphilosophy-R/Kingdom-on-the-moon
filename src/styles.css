@@ -1631,6 +1631,667 @@ h3,
   }
 }
 
+/* UI layout pass: cleaner panels, practical toolbars, start gate, and connected technology cards. */
+.start-gate {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(360px, 1.35fr) minmax(320px, .75fr);
+  min-height: 100vh;
+  overflow: hidden;
+  padding: clamp(1.2rem, 4vw, 3.2rem);
+  background:
+    linear-gradient(180deg, var(--ui-shell), var(--ui-shell-2));
+}
+
+.start-gate::before {
+  position: fixed;
+  content: '';
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(oklch(52% .025 78 / .16) .55px, transparent .75px),
+    linear-gradient(90deg, transparent 49.9%, oklch(58% .02 84 / .08) 50%, transparent 50.1%);
+  background-size: 12px 12px, 180px 180px;
+}
+
+.start-orbit {
+  position: relative;
+  min-height: min(760px, calc(100vh - 6rem));
+}
+
+.start-orbit .planet-scene {
+  min-height: 520px;
+}
+
+.start-console {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  display: grid;
+  gap: .9rem;
+  max-width: 420px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  padding: 1.45rem;
+  background: oklch(97% .01 86 / .94);
+  box-shadow: 0 20px 54px var(--ui-shadow);
+}
+
+.start-console h1 {
+  margin: .05rem 0 0;
+  font-size: 2.35rem;
+  line-height: 1.12;
+}
+
+.start-console p {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--font-body);
+  line-height: 1.75;
+}
+
+.start-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+}
+
+.start-facts span {
+  display: inline-flex;
+  align-items: center;
+  gap: .28rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  padding: .34rem .48rem;
+  background: var(--ui-raised);
+  color: var(--ui-muted);
+  font-size: var(--font-label);
+}
+
+.app-shell {
+  padding-bottom: 7.8rem;
+}
+
+.page-content {
+  padding-bottom: 7.2rem;
+}
+
+.resource-rail {
+  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+  gap: .32rem;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  padding: .45rem 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.resource-rail > .resource-atom {
+  min-height: 42px;
+  border: 1px solid oklch(73% .018 84 / .42);
+  border-radius: 5px;
+  background: oklch(97% .01 86 / .78);
+  box-shadow: none;
+}
+
+.resource-atom {
+  display: grid;
+  grid-template-columns: 18px minmax(4.7ch, 1fr) auto;
+  align-items: center;
+  gap: .32rem;
+  width: 100%;
+  min-width: 108px;
+  padding: .38rem .45rem;
+}
+
+.resource-atom > span {
+  display: grid;
+  grid-template-columns: minmax(2.8rem, 1fr) 4.7ch;
+  align-items: baseline;
+  gap: .22rem;
+}
+
+.resource-atom .resource-family {
+  display: none;
+}
+
+.resource-atom small {
+  font-size: .58rem;
+  white-space: nowrap;
+}
+
+.resource-atom strong {
+  justify-self: end;
+  width: 4.7ch;
+  font-size: .86rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.resource-atom em {
+  min-width: 4.6ch;
+  margin-left: 0;
+  font-size: .55rem;
+  text-align: right;
+}
+
+.resource-atom.compact {
+  grid-template-columns: 14px 4.7ch;
+  width: auto;
+  min-width: 62px;
+  border-color: oklch(74% .018 84 / .34);
+  background: transparent;
+}
+
+.resource-atom.compact > span {
+  display: block;
+}
+
+.bottom-tabs {
+  z-index: 7;
+  bottom: .8rem;
+  border-color: var(--ui-line-strong);
+  background: var(--ui-surface);
+  backdrop-filter: none;
+  box-shadow: 0 18px 45px var(--ui-shadow-strong);
+}
+
+.bottom-tabs::before {
+  position: absolute;
+  content: '';
+  left: -1.25rem;
+  right: -1.25rem;
+  top: -2.2rem;
+  height: 2.2rem;
+  pointer-events: none;
+  background: linear-gradient(180deg, oklch(92% .018 86 / 0), var(--ui-shell));
+}
+
+.bottom-tabs .art-button,
+.art-brief {
+  display: none;
+}
+
+.info-toggle {
+  position: relative;
+  display: inline-grid;
+  justify-items: end;
+}
+
+.info-toggle summary {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 50%;
+  background: var(--ui-raised);
+  color: var(--ui-brass-dark);
+  cursor: help;
+  list-style: none;
+}
+
+.info-toggle summary::-webkit-details-marker {
+  display: none;
+}
+
+.info-toggle[open] summary {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+}
+
+.info-toggle > div {
+  position: absolute;
+  top: calc(100% + .35rem);
+  right: 0;
+  z-index: 20;
+  width: min(330px, 78vw);
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 6px;
+  padding: .68rem .75rem;
+  background: var(--ui-surface);
+  box-shadow: 0 14px 34px var(--ui-shadow);
+  text-align: left;
+}
+
+.info-toggle p {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--font-note);
+  line-height: 1.65;
+}
+
+.info-toggle p + p {
+  margin-top: .45rem;
+}
+
+.planet-workbench.detail-mode {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.facility-detail-page {
+  display: grid;
+  grid-template-columns: minmax(280px, .74fr) minmax(420px, 1.26fr);
+  gap: .75rem;
+  align-items: start;
+  min-height: 0;
+  padding: 1rem;
+}
+
+.facility-detail-toolbar,
+.production-methods,
+.stat-block,
+.worker-card,
+.inspector-footnote {
+  grid-column: 1 / -1;
+}
+
+.facility-detail-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.facility-identity-panel {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: .85rem;
+  align-items: stretch;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .8rem;
+  background: var(--ui-raised);
+}
+
+.building-art-slot {
+  display: grid;
+  min-height: 150px;
+  place-items: center;
+  align-content: center;
+  gap: .5rem;
+  border: 1px dashed var(--ui-line-strong);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, var(--ui-parchment), var(--ui-surface-2)),
+    repeating-linear-gradient(45deg, transparent 0 8px, oklch(68% .018 84 / .18) 8px 9px);
+  color: var(--ui-brass-dark);
+}
+
+.building-art-slot span {
+  color: var(--ui-muted);
+  font-size: .62rem;
+}
+
+.building-title-copy {
+  display: grid;
+  align-content: center;
+  gap: .35rem;
+  min-width: 0;
+}
+
+.building-title-copy h2 {
+  margin: 0;
+  font-size: 1.42rem;
+}
+
+.building-title-copy p {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--font-body);
+}
+
+.path-note.compact {
+  margin: .2rem 0 0;
+  padding: .42rem .48rem;
+}
+
+.population-strip {
+  margin: 0;
+}
+
+.detail-operations {
+  display: grid;
+  gap: .65rem;
+}
+
+.detail-operations .staffing-control,
+.detail-operations .throughput-panel {
+  margin: 0;
+}
+
+.facility-detail-page.special-detail .facility-identity-panel {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+}
+
+.action-brief {
+  margin-top: 0;
+}
+
+.action-brief .section-heading {
+  align-items: center;
+}
+
+.action-brief .section-heading p,
+.special-system-main .section-heading p,
+.policy-report .section-heading p,
+.technology-workbench > .section-heading p {
+  display: none;
+}
+
+.production-methods article {
+  grid-template-columns: minmax(130px, .7fr) minmax(240px, 1.4fr) auto auto;
+}
+
+.production-methods article > .info-toggle {
+  justify-self: center;
+}
+
+.stat-block {
+  border-top: 0;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .72rem;
+  background: var(--ui-raised);
+}
+
+.inspector-footnote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+  margin: 0;
+  border-top: 1px solid var(--ui-line);
+  padding-top: .62rem;
+}
+
+.special-panel-head {
+  align-items: center;
+}
+
+.special-panel-head .info-toggle {
+  margin-left: auto;
+}
+
+.special-panel-note {
+  display: none;
+}
+
+.palace-note-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+  color: var(--ui-muted);
+  font-size: var(--font-body);
+}
+
+.trade-offer-list {
+  display: grid;
+  gap: .65rem;
+}
+
+.trade-offer-list article {
+  display: grid;
+  grid-template-columns: minmax(160px, .78fr) minmax(260px, 1fr) auto;
+  gap: .75rem;
+  align-items: center;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .78rem;
+  background: var(--ui-raised);
+}
+
+.trade-offer-list article.active {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+}
+
+.trade-offer-list article.locked {
+  opacity: .72;
+}
+
+.trade-offer-list span {
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono);
+  font-size: .62rem;
+}
+
+.trade-offer-list h3 {
+  margin: .1rem 0;
+  font-size: var(--font-card);
+}
+
+.trade-offer-list small {
+  color: var(--ui-muted);
+  font-size: var(--font-label);
+}
+
+.trade-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: .45rem;
+  align-items: center;
+}
+
+.trade-flow > svg {
+  color: var(--ui-brass);
+}
+
+.trade-offer-list button {
+  border: 1px solid var(--ui-brass-dark);
+  border-radius: 4px;
+  padding: .48rem .7rem;
+  background: var(--ui-brass);
+  color: oklch(97% .012 86);
+  font-size: var(--font-label);
+  font-weight: 700;
+}
+
+.trade-offer-list button:disabled {
+  border-color: var(--ui-line);
+  background: var(--ui-surface-2);
+  color: var(--ui-muted);
+}
+
+.facility-ledger-list button::before {
+  display: none;
+}
+
+.technology-tree-scroll {
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  padding: .85rem;
+  background: var(--ui-surface-2);
+  box-shadow: inset 18px 0 24px oklch(90% .018 84), inset -18px 0 24px oklch(90% .018 84);
+}
+
+.technology-tree {
+  grid-template-columns: repeat(3, minmax(300px, 1fr));
+  gap: 1.25rem;
+  min-width: 1020px;
+  background: transparent;
+}
+
+.technology-tree::before {
+  top: 4.9rem;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--ui-brass), var(--ui-signal), transparent);
+}
+
+.tech-era-column {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: .85rem;
+  min-width: 0;
+}
+
+.tech-era-column::before {
+  position: absolute;
+  content: '';
+  top: 5.35rem;
+  bottom: 1.1rem;
+  left: 1.05rem;
+  width: 2px;
+  border: 0;
+  background: var(--ui-line-strong);
+}
+
+.tech-era-column:not(:last-child)::after {
+  position: absolute;
+  content: '';
+  top: 5.35rem;
+  right: -1.25rem;
+  width: 1.25rem;
+  border-top: 2px solid var(--ui-line-strong);
+}
+
+.tech-era-column header {
+  min-height: 58px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .58rem .68rem;
+  background: var(--ui-raised);
+}
+
+.tech-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(108px, 1fr) auto auto;
+  gap: .62rem;
+  min-height: 286px;
+  border-radius: 7px;
+  padding: .72rem;
+  background: var(--ui-raised);
+}
+
+.tech-card::before {
+  position: absolute;
+  content: '';
+  top: 1.15rem;
+  left: -1.05rem;
+  width: .72rem;
+  border-top: 2px solid var(--ui-line-strong);
+}
+
+.tech-card.completed::before,
+.tech-card.researching::before {
+  border-color: var(--ui-brass);
+}
+
+.tech-card-top {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: .55rem;
+  align-items: start;
+}
+
+.tech-image-placeholder {
+  width: 96px;
+  height: 60px;
+}
+
+.tech-card-copy {
+  display: grid;
+  align-content: start;
+  gap: .48rem;
+}
+
+.tech-card-copy .info-toggle {
+  justify-self: start;
+}
+
+.tech-prerequisites,
+.tech-cost-row {
+  min-height: 34px;
+}
+
+@media (max-width: 1100px) {
+  .start-gate {
+    grid-template-columns: 1fr;
+  }
+
+  .start-console {
+    position: absolute;
+    right: clamp(1rem, 4vw, 3rem);
+    bottom: clamp(1rem, 4vw, 3rem);
+  }
+
+  .facility-detail-page {
+    grid-template-columns: 1fr;
+  }
+
+  .production-methods article,
+  .trade-offer-list article,
+  .trade-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .trade-flow > svg {
+    transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    padding-bottom: 9.8rem;
+  }
+
+  .page-content {
+    padding-bottom: 9rem;
+  }
+
+  .start-gate {
+    padding: .75rem;
+  }
+
+  .start-orbit {
+    min-height: 520px;
+  }
+
+  .start-console {
+    right: .75rem;
+    bottom: .75rem;
+    left: .75rem;
+    max-width: none;
+    padding: 1rem;
+  }
+
+  .start-console h1 {
+    font-size: 1.85rem;
+  }
+
+  .resource-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .resource-atom {
+    min-width: 0;
+  }
+
+  .resource-atom em {
+    display: none;
+  }
+
+  .facility-identity-panel,
+  .population-strip,
+  .action-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .building-art-slot {
+    min-height: 180px;
+  }
+}
+
 /* Impeccable color system v2: warm lunar console, restrained product UI. */
 :root {
   color-scheme: light;
@@ -2367,5 +3028,53 @@ button:disabled,
 
   .resource-rail {
     grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  }
+}
+
+/* Final overrides for this pass. Keep these after the global color-system appendices. */
+.bottom-tabs {
+  z-index: 7;
+  border-color: var(--ui-line-strong);
+  background: var(--ui-surface);
+  backdrop-filter: none;
+  box-shadow: 0 18px 45px var(--ui-shadow-strong);
+}
+
+.bottom-tabs::before {
+  position: absolute;
+  content: '';
+  left: -1.25rem;
+  right: -1.25rem;
+  top: -2.2rem;
+  height: 2.2rem;
+  pointer-events: none;
+  background: linear-gradient(180deg, oklch(92% .018 86 / 0), var(--ui-shell));
+}
+
+.resource-rail {
+  gap: .32rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.resource-rail > .resource-atom {
+  border: 1px solid oklch(73% .018 84 / .42);
+  border-radius: 5px;
+  background: oklch(97% .01 86 / .9);
+  box-shadow: none;
+}
+
+.resource-atom .resource-family,
+.art-button,
+.art-brief,
+.facility-ledger-list button::before,
+.special-panel-note {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .resource-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

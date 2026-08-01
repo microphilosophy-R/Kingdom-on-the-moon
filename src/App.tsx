@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
 import {
   ArrowDownRight, ArrowLeftRight, ArrowRight, ArrowUpRight, BookOpen, Bot, Check, ChevronLeft, ChevronRight, CircleDot, Crown, Factory,
-  FlaskConical, House, Landmark, Leaf, Lock, Minus, Mountain, Orbit,
+  FlaskConical, House, Info, Landmark, Leaf, Lock, Minus, Mountain, Orbit,
   Pause, Pickaxe, Play, Rocket, Sparkles, Sprout, Sun, Theater, Waves, X, Zap,
   type LucideProps,
 } from 'lucide-react'
@@ -320,7 +320,15 @@ const throughputClass = (rate: number) => rate >= 1.1 ? 'surged' : rate >= 0.8 ?
 const orderLabel = (mode: FacilityOrderMode) => mode === 'expand' ? '扩张中' : mode === 'shrink' ? '缩减中' : '保持'
 const orderIcon = (mode: FacilityOrderMode) => mode === 'expand' ? <ArrowUpRight size={13} /> : mode === 'shrink' ? <ArrowDownRight size={13} /> : <Minus size={13} />
 
+function InfoToggle({ title, children }: { title: string; children: ReactNode }) {
+  return <details className="info-toggle">
+    <summary aria-label={title} title={title}><Info size={13} /></summary>
+    <div>{children}</div>
+  </details>
+}
+
 function App() {
+  const [gameStarted, setGameStarted] = useState(false)
   const [resources, setResources] = useState<Resources>(initialResources)
   const [regions, setRegions] = useState(regionTemplate)
   const [day, setDay] = useState(1)
@@ -350,7 +358,6 @@ function App() {
   const [lastPolicyReport, setLastPolicyReport] = useState<PolicyReport | null>(null)
   const [log, setLog] = useState<string[]>(['御日 001：月面行宫已就位，御座号的第一根龙骨等待铸造。'])
   const [pendingMonthlyReport, setPendingMonthlyReport] = useState<string | null>(null)
-  const [artOpen, setArtOpen] = useState(false)
 
   const selectedRegion = regions.find(region => region.id === selected)!
   const selectedCost = projectFacilityCost(facilityEconomySpecs[selectedRegion.id], selectedRegion.level)
@@ -490,12 +497,12 @@ function App() {
   }
 
   useEffect(() => {
-    if (!isRunning || completed) return
+    if (!gameStarted || !isRunning || completed) return
     const timer = window.setInterval(advanceDay, speed === 'fast' ? gameCalendar.fastMsPerDay : gameCalendar.normalMsPerDay)
     return () => window.clearInterval(timer)
     // The interval intentionally observes current game state after each render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRunning, completed, day, dailyNet, visitor, speed, pendingMonthlyReport, automationPlan])
+  }, [gameStarted, isRunning, completed, day, dailyNet, visitor, speed, pendingMonthlyReport, automationPlan])
 
   const selectFacility = (id: RegionId) => {
     setSelected(id)
@@ -594,6 +601,29 @@ function App() {
     if (visitor) advanceEncounter(visitor, true)
   }
 
+  const inspectFacility = (id: RegionId) => {
+    setSelected(id)
+    setView('facilities')
+    setPlanetDocked(true)
+    setDetailOpen(true)
+  }
+
+  const executeTrade = (name: string, input: Partial<Resources>, output: Partial<Resources>) => {
+    if (!canPay(resources, input)) {
+      writeLog(`${formatDay(day)}：${name}未能成交，库存不足。`)
+      return
+    }
+    setResources(previous => apply(apply(previous, input, -1), output))
+    writeLog(`${formatDay(day)}：星海交易港完成「${name}」。`)
+  }
+
+  if (!gameStarted) {
+    return <StartGate planetTexture={planetTexture} onStart={() => {
+      setGameStarted(true)
+      setRunning(true)
+    }} />
+  }
+
   return <main className="app-shell">
     <header className="site-header">
       <div className="brand-block">
@@ -608,7 +638,7 @@ function App() {
     </header>
 
     <section className="resource-rail" aria-label="王国库存">
-      {allResourceKeys.map(key => <ResourceAtom key={key} resourceKey={key} value={resources[key]} net={dailyNet[key] ?? 0} showGroup />)}
+      {allResourceKeys.map(key => <ResourceAtom key={key} resourceKey={key} value={resources[key]} net={dailyNet[key] ?? 0} />)}
     </section>
 
     {visitor && <div className="event-scrim" role="presentation"><section className="diplomatic-letter event-modal" aria-live="polite" aria-modal="true" role="dialog">
@@ -637,11 +667,11 @@ function App() {
 
     <section className="page-content">
       {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} staffing={staffing} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onStaff={assignPopulation} onMethod={(methodId) => setProductionMethods(previous => ({ ...previous, [selectedRegion.id]: methodId }))} onAssignment={visitorId => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))} />}
-      {view === 'palace' && <Palace policy={policy} policyStartedDay={policyEffectiveDay} facility={palaceFacility} cooldownRemaining={policyCooldownRemaining} reportProgress={policyReportProgress} lastReport={lastPolicyReport} techs={techs} onPolicy={changePolicy} onSelectFacility={() => selectFacility('K')} />}
-      {view === 'research' && <ResearchLab facility={specialFacility('L')} techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} researchThroughput={researchThroughput} knowledgeStock={resources.knowledge} onResearch={setActiveResearch} onSelectFacility={() => selectFacility('L')} />}
-      {view === 'ecology' && <EcologyRing facility={specialFacility('R')} onSelectFacility={() => selectFacility('R')} />}
-      {view === 'starport' && <Starport facility={specialFacility('S')} techs={techs} onSelectFacility={() => selectFacility('S')} />}
-      {view === 'ship' && <Shipyard facility={specialFacility('D')} shipProgress={shipProgress} score={score} onSelectFacility={() => selectFacility('D')} />}
+      {view === 'palace' && <Palace policy={policy} policyStartedDay={policyEffectiveDay} facility={palaceFacility} cooldownRemaining={policyCooldownRemaining} reportProgress={policyReportProgress} lastReport={lastPolicyReport} onPolicy={changePolicy} onSelectFacility={() => inspectFacility('K')} />}
+      {view === 'research' && <ResearchLab facility={specialFacility('L')} techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} researchThroughput={researchThroughput} knowledgeStock={resources.knowledge} onResearch={setActiveResearch} onSelectFacility={() => inspectFacility('L')} />}
+      {view === 'ecology' && <EcologyRing facility={specialFacility('R')} onSelectFacility={() => inspectFacility('R')} />}
+      {view === 'starport' && <Starport facility={specialFacility('S')} resources={resources} techs={techs} onTrade={executeTrade} onSelectFacility={() => inspectFacility('S')} />}
+      {view === 'ship' && <Shipyard facility={specialFacility('D')} shipProgress={shipProgress} score={score} onSelectFacility={() => inspectFacility('D')} />}
       {view === 'visitors' && <Visitors roster={roster} assigned={assigned} regions={regions} visitor={visitor} onSelect={selectFacility} onAssignment={(regionId, visitorId) => setAssigned(previous => ({ ...previous, [regionId]: visitorId }))} />}
     </section>
 
@@ -649,10 +679,27 @@ function App() {
       <div className="scoreline"><span>国祚评分</span><strong>{score}</strong><small>星舰进度权重最高</small></div>
       <nav className="tab-nav" aria-label="底部系统菜单">{navItems.map(item => { const NavIcon = item.icon; return <button key={item.id} className={view === item.id ? 'active' : ''} onClick={() => setView(item.id)}><NavIcon size={16} />{item.label}</button> })}</nav>
       <button className="advance-year" onClick={advanceDay} disabled={completed}>推进一日 <ArrowUpRight size={17} /></button>
-      <button className="art-button" onClick={() => setArtOpen(!artOpen)}>素材提示词</button>
     </footer>
+  </main>
+}
 
-    {artOpen && <section className="art-brief"><button onClick={() => setArtOpen(false)} aria-label="关闭素材提示"><X size={16} /></button><span>静态美术素材提示词，不含生成图像</span><p>“lunar royal colony command deck, titanium ceremonial architecture buried in moon regolith, restrained brass royal insignia, hard sunlight, blue grey shadows, Chinese sci-fi court ritual, isometric game asset, no text, no people, high-detail matte painting”</p></section>}
+function StartGate({ planetTexture, onStart }: { planetTexture: typeof planetTextures[number]; onStart: () => void }) {
+  return <main className="start-gate">
+    <section className="start-orbit" aria-label="殖民星球预览">
+      <PlanetScene texture={planetTexture} onActivate={onStart} />
+    </section>
+    <section className="start-console" aria-label="开始游戏">
+      <div className="brand-seal"><Crown size={25} /></div>
+      <span className="eyebrow">月面主权局 · 1000御日试验</span>
+      <h1>月冠纪元</h1>
+      <p>在第一个御日签发殖民诏令。资源会自动结算，设施、政策、科技、贸易与星舰共同决定国祚。</p>
+      <div className="start-facts">
+        <span><Orbit size={14} />{planetTexture.name}</span>
+        <span><Rocket size={14} />终局星舰</span>
+        <span><Landmark size={14} />政务舱</span>
+      </div>
+      <button className="primary-action" onClick={onStart}><Play size={16} />开始执政</button>
+    </section>
   </main>
 }
 
@@ -667,14 +714,14 @@ function PlanetFacilities({ regions, selected, year, techs, productionMethods, f
   }
 
   return <div className={detailOpen ? 'planet-workbench detail-mode' : 'planet-workbench'}>
-    <section className="planet-dock">
+    {!detailOpen && <section className="planet-dock">
       <div className="docked-orbit"><PlanetScene texture={planetTexture} compact onActivate={() => onBack()} /></div>
       <div className="planet-dock-copy"><span className="eyebrow">殖民星球</span><h2>{planetTexture.name}</h2><p>{formatDay(year)}，国祚仍在设施、政策与星舰之间被重新分配。</p></div>
       <aside className="king-profile">
         <div className="king-portrait-slot"><Crown size={22} /><span>王像待绘</span></div>
         <div><span className="eyebrow">玩家国王</span><h3>月冠执政者</h3><p>姓名、称号、肖像与个人诏令摘要将在此处展示。当前视图保留为后续角色化叙事入口。</p></div>
       </aside>
-    </section>
+    </section>}
     {detailOpen ? <FacilityDetailPanel selected={selected} year={year} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} staffing={staffing} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} regions={regions} onBack={onBack} onUpgrade={onUpgrade} onHold={onHold} onShrink={onShrink} onStaff={onStaff} onMethod={onMethod} onAssignment={onAssignment} /> : <FacilityList regions={regions} selected={selected} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} staffing={staffing} facilityModifiers={facilityModifiers} assigned={assigned} roster={roster} onSelect={onSelect} />}
   </div>
 }
@@ -729,6 +776,7 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
   const operationProgress = currentOrder === 'hold' ? cycleProgress : Math.min(100, Math.max(8, Math.round(((year - (facilityOrderStarted[selectedRegion.id] ?? year) + 1) / gameCalendar.optimizationIntervalDays) * 100)))
   const recentAuto = lastAutomatedAction?.id === selectedRegion.id && year - lastAutomatedAction.day <= 6
   const throughput = staffRate * selectedModifier.outputMultiplier
+  const isSpecialDetail = Boolean(specialFacilityViews[selectedRegion.id])
   const techBonusSources = [
     hasTech(techs, 'TG-1') ? 'TG-1 全局生产效率' : null,
     hasTech(techs, 'TG-2') ? 'TG-2 电力消耗减免' : null,
@@ -750,53 +798,69 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
         ? '库存满足扩建成本，扩张会立即消耗下列资源'
         : '库存不足，扩张按钮会保留判断但暂不可签发'
 
-  return <aside className="inspector facility-detail-page">
-    <button className="back-button" onClick={onBack}><ChevronLeft size={16} />建筑名录</button>
-    <div className="inspector-head"><span className="facility-icon"><SelectIcon size={23} /></span><div><span className="eyebrow">建筑详情 · {selected}</span><h2>{selectedRegion.name}</h2><p>{selectedRegion.subtitle}</p></div></div>
-    <p className="inspector-description">{displayCopy(selectedRegion.note)}</p>
-    <p className="inspector-description">{displayCopy(selectedRegion.interfaceDuty)}</p>
-    {selectedRegion.phaseNotes?.length ? <div className="phase-list">{selectedRegion.phaseNotes.map(phase => <p key={phase.name}><b>{phase.name}</b><span>{displayCopy(phase.note)}</span></p>)}</div> : null}
-    <div className="population-strip">
+  return <aside className={`inspector facility-detail-page ${isSpecialDetail ? 'special-detail' : 'standard-detail'}`}>
+    <div className="facility-detail-toolbar">
+      <button className="back-button" onClick={onBack}><ChevronLeft size={16} />建筑名录</button>
+      <InfoToggle title="建筑说明">
+        <p>{displayCopy(selectedRegion.note)}</p>
+        <p>{displayCopy(selectedRegion.interfaceDuty)}</p>
+        {selectedRegion.phaseNotes?.map(phase => <p key={phase.name}><b>{phase.name}</b>：{displayCopy(phase.note)}</p>)}
+      </InfoToggle>
+    </div>
+    <section className="facility-identity-panel">
+      <div className="building-art-slot" aria-label={`${selectedRegion.name}建筑图片占位`}>
+        <SelectIcon size={44} />
+        <span>建筑美术占位</span>
+      </div>
+      <div className="building-title-copy">
+        <span className="eyebrow">{isSpecialDetail ? '特殊建筑详情' : '普通建筑详情'} · {selected}</span>
+        <h2>{selectedRegion.name}</h2>
+        <p>{selectedRegion.subtitle}</p>
+        <div className="path-note compact"><Orbit size={15} /><span>{parents.length ? `${parents.join('、')} → 本设施` : '殖民地基础设施'}</span></div>
+      </div>
+    </section>
+    <section className="population-strip">
       <div><span>岗位容量</span><strong>{selectedRegion.level}<small>/{selectedRegion.max}</small></strong><em>建筑可容纳人口</em></div>
       <div><span>已分配人口</span><strong>{assignedPopulation}<small>/{selectedRegion.level}</small></strong><em>王国余闲 {freePopulation}</em></div>
       <div><span>建筑状态</span><strong>{selectedBuildable ? (selectedRegion.level ? '运行中' : '可建造') : '未授权'}</strong><em>{selectedBuildable ? `${allocatedPopulation}/${fmt(resources.population)} 人口已派用` : selectedRequiredTech?.name ?? '科技锁定'}</em></div>
-    </div>
-    <div className="staffing-control">
-      <div className="staffing-meter"><span style={{ width: `${selectedRegion.level ? Math.round(assignedPopulation / selectedRegion.level * 100) : 0}%` }} /><small>人口分配 {selectedRegion.level ? Math.round(assignedPopulation / selectedRegion.level * 100) : 0}%</small></div>
-      <div className="staffing-buttons"><button onClick={() => onStaff(selectedRegion.id, -1)} disabled={assignedPopulation <= 0}>撤员</button><button onClick={() => onStaff(selectedRegion.id, 1)} disabled={selectedRegion.level <= assignedPopulation || freePopulation <= 0}>增员</button></div>
-    </div>
-    <div className="action-brief">
-      <div className="section-heading"><div><span className="eyebrow">调度判断</span><h3>先看代价，再签发动作</h3></div><p>{actionReason}</p></div>
+    </section>
+    <section className="detail-operations">
+      <div className="staffing-control">
+        <div className="staffing-meter"><span style={{ width: `${selectedRegion.level ? Math.round(assignedPopulation / selectedRegion.level * 100) : 0}%` }} /><small>人口分配 {selectedRegion.level ? Math.round(assignedPopulation / selectedRegion.level * 100) : 0}%</small></div>
+        <div className="staffing-buttons"><button onClick={() => onStaff(selectedRegion.id, -1)} disabled={assignedPopulation <= 0}>撤员</button><button onClick={() => onStaff(selectedRegion.id, 1)} disabled={selectedRegion.level <= assignedPopulation || freePopulation <= 0}>增员</button></div>
+      </div>
+      <div className={`throughput-panel throughput-${throughputClass(throughput)}`}>
+        <div><span>建筑吞吐率</span><strong>{Math.round(throughput * 100)}%</strong><em>{throughput >= 1 ? '满负荷或受加成' : throughput > 0 ? '低负荷运行' : '停摆'}</em></div>
+        <div><span>加成来源</span><p>{bonusSources.join('；')}</p></div>
+      </div>
+    </section>
+    <section className="action-brief">
+      <div className="section-heading"><div><span className="eyebrow">调度判断</span><h3>签发动作</h3></div><InfoToggle title="调度说明"><p>{actionReason}</p><p>{nextAutoAction ? `自动建议扩张至 ${nextAutoAction.toLevel}` : automationPlan.reason ?? '维持当前规模'}</p></InfoToggle></div>
       <div className="action-facts">
         <div><span>扩建成本</span><ResourceBundle bundle={selectedCost} empty="无需成本" /></div>
-        <div><span>自动建议</span><b>{nextAutoAction ? `建议扩张至 ${nextAutoAction.toLevel}` : automationPlan.reason ?? '维持当前规模'}</b></div>
-        <div><span>当前手动状态</span><b>{currentOrder === 'expand' ? '扩张' : currentOrder === 'shrink' ? '缩小' : '保持'}</b></div>
+        <div><span>自动建议</span><b>{nextAutoAction ? `扩张至 ${nextAutoAction.toLevel}` : '维持'}</b></div>
+        <div><span>当前状态</span><b>{currentOrder === 'expand' ? '扩张' : currentOrder === 'shrink' ? '缩小' : '保持'}</b></div>
       </div>
-      <div className={`operation-progress operation-${currentOrder}`}><span style={{ width: `${operationProgress}%` }} /><small>{currentOrder === 'hold' ? `内置优化署每 ${gameCalendar.optimizationIntervalDays} 御日复核一次，当前周期 ${cycleProgress}%` : `${orderLabel(currentOrder)}：进度 ${operationProgress}%`}</small></div>
+      <div className={`operation-progress operation-${currentOrder}`} title={currentOrder === 'hold' ? `优化署每 ${gameCalendar.optimizationIntervalDays} 御日复核一次` : orderLabel(currentOrder)}><span style={{ width: `${operationProgress}%` }} /><small>{currentOrder === 'hold' ? `复核周期 ${cycleProgress}%` : `${orderLabel(currentOrder)} ${operationProgress}%`}</small></div>
       <div className="facility-actions">
         <button className={`${currentOrder === 'expand' ? 'selected' : ''} ${recentAuto && lastAutomatedAction?.mode === 'expand' ? 'auto-feedback' : ''}`} onClick={() => onUpgrade(selectedRegion.id)} disabled={!selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />扩张</button>
         <button className={currentOrder === 'hold' ? 'selected' : ''} onClick={() => onHold(selectedRegion.id)}><Minus size={15} />保持</button>
         <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id)} disabled={selectedRegion.level <= 0}><ArrowDownRight size={15} />缩小</button>
       </div>
-    </div>
-    <div className={`throughput-panel throughput-${throughputClass(throughput)}`}>
-      <div><span>建筑吞吐率</span><strong>{Math.round(throughput * 100)}%</strong><em>{throughput >= 1 ? '满负荷或受加成' : throughput > 0 ? '低负荷运行' : '停摆'}</em></div>
-      <div><span>加成来源</span><p>{bonusSources.join('；')}</p></div>
-    </div>
-    <div className="production-methods"><span>生产方式</span>{selectedSpec.productionMethods.map(method => {
+    </section>
+    <section className="production-methods"><span>生产方式</span>{selectedSpec.productionMethods.map(method => {
       const methodReady = hasTech(techs, method.unlockedBy) && method.autoSelect !== false
       const techName = method.unlockedBy ? technologyCatalog[method.unlockedBy]?.name : undefined
       return <article key={method.id} className={method.id === selectedMethod.id && methodReady ? 'active' : ''}>
         <div className="method-copy"><b>{method.name}</b><small>{methodReady ? '已解锁，可切换' : method.autoSelect === false ? '由阶段推进启用' : `需要 ${techName ?? '对应科技'}`}</small></div>
         <ProductionFlow input={method.input} output={method.output} />
-        <p>{displayCopy(method.note)}</p>
+        <InfoToggle title={`${method.name}说明`}><p>{displayCopy(method.note)}</p></InfoToggle>
         {method.id === selectedMethod.id && methodReady ? <em>使用中</em> : <button onClick={() => onMethod(method.id)} disabled={!methodReady}>切换</button>}
       </article>
-    })}</div>
-    <div className="stat-block"><span>每日结算</span><div>{resourceOrder.filter(key => selectedYield[key]).map(key => <ResourceAtom key={key} resourceKey={key} value={selectedYield[key] ?? 0} compact />)}{!Object.values(selectedYield).filter(Boolean).length && <span className="resource-empty">无日结算</span>}</div></div>
-    <div className="path-note"><Orbit size={15} /><span>{parents.length ? `发展路径：${parents.join('、')} → 本设施` : '发展路径：殖民地基础设施'}</span></div>
+    })}</section>
+    <section className="stat-block"><span>每日结算</span><div>{resourceOrder.filter(key => selectedYield[key]).map(key => <ResourceAtom key={key} resourceKey={key} value={selectedYield[key] ?? 0} compact />)}{!Object.values(selectedYield).filter(Boolean).length && <span className="resource-empty">无日结算</span>}</div></section>
     {selectedWorker ? <div className="worker-card"><span>{selectedWorker.glyph}</span><div><b>{selectedWorker.name} 正在执勤</b><small>专属区域日产出 +{Math.round(selectedWorker.boost * 100)}%</small></div><button onClick={() => onAssignment(undefined)}>待命</button></div> : workerChoices.length ? <div className="worker-card"><span>{workerChoices[0].glyph}</span><div><b>{workerChoices[0].name} 可派驻</b><small>专属区域日产出 +{Math.round(workerChoices[0].boost * 100)}%</small></div><button onClick={() => onAssignment(workerChoices[0].id)}>派驻</button></div> : null}
-    <p className="inspector-footnote">全局日净值当前有 {Object.values(dailyNet).filter(Boolean).length} 项变化。系统自动操作会在上方按钮中短暂高亮。</p>
+    <div className="inspector-footnote"><span>全局日净值 {Object.values(dailyNet).filter(Boolean).length} 项变化</span><InfoToggle title="自动操作说明"><p>系统自动操作会在调度按钮中短暂高亮。</p></InfoToggle></div>
   </aside>
 }
 
@@ -809,8 +873,8 @@ function SpecialFacilityPanel({ facility, tone, children, onSelectFacility }: { 
     <div className="special-panel-head">
       <span className="special-panel-icon"><FacilityIcon size={28} /></span>
       <div><span className="eyebrow">{facility.region.id} 特殊设施 · 建筑状态</span><h2>{facility.region.name}</h2><p>{facility.region.subtitle}</p></div>
+      <InfoToggle title="特殊设施说明"><p>{displayCopy(facility.region.note)}</p></InfoToggle>
     </div>
-    <p className="special-panel-note">{displayCopy(facility.region.note)}</p>
     <div className="special-facility-stats">
       <div><span>设施等级</span><strong>{facility.region.level}<small>/{facility.region.max}</small></strong></div>
       <div><span>已分配人口</span><strong>{facility.assignedPopulation}<small>/{facility.region.level}</small></strong></div>
@@ -822,7 +886,7 @@ function SpecialFacilityPanel({ facility, tone, children, onSelectFacility }: { 
       <div><span>每日结算</span><ResourceBundle bundle={facility.net} empty="暂无日结算" /></div>
     </div>
     {children}
-    <button className="special-secondary-action" onClick={onSelectFacility}><Orbit size={15} />查看设施名录</button>
+    <button className="special-secondary-action" onClick={onSelectFacility}><Orbit size={15} />查看设施详情</button>
   </section>
 }
 
@@ -871,7 +935,7 @@ function TechnologyCard({ techId, techs, activeResearch, researchProgress, onRes
     <div className="tech-card-copy">
       <h3>{tech.name}</h3>
       <TechnologyTags tech={tech} />
-      <p>{displayCopy(tech.note)}</p>
+      <InfoToggle title={`${tech.name}说明`}><p>{displayCopy(tech.note)}</p></InfoToggle>
     </div>
     <div className="tech-prerequisites">
       <span>前置</span>
@@ -929,13 +993,28 @@ function EcologyRing({ facility, onSelectFacility }: { facility: SpecialFacility
   </div>
 }
 
-function Starport({ facility, techs, onSelectFacility }: { facility: SpecialFacilityViewModel; techs: string[]; onSelectFacility: () => void }) {
-  const tradeTechs = techs.filter(tech => tech.startsWith('TS-'))
+function Starport({ facility, resources, techs, onTrade, onSelectFacility }: { facility: SpecialFacilityViewModel; resources: Resources; techs: string[]; onTrade: (name: string, input: Partial<Resources>, output: Partial<Resources>) => void; onSelectFacility: () => void }) {
+  const tradeOffers: { id: TechnologyId; name: string; input: Partial<Resources>; output: Partial<Resources>; note: string }[] = [
+    { id: 'TS-1', name: '招募星际劳工', input: { currency: 6, luxury: 1 }, output: { population: 1 }, note: '以货币和礼物换取 1 人口单位。' },
+    { id: 'TS-2', name: '购买知识封包', input: { currency: 5, alloy: 2 }, output: { knowledge: 6 }, note: '把工业品转为可投入研究的知识。' },
+    { id: 'TS-3', name: '输出玫瑰奢侈品', input: { biomass: 4, water: 2 }, output: { luxury: 3, currency: 2 }, note: '把生态盈余转为礼物与结算货币。' },
+  ]
   return <div className="special-system-page">
     <SpecialFacilityPanel facility={facility} tone="trade" onSelectFacility={onSelectFacility}>
-      <div className="special-panel-brief"><ArrowLeftRight size={16} /><span>星港科技固定添加双向贸易权限，贸易清单不再依赖临时事件按钮。</span></div>
+      <div className="special-panel-brief"><ArrowLeftRight size={16} /><span>已解锁的星港科技会打开对应交易单。库存不足时交易按钮自动禁用。</span></div>
     </SpecialFacilityPanel>
-    <section className="special-system-main trade-board"><div className="section-heading"><div><span className="eyebrow">S 星海交易港</span><h2>贸易权限</h2></div><p>当前所有星港科技均为双向贸易。</p></div>{['TS-1 星际劳工', 'TS-2 知识传输协议', 'TS-3 玫瑰星球'].map(tech => <p key={tech} className={tradeTechs.some(item => item.startsWith(tech.split(' ')[0])) ? 'active' : ''}><ArrowLeftRight size={15} />{tech}</p>)}</section>
+    <section className="special-system-main trade-board">
+      <div className="section-heading"><div><span className="eyebrow">S 星海交易港</span><h2>贸易清单</h2></div><InfoToggle title="贸易规则"><p>交易立即结算库存，不改变每日净值。解锁 TS 系列科技后，对应交易单会从封存状态变为可执行。</p></InfoToggle></div>
+      <div className="trade-offer-list">{tradeOffers.map(offer => {
+        const unlocked = hasTech(techs, offer.id)
+        const affordable = canPay(resources, offer.input)
+        return <article key={offer.id} className={unlocked ? 'active' : 'locked'}>
+          <div><span>{offer.id}</span><h3>{offer.name}</h3><small>{unlocked ? offer.note : `需要 ${technologyCatalog[offer.id].name}`}</small></div>
+          <div className="trade-flow"><ResourceBundle bundle={offer.input} empty="无需投入" /><ArrowRight size={15} /><ResourceBundle bundle={offer.output} empty="无产出" /></div>
+          <button onClick={() => onTrade(offer.name, offer.input, offer.output)} disabled={!unlocked || !affordable}>{unlocked ? '交易' : '封存'}</button>
+        </article>
+      })}</div>
+    </section>
   </div>
 }
 
@@ -948,7 +1027,7 @@ function Shipyard({ facility, shipProgress, score, onSelectFacility }: { facilit
   </div>
 }
 
-function Palace({ policy, policyStartedDay, facility, cooldownRemaining, reportProgress, lastReport, techs, onPolicy, onSelectFacility }: { policy: PolicyId; policyStartedDay: number; facility: SpecialFacilityViewModel; cooldownRemaining: number; reportProgress: number; lastReport: PolicyReport | null; techs: string[]; onPolicy: (policy: PolicyId) => void; onSelectFacility: () => void }) {
+function Palace({ policy, policyStartedDay, facility, cooldownRemaining, reportProgress, lastReport, onPolicy, onSelectFacility }: { policy: PolicyId; policyStartedDay: number; facility: SpecialFacilityViewModel; cooldownRemaining: number; reportProgress: number; lastReport: PolicyReport | null; onPolicy: (policy: PolicyId) => void; onSelectFacility: () => void }) {
   const currentPolicy = policyDefinitions.find(item => item.id === policy)!
   const currentPolicyName = currentPolicy.name
   const palaceCapacity = facility.region.level
@@ -961,7 +1040,7 @@ function Palace({ policy, policyStartedDay, facility, cooldownRemaining, reportP
       <div className="palace-mark"><Crown size={48} /></div>
       <span className="eyebrow">K 月面王城 · 建筑页</span>
       <h2>{facility.region.name}</h2>
-      <p>{displayCopy(facility.region.note)}</p>
+      <div className="palace-note-line"><span>{facility.region.subtitle}</span><InfoToggle title="王城说明"><p>{displayCopy(facility.region.note)}</p></InfoToggle></div>
       <div className="palace-building-stats">
         <div><span>王城等级</span><strong>{facility.region.level}<small>/{facility.region.max}</small></strong></div>
         <div><span>已分配人口</span><strong>{facility.assignedPopulation}<small>/{palaceCapacity}</small></strong></div>
@@ -972,7 +1051,7 @@ function Palace({ policy, policyStartedDay, facility, cooldownRemaining, reportP
         <span>每日结算</span>
         <ResourceBundle bundle={facility.net} empty="王城未产生净变动" />
       </div>
-      <button onClick={onSelectFacility}><Orbit size={15} />查看设施名录</button>
+      <button onClick={onSelectFacility}><Orbit size={15} />查看设施详情</button>
     </section>
 
     <section className="policy-board">
@@ -1009,12 +1088,6 @@ function Palace({ policy, policyStartedDay, facility, cooldownRemaining, reportP
         <div><span>执行政策</span><strong>{policyDefinitions.find(item => item.id === lastReport.policy)?.name ?? lastReport.policy}</strong><small>{lastReport.summary}</small></div>
         <div><span>库存净变动</span><ResourceBundle bundle={lastReport.delta} empty="无显著变动" /></div>
       </div> : <div className="policy-report-empty"><Landmark size={22} /><span>尚未完成第一个 20 御日政策周期。</span></div>}
-    </section>
-
-    <section className="tech-cabinet palace-tech-cabinet">
-      <span className="eyebrow">档案柜 · 已获技术</span>
-      <p><Bot size={15} />王城加成来源：设施吞吐 {throughputPercent}%、人口府邸系数 x{(facility.modifier.outputMultiplier ?? 1).toFixed(2)}</p>
-      {techs.length ? techs.map(tech => <p key={tech}><FlaskConical size={15} />{tech}</p>) : <p className="empty-tech">尚无科技入库。科技会解锁可选生产方式。</p>}
     </section>
   </div>
 }
