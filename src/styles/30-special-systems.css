@@ -472,7 +472,7 @@
 
 .trade-offer-list article {
   display: grid;
-  grid-template-columns: minmax(160px, .78fr) minmax(260px, 1fr) auto;
+  grid-template-columns: minmax(160px, .68fr) minmax(240px, .9fr) minmax(230px, auto);
   gap: .75rem;
   align-items: center;
   border: 1px solid var(--ui-line);

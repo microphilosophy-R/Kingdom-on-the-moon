@@ -21,10 +21,14 @@ export const housingCapacityPerLevel: Partial<Record<FacilityId, number>> = {
   M: 24,
 }
 
+export const fixedFacilityIds: FacilityId[] = ['S']
+
 export const isHousingFacility = (id: FacilityId) => Boolean(housingCapacityPerLevel[id])
 
+export const isFixedFacility = (id: FacilityId) => fixedFacilityIds.includes(id)
+
 export const getFacilityWorkCapacity = (id: FacilityId, level: number) =>
-  isHousingFacility(id) ? 0 : Math.max(0, level) * jobsPerFacilityLevel
+  isHousingFacility(id) || isFixedFacility(id) ? 0 : Math.max(0, level) * jobsPerFacilityLevel
 
 export const getHousingCapacity = (id: FacilityId, level: number) =>
   Math.max(0, level) * (housingCapacityPerLevel[id] ?? 0)
@@ -38,6 +42,7 @@ export const getConstructionCostDiscount = (techs: string[] = []) =>
   hasTech(techs, 'TG-3') ? 0.95 : 1
 
 export const getUpgradeCostScale = (id: FacilityId) => {
+  if (isFixedFacility(id)) return 0
   if (id === 'K') return 2
   if (id === 'H') return 4
   if (id === 'M') return 6

@@ -15,6 +15,55 @@
   color: var(--ui-muted);
 }
 
+.trade-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .35rem;
+}
+
+.trade-quantity-controls {
+  display: grid;
+  gap: .28rem;
+  min-width: 0;
+}
+
+.trade-step-buttons,
+.trade-count-row,
+.trade-limit-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .25rem;
+}
+
+.trade-step-buttons button,
+.trade-limit-buttons button {
+  padding: .3rem .38rem;
+  font-size: .57rem;
+}
+
+.trade-count-row button {
+  width: 26px;
+  height: 24px;
+  padding: 0;
+}
+
+.trade-count-row strong {
+  min-width: 4.5ch;
+  color: var(--ui-ink-strong);
+  font-family: var(--ui-mono);
+  font-size: var(--font-label);
+  text-align: center;
+}
+
+.trade-actions button.selected {
+  border-color: oklch(58% .09 150);
+  background: oklch(93% .045 150);
+  color: oklch(34% .06 150);
+}
+
 .facility-ledger-list button::before {
   display: none;
 }
@@ -477,7 +526,6 @@ h3,
 .main-nav button.active,
 .tab-nav button.active,
 .primary-action,
-.advance-year,
 .letter-actions .primary,
 .event-modal .letter-actions .primary,
 .upgrade-button,
@@ -494,7 +542,6 @@ h3,
 }
 
 .primary-action,
-.advance-year,
 .letter-actions .primary,
 .event-modal .letter-actions .primary,
 .upgrade-button {
@@ -503,7 +550,6 @@ h3,
 }
 
 .primary-action:hover,
-.advance-year:hover:not(:disabled),
 .letter-actions .primary:hover,
 .event-modal .letter-actions .primary:hover,
 .upgrade-button:hover:not(:disabled) {

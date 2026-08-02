@@ -187,6 +187,8 @@ export const resourceGroups: { label: string; keys: ResourceKey[] }[] = [
   { label: '文化', keys: ['luxury'] },
 ]
 
+export const nonStorableResourceKeys = resourceOrder.filter(key => !resourceMeta[key].storable)
+
 export const defaultReserveFloors: Resources = {
   power: 12,
   water: 8,
@@ -228,13 +230,24 @@ export const methodText = (method: ProductionMethod) => {
 }
 
 export const canAfford = (bank: Resources, price: Partial<Resources>) =>
-  resourceOrder.every(key => bank[key] >= (price[key] ?? 0))
+  resourceOrder.every(key => {
+    const required = price[key] ?? 0
+    return required <= 0 || bank[key] >= required
+  })
 
 export const applyBundle = (bank: Resources, change: Partial<Resources>, direction = 1): Resources => {
   const next = { ...bank }
   resourceOrder.forEach(key => {
     const delta = change[key] ?? 0
     next[key] = next[key] + direction * delta
+  })
+  return next
+}
+
+export const settleDailyResources = (bank: Resources, dailyNet: Partial<Resources>): Resources => {
+  const next = applyBundle(bank, dailyNet)
+  nonStorableResourceKeys.forEach(key => {
+    next[key] = dailyNet[key] ?? 0
   })
   return next
 }

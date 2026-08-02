@@ -17,6 +17,9 @@ import {
   projectDailyNet,
   projectFacilityCost,
   projectPopulationSystem,
+  planAutoTradesForDeficits,
+  calculateCurrencyDebtInterest,
+  settleDailyResources,
   resourceOrder,
   selectProductionMethod,
   technologyCatalog,
@@ -24,6 +27,7 @@ import {
   type FacilityState,
   type PopulationPolicy,
   type ProductionMethodId,
+  type ResourceKey,
   type Resources,
   type TechnologyId,
 } from '../src/economy'
@@ -138,6 +142,8 @@ function simulateToDay1000(): SimulationResult {
   let activeResearch = firstResearchableTechnology()
   let populationPressureDays = 0
   const policy: PopulationPolicy = 'ration'
+  const autoTradeProtectionEnabled = false
+  const autoTradeEnabled: Partial<Record<ResourceKey, boolean>> = {}
   const snapshots: Snapshot[] = []
   const cumulative = {
     started: 0,
@@ -151,14 +157,42 @@ function simulateToDay1000(): SimulationResult {
     strainedDays: 0,
   }
 
-  const buildSnapshot = (dailyNet = emptyResources()): Snapshot => {
-    const projection = projectPopulationSystem({
-      resources,
+  const protectedPopulationProjection = (resourceState: Resources) => {
+    const preliminary = projectPopulationSystem({
+      resources: resourceState,
       facilities: makeFacilityMap(levels),
       policy,
       techs,
       pressureDays: populationPressureDays,
     })
+    const protection = planAutoTradesForDeficits(
+      resourceState,
+      {
+        water: preliminary.lifeSupportCost.water ?? 0,
+        oxygen: preliminary.lifeSupportCost.oxygen ?? 0,
+        biomass: preliminary.lifeSupportCost.biomass ?? 0,
+        regolith: 0,
+        alloy: 0,
+        quantumCore: 0,
+        luxury: 0,
+      },
+      facilityOrder.map(id => ({ id, level: levels[id] })),
+      techs,
+      autoTradeEnabled,
+      autoTradeProtectionEnabled,
+    )
+    const interest = calculateCurrencyDebtInterest(protection.resources)
+    return projectPopulationSystem({
+      resources: interest > 0 ? applyBundle(protection.resources, { currency: -interest }) : protection.resources,
+      facilities: makeFacilityMap(levels),
+      policy,
+      techs,
+      pressureDays: populationPressureDays,
+    })
+  }
+
+  const buildSnapshot = (dailyNet = emptyResources()): Snapshot => {
+    const projection = protectedPopulationProjection(resources)
     return {
       day,
       resources: roundResources(resources),
@@ -201,15 +235,41 @@ function simulateToDay1000(): SimulationResult {
       productionMethods,
       globalBonus: policy === 'ration' ? { biomass: 1 } : {},
     })
-    const populationProjection = projectPopulationSystem({
-      resources: applyBundle(resources, productionNet),
+    const afterProductionResources = settleDailyResources(resources, productionNet)
+    const preliminaryPopulationProjection = projectPopulationSystem({
+      resources: afterProductionResources,
       facilities: makeFacilityMap(levels),
       policy,
       techs,
       pressureDays: populationPressureDays,
     })
-    const dailyNet = mergeResources(productionNet, populationProjection.net)
-    resources = applyBundle(resources, dailyNet)
+    const autoTradeTargets = {
+      water: preliminaryPopulationProjection.lifeSupportCost.water ?? 0,
+      oxygen: preliminaryPopulationProjection.lifeSupportCost.oxygen ?? 0,
+      biomass: preliminaryPopulationProjection.lifeSupportCost.biomass ?? 0,
+      regolith: 0,
+      alloy: 0,
+      quantumCore: 0,
+      luxury: 0,
+    }
+    const autoTradePlan = planAutoTradesForDeficits(
+      afterProductionResources,
+      autoTradeTargets,
+      facilityOrder.map(id => ({ id, level: levels[id] })),
+      techs,
+      autoTradeEnabled,
+      autoTradeProtectionEnabled,
+    )
+    const currencyDebtInterest = calculateCurrencyDebtInterest(autoTradePlan.resources)
+    const populationProjection = projectPopulationSystem({
+      resources: currencyDebtInterest > 0 ? applyBundle(autoTradePlan.resources, { currency: -currencyDebtInterest }) : autoTradePlan.resources,
+      facilities: makeFacilityMap(levels),
+      policy,
+      techs,
+      pressureDays: populationPressureDays,
+    })
+    const dailyNet = mergeResources(productionNet, autoTradePlan.delta, { currency: -currencyDebtInterest }, populationProjection.net)
+    resources = settleDailyResources(resources, dailyNet)
     populationPressureDays = populationProjection.nextPressureDays
 
     Object.entries(construction).forEach(([id, project]) => {
@@ -245,13 +305,7 @@ function simulateToDay1000(): SimulationResult {
       }
     }
 
-    const postPopulationProjection = projectPopulationSystem({
-      resources,
-      facilities: makeFacilityMap(levels),
-      policy,
-      techs,
-      pressureDays: populationPressureDays,
-    })
+    const postPopulationProjection = protectedPopulationProjection(resources)
     const plan = crownStewardOptimizer.run({
       resources,
       facilities: facilityOrder.map(id => ({ id, level: levels[id] })),
@@ -336,7 +390,7 @@ function simulateToDay1000(): SimulationResult {
     final.population.total >= 500
       ? `Without random events, final population is ${final.population.total}/${final.population.capacity}, meeting the 500 target.`
       : `Without random events, final population is ${final.population.total}/${final.population.capacity}, below the 500 target.`,
-    `Built facilities: ${builtFacilities.join(', ')}. Opening S exists, and the optimizer can use starport trade to cover alloy and complete the first expansion wave.`,
+    `Built facilities: ${builtFacilities.join(', ')}. Opening S exists; deficit auto-purchase protection is off, while planned starport trades remain available to the optimizer.`,
     final.cumulative.started === 0
       ? 'The optimizer started no construction; early costs or tradable materials still need adjustment.'
       : `The optimizer started ${final.cumulative.started} projects and completed ${final.cumulative.completed}.`,
@@ -352,9 +406,10 @@ function simulateToDay1000(): SimulationResult {
   return {
     scenario: `default-no-random-events-${crownStewardOptimizer.id}`,
     assumptions: [
-      '使用默认初始资源、默认科技、默认政策 ration。',
-      '不触发随机访客事件，不手动切换生产方式或政策。',
+      '使用默认初始资源、默认科技、默认配给基线。',
+      '不触发随机访客事件，不手动切换生产方式。',
       `每天运行 ${crownStewardOptimizer.name} 优化器；每座建筑有独立施工状态。`,
+      '关闭自动购入保护，赤字不再由星海交易港每日兜底采购。',
       '每 50 御日记录一次结构化快照。',
     ],
     snapshots,

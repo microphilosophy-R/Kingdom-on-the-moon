@@ -192,6 +192,12 @@ h1, h2, h3 { font-family: 'Noto Serif SC', 'Songti SC', serif; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.resource-atom .resource-detail {
+  grid-column: 1 / -1;
+  justify-self: end;
+  color: oklch(45% .022 250);
+  font-size: .55rem;
+}
 .resource-atom strong {
   color: oklch(25% .03 250);
   font-family: ui-monospace, monospace;
@@ -211,6 +217,16 @@ h1, h2, h3 { font-family: 'Noto Serif SC', 'Songti SC', serif; }
   font-size: .58rem;
   font-style: normal;
   white-space: nowrap;
+}
+.resource-inline-action {
+  grid-column: 1 / -1;
+  justify-self: end;
+  border: 1px solid oklch(64% .04 84);
+  border-radius: 4px;
+  padding: .1rem .28rem;
+  background: oklch(94% .025 86);
+  color: oklch(38% .04 74);
+  font-size: .55rem;
 }
 .resource-atom.compact {
   min-height: 0;

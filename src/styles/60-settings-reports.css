@@ -203,7 +203,7 @@
 
 .resource-rail > .resource-atom {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
+  grid-template-columns: 18px minmax(0, 1fr) auto;
   grid-template-rows: auto;
   align-items: center;
   min-height: 42px;
@@ -211,13 +211,14 @@
 
 .resource-rail > .resource-atom > span {
   display: grid;
-  grid-template-columns: minmax(3.2rem, 1fr) 4.7ch;
+  grid-template-columns: minmax(3.2rem, 1fr) minmax(4.7ch, auto);
   align-items: baseline;
   gap: .2rem;
 }
 
 .resource-rail > .resource-atom em {
-  display: none;
+  display: block;
+  min-width: 4.8ch;
 }
 
 .resource-atom strong {
@@ -417,12 +418,6 @@
   font-size: .58rem;
 }
 
-.time-dock .advance-year {
-  margin-left: 0;
-  background: var(--ui-brass);
-  color: oklch(97% .012 86);
-}
-
 .settings-scrim {
   position: fixed;
   z-index: 12;
@@ -496,6 +491,69 @@
 .settings-section input[type='range'] {
   width: 100%;
   accent-color: var(--ui-brass);
+}
+
+.settings-toggle,
+.trade-protection-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: .58rem;
+  color: var(--ui-ink);
+  font-size: var(--font-body);
+  font-weight: 700;
+}
+
+.settings-toggle span,
+.trade-protection-toggle span {
+  display: inline-flex;
+  align-items: center;
+  gap: .42rem;
+  min-width: 0;
+}
+
+.settings-toggle input,
+.trade-protection-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.settings-toggle i,
+.trade-protection-toggle i {
+  position: relative;
+  width: 42px;
+  height: 22px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 999px;
+  background: var(--ui-surface);
+  box-shadow: inset 0 1px 3px var(--ui-shadow);
+}
+
+.settings-toggle i::after,
+.trade-protection-toggle i::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ui-muted);
+  transition: transform .16s ease, background .16s ease;
+}
+
+.settings-toggle input:checked + i::after,
+.trade-protection-toggle input:checked + i::after {
+  transform: translateX(18px);
+  background: var(--ui-brass);
+}
+
+.trade-protection-toggle {
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .65rem .72rem;
+  background: var(--ui-raised);
 }
 
 .settings-actions {
@@ -645,13 +703,81 @@
   color: oklch(46% .105 145);
 }
 
+.palace-report-board {
+  align-content: start;
+}
+
+.palace-report-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: .7rem 0;
+}
+
+.palace-report-preview {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: .8rem;
+}
+
+.palace-report-preview section {
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .75rem;
+  background: var(--ui-raised);
+}
+
+.palace-report-preview h3 {
+  margin: 0 0 .55rem;
+  color: var(--ui-ink-strong);
+  font-size: var(--font-card);
+}
+
+.palace-report-preview section:first-child > div {
+  display: grid;
+  grid-template-columns: minmax(54px, 1fr) repeat(3, minmax(42px, auto));
+  gap: .42rem;
+  border-bottom: 1px solid var(--ui-line);
+  padding: .34rem 0;
+  color: var(--ui-muted);
+  font-size: var(--font-label);
+}
+
+.palace-report-preview section:first-child > div:last-child {
+  border-bottom: 0;
+}
+
+.palace-report-preview b {
+  color: var(--ui-ink);
+  font-family: var(--ui-mono);
+  text-align: right;
+}
+
+.palace-report-preview b.negative {
+  color: oklch(48% .15 28);
+}
+
+.palace-report-preview ol {
+  display: grid;
+  gap: .45rem;
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--ui-ink);
+  font-size: var(--font-body);
+  line-height: 1.55;
+}
+
+.palace-report-empty {
+  min-height: 220px;
+}
+
 @media (max-width: 900px) {
   .app-shell {
     padding-bottom: 9.2rem;
   }
 
   .reign-report-kpis,
-  .reign-report-grid {
+  .reign-report-grid,
+  .palace-report-preview {
     grid-template-columns: 1fr;
   }
 
@@ -675,8 +801,7 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .day-counter,
-  .time-dock .advance-year {
+  .day-counter {
     grid-column: 1 / -1;
   }
 
