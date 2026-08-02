@@ -63,7 +63,8 @@ import charChenlin from './assets/char-chenlin.jpg'
 type AppView = 'facilities' | 'palace' | 'research' | 'ecology' | 'starport' | 'ship' | 'visitors'
 type Icon = ComponentType<LucideProps>
 type RegionId = FacilityId
-type FacilityOrderMode = 'expand' | 'hold' | 'shrink'
+type FacilityOrderMode = 'shrink-continuous' | 'shrink' | 'hold' | 'expand' | 'expand-continuous'
+type StaffingPriority = 1 | 2 | 3 | 4 | 5
 type FacilityEra = 'early' | 'mid' | 'late'
 type TechnologyEra = 'early' | 'mid' | 'late'
 
@@ -98,7 +99,7 @@ type ConstructionProject = {
 }
 
 type GameSaveState = {
-  version: 4 | 5
+  version: 4 | 5 | 6
   savedAt: string
   gameStarted: boolean
   resources: Resources
@@ -120,6 +121,7 @@ type GameSaveState = {
   researchProgress: Partial<Record<TechnologyId, number>>
   productionMethods: Record<RegionId, ProductionMethodId>
   staffing: Record<RegionId, number>
+  staffingPriorities?: Record<RegionId, StaffingPriority>
   facilityOrders: Record<RegionId, FacilityOrderMode>
   facilityOrderStarted: Record<RegionId, number>
   construction: Record<RegionId, ConstructionProject | null>
@@ -198,14 +200,63 @@ const regionLayout: Record<RegionId, { icon: Icon; parentIds: RegionId[]; positi
 }
 
 const initialLevels: Partial<Record<RegionId, number>> = { E1: 1, C1: 1, K: 2, S: 1 }
-const initialStaffing = Object.fromEntries(facilityOrder.map(id => [
-  id,
-  isHousingFacility(id) ? 0 : getFacilityWorkCapacity(id, initialLevels[id] ?? 0),
-])) as Record<RegionId, number>
 const initialConstruction = Object.fromEntries(facilityOrder.map(id => [id, null])) as Record<RegionId, ConstructionProject | null>
 const initialProductionMethods = Object.fromEntries(
   facilityOrder.map(id => [id, selectProductionMethod(facilityEconomySpecs[id].productionMethods, defaultStartingTechs).id]),
 ) as Record<RegionId, ProductionMethodId>
+
+const facilityOrderIndex = Object.fromEntries(facilityOrder.map((id, index) => [id, index])) as Record<RegionId, number>
+const priorityLevels: StaffingPriority[] = [1, 2, 3, 4, 5]
+const defaultPriorityForFacility = (id: RegionId): StaffingPriority => {
+  const priority = facilityEconomySpecs[id].priority
+  if (priority >= 12) return 5
+  if (priority >= 9) return 4
+  if (priority >= 7) return 3
+  if (priority >= 5) return 2
+  return 1
+}
+const initialStaffingPriorities = Object.fromEntries(
+  facilityOrder.map(id => [id, defaultPriorityForFacility(id)]),
+) as Record<RegionId, StaffingPriority>
+const normalizeStaffingPriority = (value: unknown, fallback: StaffingPriority): StaffingPriority => {
+  const numeric = typeof value === 'number' ? value : Number(value)
+  return priorityLevels.includes(numeric as StaffingPriority) ? numeric as StaffingPriority : fallback
+}
+const normalizeStaffingPriorities = (saved?: Partial<Record<RegionId, unknown>>) => Object.fromEntries(
+  facilityOrder.map(id => [id, normalizeStaffingPriority(saved?.[id], initialStaffingPriorities[id])]),
+) as Record<RegionId, StaffingPriority>
+const autoAllocateStaffingFromLevels = (
+  levels: Partial<Record<RegionId, number>>,
+  population: number,
+  priorities: Record<RegionId, StaffingPriority>,
+) => {
+  const next = Object.fromEntries(facilityOrder.map(id => [id, 0])) as Record<RegionId, number>
+  let remainingPopulation = Math.max(0, Math.floor(population))
+  const assignable = facilityOrder
+    .filter(id => !isHousingFacility(id) && !isFixedFacility(id) && getFacilityWorkCapacity(id, levels[id] ?? 0) > 0)
+    .sort((a, b) =>
+      (priorities[b] ?? initialStaffingPriorities[b]) - (priorities[a] ?? initialStaffingPriorities[a])
+      || facilityEconomySpecs[b].priority - facilityEconomySpecs[a].priority
+      || facilityOrderIndex[a] - facilityOrderIndex[b],
+    )
+  assignable.forEach(id => {
+    const capacity = getFacilityWorkCapacity(id, levels[id] ?? 0)
+    const assigned = Math.min(capacity, remainingPopulation)
+    next[id] = assigned
+    remainingPopulation -= assigned
+  })
+  return next
+}
+const autoAllocateStaffing = (
+  regions: Pick<Region, 'id' | 'level'>[],
+  population: number,
+  priorities: Record<RegionId, StaffingPriority>,
+) => autoAllocateStaffingFromLevels(
+  Object.fromEntries(regions.map(region => [region.id, region.level])) as Partial<Record<RegionId, number>>,
+  population,
+  priorities,
+)
+const initialStaffing = autoAllocateStaffingFromLevels(initialLevels, initialResources.population, initialStaffingPriorities)
 
 const facilityEra: Record<RegionId, FacilityEra> = {
   E1: 'early',
@@ -504,8 +555,14 @@ function ProductionFlow({ input, output }: { input: Partial<Resources>; output: 
 }
 
 const throughputClass = (rate: number) => rate >= 1.1 ? 'surged' : rate >= 0.8 ? 'steady' : rate > 0 ? 'thin' : 'idle'
-const orderLabel = (mode: FacilityOrderMode) => mode === 'expand' ? '扩张中' : mode === 'shrink' ? '缩减中' : '保持'
-const orderIcon = (mode: FacilityOrderMode) => mode === 'expand' ? <ArrowUpRight size={13} /> : mode === 'shrink' ? <ArrowDownRight size={13} /> : <Minus size={13} />
+const orderLabel = (mode: FacilityOrderMode) => {
+  if (mode === 'expand-continuous') return '持续增加'
+  if (mode === 'expand') return '增加一级'
+  if (mode === 'shrink-continuous') return '持续收缩'
+  if (mode === 'shrink') return '降低一级'
+  return '保持不变'
+}
+const orderIcon = (mode: FacilityOrderMode) => mode === 'expand' || mode === 'expand-continuous' ? <ArrowUpRight size={13} /> : mode === 'shrink' || mode === 'shrink-continuous' ? <ArrowDownRight size={13} /> : <Minus size={13} />
 const loadStoredMusicVolume = () => {
   if (typeof window === 'undefined') return 0.42
   const stored = window.localStorage.getItem(musicVolumeKey)
@@ -580,7 +637,7 @@ function App() {
   const [activeResearch, setActiveResearch] = useState<TechnologyId>(researchableTechIds[0])
   const [researchProgress, setResearchProgress] = useState<Partial<Record<TechnologyId, number>>>({})
   const [productionMethods, setProductionMethods] = useState<Record<RegionId, ProductionMethodId>>(initialProductionMethods)
-  const [staffing, setStaffing] = useState<Record<RegionId, number>>(initialStaffing)
+  const [staffingPriorities, setStaffingPriorities] = useState<Record<RegionId, StaffingPriority>>(initialStaffingPriorities)
   const [facilityOrders, setFacilityOrders] = useState<Record<RegionId, FacilityOrderMode>>(Object.fromEntries(facilityOrder.map(id => [id, 'hold'])) as Record<RegionId, FacilityOrderMode>)
   const [facilityOrderStarted, setFacilityOrderStarted] = useState<Record<RegionId, number>>(Object.fromEntries(facilityOrder.map(id => [id, 1])) as Record<RegionId, number>)
   const [construction, setConstruction] = useState<Record<RegionId, ConstructionProject | null>>(initialConstruction)
@@ -607,6 +664,7 @@ function App() {
   const habitatLevel = regions.find(region => region.id === 'M')?.level ?? 0
   const shipLevel = regions.find(region => region.id === 'D')!.level
   const completed = day >= gameCalendar.finalDay
+  const staffing = useMemo(() => autoAllocateStaffing(regions, resources.population, staffingPriorities), [regions, resources.population, staffingPriorities])
   const allocatedPopulation = useMemo(() => facilityOrder.reduce((sum, id) => sum + (staffing[id] ?? 0), 0), [staffing])
   const freePopulation = Math.max(0, Math.floor(resources.population - allocatedPopulation))
   const activeResearchSpec = technologyCatalog[activeResearch]
@@ -800,7 +858,7 @@ function App() {
   }
 
   const currentSave = (): GameSaveState => ({
-    version: 5,
+    version: 6,
     savedAt: new Date().toISOString(),
     gameStarted,
     resources,
@@ -822,6 +880,7 @@ function App() {
     researchProgress,
     productionMethods,
     staffing,
+    staffingPriorities,
     facilityOrders,
     facilityOrderStarted,
     construction,
@@ -862,7 +921,7 @@ function App() {
     setActiveResearch(save.activeResearch)
     setResearchProgress(save.researchProgress)
     setProductionMethods(save.productionMethods)
-    setStaffing(save.staffing)
+    setStaffingPriorities(normalizeStaffingPriorities(save.staffingPriorities))
     setFacilityOrders(save.facilityOrders)
     setFacilityOrderStarted(save.facilityOrderStarted)
     setConstruction(save.construction)
@@ -894,7 +953,7 @@ function App() {
     }
     try {
       const parsed = JSON.parse(rawSave) as GameSaveState
-      if ((parsed.version !== 4 && parsed.version !== 5) || !parsed.resources || !parsed.regionLevels || !parsed.construction || !parsed.reignReportBaseline) throw new Error('invalid save')
+      if ((parsed.version !== 4 && parsed.version !== 5 && parsed.version !== 6) || !parsed.resources || !parsed.regionLevels || !parsed.construction || !parsed.reignReportBaseline) throw new Error('invalid save')
       applySave(parsed)
       setSettingsOpen(false)
       setSaveStatus(`已读档：${formatDay(parsed.day)}`)
@@ -975,19 +1034,64 @@ function App() {
         completedProjects.forEach(([id]) => { next[id] = null })
         return next
       })
-      setStaffing(previous => {
-        let remainingFreePopulation = freePopulation
+      writeLog(`${formatDay(nextDay)}：${completedProjects.map(([id, project]) => `${regions.find(region => region.id === id)?.name ?? id}${project.mode === 'expand' ? '完工' : '拆除冷却结束'}`).join('、')}。`)
+    }
+
+    const completedProjectById = Object.fromEntries(completedProjects) as Partial<Record<RegionId, ConstructionProject>>
+    const manualContinuousProjects: [RegionId, ConstructionProject][] = []
+    const manualImmediateLevels: Partial<Record<RegionId, number>> = {}
+    facilityOrder.forEach(id => {
+      const mode = facilityOrders[id]
+      if (mode !== 'expand-continuous' && mode !== 'shrink-continuous') return
+      if (isFixedFacility(id)) return
+      if (construction[id] && !completedProjectById[id]) return
+      const region = regions.find(item => item.id === id)!
+      const completedProject = completedProjectById[id]
+      const currentLevel = completedProject?.mode === 'expand' ? completedProject.toLevel : region.level
+      const spec = facilityEconomySpecs[id]
+      if (mode === 'expand-continuous') {
+        const cost = projectFacilityCost(spec, currentLevel, techs)
+        if (!canBuildFacility(spec, nextDay, techs) || currentLevel >= spec.maxLevel || !canPay(finalResources, cost)) return
+        finalResources = apply(finalResources, cost, -1)
+        manualContinuousProjects.push([id, {
+          mode: 'expand',
+          startedDay: nextDay,
+          completeDay: nextDay + getConstructionDays(techs),
+          fromLevel: currentLevel,
+          toLevel: currentLevel + 1,
+          cost,
+        }])
+        return
+      }
+      if (currentLevel <= 0) return
+      const refund = scaleResourceBundle(projectFacilityCost(spec, currentLevel - 1, techs), 0.5)
+      finalResources = apply(finalResources, refund)
+      manualImmediateLevels[id] = currentLevel - 1
+      manualContinuousProjects.push([id, {
+        mode: 'shrink',
+        startedDay: nextDay,
+        completeDay: nextDay + getConstructionDays(techs),
+        fromLevel: currentLevel,
+        toLevel: currentLevel - 1,
+        cost: refund,
+      }])
+    })
+    if (manualContinuousProjects.length) {
+      setResources(finalResources)
+      if (Object.keys(manualImmediateLevels).length) {
+        setRegions(previous => previous.map(region => manualImmediateLevels[region.id] === undefined ? region : { ...region, level: manualImmediateLevels[region.id]! }))
+      }
+      setConstruction(previous => {
         const next = { ...previous }
-        completedProjects.forEach(([id, project]) => {
-          if (project.mode !== 'expand' || isHousingFacility(id)) return
-          const addedCapacity = getFacilityWorkCapacity(id, project.toLevel) - getFacilityWorkCapacity(id, project.fromLevel)
-          const addedStaff = Math.max(0, Math.min(addedCapacity, remainingFreePopulation))
-          next[id] = Math.min(getFacilityWorkCapacity(id, project.toLevel), (next[id] ?? 0) + addedStaff)
-          remainingFreePopulation -= addedStaff
-        })
+        manualContinuousProjects.forEach(([id, project]) => { next[id] = project })
         return next
       })
-      writeLog(`${formatDay(nextDay)}：${completedProjects.map(([id, project]) => `${regions.find(region => region.id === id)?.name ?? id}${project.mode === 'expand' ? '完工' : '拆除冷却结束'}`).join('、')}。`)
+      setFacilityOrderStarted(previous => {
+        const next = { ...previous }
+        manualContinuousProjects.forEach(([id]) => { next[id] = nextDay })
+        return next
+      })
+      writeLog(`${formatDay(nextDay)}：持续命令继续执行 ${manualContinuousProjects.map(([id]) => regions.find(region => region.id === id)?.name ?? id).join('、')}。`)
     }
 
     if (activeOptimizerId !== 'none' && isReportDay) {
@@ -1098,7 +1202,7 @@ function App() {
     setDetailOpen(true)
   }
 
-  const upgrade = (id: RegionId) => {
+  const upgrade = (id: RegionId, orderMode: Extract<FacilityOrderMode, 'expand' | 'expand-continuous'> = 'expand') => {
     const region = regions.find(item => item.id === id)!
     const spec = facilityEconomySpecs[id]
     const cost = projectFacilityCost(facilityEconomySpecs[id], region.level, techs)
@@ -1127,9 +1231,9 @@ function App() {
         cost,
       },
     }))
-    setFacilityOrders(previous => ({ ...previous, [id]: 'expand' }))
+    setFacilityOrders(previous => ({ ...previous, [id]: orderMode }))
     setFacilityOrderStarted(previous => ({ ...previous, [id]: day }))
-    writeLog(`${formatDay(day)}：${region.name}开工扩建，预计 ${getConstructionDays(techs)} 御日后升为第 ${region.level + 1} 阶。`)
+    writeLog(`${formatDay(day)}：${region.name}开工扩建，预计 ${getConstructionDays(techs)} 御日后升为第 ${region.level + 1} 阶。${orderMode === 'expand-continuous' ? '持续增加命令已记录。' : ''}`)
   }
 
   const holdFacility = (id: RegionId) => {
@@ -1139,7 +1243,7 @@ function App() {
     writeLog(`${formatDay(day)}：${region.name}维持现行规模，等待下个王月报告复核。`)
   }
 
-  const shrinkFacility = (id: RegionId) => {
+  const shrinkFacility = (id: RegionId, orderMode: Extract<FacilityOrderMode, 'shrink' | 'shrink-continuous'> = 'shrink') => {
     const region = regions.find(item => item.id === id)!
     if (isFixedFacility(id)) {
       writeLog(`${formatDay(day)}：${region.name}是固定贸易节点，不能缩减规模。`)
@@ -1150,11 +1254,10 @@ function App() {
       writeLog(`${formatDay(day)}：${region.name}仍在施工或拆除冷却中。`)
       return
     }
-    setFacilityOrders(previous => ({ ...previous, [id]: 'shrink' }))
+    setFacilityOrders(previous => ({ ...previous, [id]: orderMode }))
     setFacilityOrderStarted(previous => ({ ...previous, [id]: day }))
     const refund = scaleResourceBundle(projectFacilityCost(facilityEconomySpecs[id], region.level - 1, techs), 0.5)
     setRegions(previous => previous.map(item => item.id === id ? { ...item, level: Math.max(0, item.level - 1) } : item))
-    setStaffing(previous => ({ ...previous, [id]: Math.min(getFacilityWorkCapacity(id, Math.max(0, region.level - 1)), previous[id] ?? 0) }))
     setResources(previous => apply(previous, refund))
     setConstruction(previous => ({
       ...previous,
@@ -1167,18 +1270,17 @@ function App() {
         cost: refund,
       },
     }))
-    writeLog(`${formatDay(day)}：${region.name}缩小至第 ${Math.max(0, region.level - 1)} 阶，回收约 50% 建材并进入冷却。`)
+    writeLog(`${formatDay(day)}：${region.name}缩小至第 ${Math.max(0, region.level - 1)} 阶，回收约 50% 建材并进入冷却。${orderMode === 'shrink-continuous' ? '持续收缩命令已记录。' : ''}`)
   }
 
-  const assignPopulation = (id: RegionId, delta: 1 | -1) => {
+  const setStaffPriority = (id: RegionId, priority: StaffingPriority) => {
     const region = regions.find(item => item.id === id)!
-    setStaffing(previous => {
-      const current = previous[id] ?? 0
-      const next = Math.max(0, Math.min(getFacilityWorkCapacity(id, region.level), current + delta))
-      if (delta > 0 && freePopulation <= 0) return previous
-      return { ...previous, [id]: next }
-    })
-    writeLog(`${formatDay(day)}：${region.name}${delta > 0 ? '增派' : '撤回'} 1 个人口单位。`)
+    if (isFixedFacility(id) || isHousingFacility(id)) {
+      writeLog(`${formatDay(day)}：${region.name}不占用岗位，优先级不参与人口分配。`)
+      return
+    }
+    setStaffingPriorities(previous => ({ ...previous, [id]: priority }))
+    writeLog(`${formatDay(day)}：${region.name}岗位优先级调整为 ${priority}。`)
   }
 
   const acceptTrade = () => {
@@ -1305,8 +1407,8 @@ function App() {
     </section></div>}
 
     <section className="page-content">
-      {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onStaff={assignPopulation} onMethod={(methodId) => setProductionMethods(previous => ({ ...previous, [selectedRegion.id]: methodId }))} onAssignment={visitorId => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))} />}
-      {view === 'palace' && <Palace facility={palaceFacility} day={day} lastReignReport={lastReignReport} onOpenReport={(report) => setActiveReignReport(report)} onSelectFacility={() => inspectFacility('K')} />}
+      {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={(methodId) => setProductionMethods(previous => ({ ...previous, [selectedRegion.id]: methodId }))} onAssignment={visitorId => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))} />}
+      {view === 'palace' && <Palace facility={palaceFacility} day={day} lastReignReport={lastReignReport} onOpenReport={(report) => setActiveReignReport(report)} />}
       {view === 'research' && <ResearchLab facility={specialFacility('L')} techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} researchThroughput={researchThroughput} knowledgeStock={resources.knowledge} onResearch={setActiveResearch} onSelectFacility={() => inspectFacility('L')} />}
       {view === 'ecology' && <EcologyRing facility={specialFacility('R')} onSelectFacility={() => inspectFacility('R')} />}
       {view === 'starport' && <Starport facility={specialFacility('S')} resources={resources} populationProjection={populationProjection} techs={techs} autoTradeProtectionEnabled={autoTradeProtectionEnabled} autoTradeEnabled={autoTradeEnabled} onProtection={setAutoTradeProtectionEnabled} onTrade={executeTrade} onAutoTrade={(key, enabled) => setAutoTradeEnabled(previous => ({ ...previous, [key]: enabled }))} onSelectFacility={() => inspectFacility('S')} />}
@@ -1441,7 +1543,7 @@ function SettingsPanel({ volume, saveStatus, autoTradeProtectionEnabled, onAutoT
   </div>
 }
 
-function PlanetFacilities({ regions, selected, year, techs, productionMethods, facilityOrders, facilityOrderStarted, construction, populationProjection, staffing, allocatedPopulation, freePopulation, facilityModifiers, lastAutomatedAction, roster, assigned, selectedRegion, selectedCost, resources, dailyNet, automationPlan, planetTexture, docked, detailOpen, onDock, onBack, onSelect, onUpgrade, onHold, onShrink, onStaff, onMethod, onAssignment }: { regions: Region[]; selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; facilityOrders: Record<RegionId, FacilityOrderMode>; facilityOrderStarted: Record<RegionId, number>; construction: Record<RegionId, ConstructionProject | null>; populationProjection: PopulationProjection; staffing: Record<RegionId, number>; allocatedPopulation: number; freePopulation: number; facilityModifiers: Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>; lastAutomatedAction: { id: RegionId; day: number; mode: FacilityOrderMode } | null; roster: Role[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; dailyNet: Partial<Resources>; automationPlan: AutomationPlan; planetTexture: typeof planetTextures[number]; docked: boolean; detailOpen: boolean; onDock: () => void; onBack: () => void; onSelect: (id: RegionId) => void; onUpgrade: (id: RegionId) => void; onHold: (id: RegionId) => void; onShrink: (id: RegionId) => void; onStaff: (id: RegionId, delta: 1 | -1) => void; onMethod: (methodId: ProductionMethodId) => void; onAssignment: (visitorId: string | undefined) => void }) {
+function PlanetFacilities({ regions, selected, year, techs, productionMethods, facilityOrders, facilityOrderStarted, construction, populationProjection, staffing, staffingPriorities, allocatedPopulation, freePopulation, facilityModifiers, lastAutomatedAction, roster, assigned, selectedRegion, selectedCost, resources, dailyNet, automationPlan, planetTexture, docked, detailOpen, onDock, onBack, onSelect, onUpgrade, onHold, onShrink, onPriority, onMethod, onAssignment }: { regions: Region[]; selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; facilityOrders: Record<RegionId, FacilityOrderMode>; facilityOrderStarted: Record<RegionId, number>; construction: Record<RegionId, ConstructionProject | null>; populationProjection: PopulationProjection; staffing: Record<RegionId, number>; staffingPriorities: Record<RegionId, StaffingPriority>; allocatedPopulation: number; freePopulation: number; facilityModifiers: Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>; lastAutomatedAction: { id: RegionId; day: number; mode: FacilityOrderMode } | null; roster: Role[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; dailyNet: Partial<Resources>; automationPlan: AutomationPlan; planetTexture: typeof planetTextures[number]; docked: boolean; detailOpen: boolean; onDock: () => void; onBack: () => void; onSelect: (id: RegionId) => void; onUpgrade: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'expand' | 'expand-continuous'>) => void; onHold: (id: RegionId) => void; onShrink: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'shrink' | 'shrink-continuous'>) => void; onPriority: (id: RegionId, priority: StaffingPriority) => void; onMethod: (methodId: ProductionMethodId) => void; onAssignment: (visitorId: string | undefined) => void }) {
   if (!docked) {
     return <div className="planet-home">
       <div className="planet-stage">
@@ -1460,7 +1562,7 @@ function PlanetFacilities({ regions, selected, year, techs, productionMethods, f
         <div><span className="eyebrow">玩家国王</span><h3>月冠执政者</h3><p>陈林，拓殖署基层公务员，被强行推上龙椅。真实目标是密造御座号归乡，而非追求繁荣。</p></div>
       </aside>
     </section>}
-    {detailOpen ? <FacilityDetailPanel selected={selected} year={year} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} regions={regions} onBack={onBack} onUpgrade={onUpgrade} onHold={onHold} onShrink={onShrink} onStaff={onStaff} onMethod={onMethod} onAssignment={onAssignment} /> : <FacilityList regions={regions} selected={selected} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} staffing={staffing} facilityModifiers={facilityModifiers} assigned={assigned} roster={roster} onSelect={onSelect} />}
+    {detailOpen ? <FacilityDetailPanel selected={selected} year={year} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} regions={regions} onBack={onBack} onUpgrade={onUpgrade} onHold={onHold} onShrink={onShrink} onPriority={onPriority} onMethod={onMethod} onAssignment={onAssignment} /> : <FacilityList regions={regions} selected={selected} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} staffing={staffing} facilityModifiers={facilityModifiers} assigned={assigned} roster={roster} onSelect={onSelect} />}
   </div>
 }
 
@@ -1497,7 +1599,7 @@ function FacilityList({ regions, selected, techs, productionMethods, facilityOrd
   </section>
 }
 
-function FacilityDetailPanel({ selected, year, techs, productionMethods, facilityOrders, facilityOrderStarted, construction, populationProjection, staffing, allocatedPopulation, freePopulation, facilityModifiers, lastAutomatedAction, roster, assigned, selectedRegion, selectedCost, resources, dailyNet, automationPlan, regions, onBack, onUpgrade, onHold, onShrink, onStaff, onMethod, onAssignment }: { selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; facilityOrders: Record<RegionId, FacilityOrderMode>; facilityOrderStarted: Record<RegionId, number>; construction: Record<RegionId, ConstructionProject | null>; populationProjection: PopulationProjection; staffing: Record<RegionId, number>; allocatedPopulation: number; freePopulation: number; facilityModifiers: Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>; lastAutomatedAction: { id: RegionId; day: number; mode: FacilityOrderMode } | null; roster: Role[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; dailyNet: Partial<Resources>; automationPlan: AutomationPlan; regions: Region[]; onBack: () => void; onUpgrade: (id: RegionId) => void; onHold: (id: RegionId) => void; onShrink: (id: RegionId) => void; onStaff: (id: RegionId, delta: 1 | -1) => void; onMethod: (methodId: ProductionMethodId) => void; onAssignment: (visitorId: string | undefined) => void }) {
+function FacilityDetailPanel({ selected, year, techs, productionMethods, facilityOrders, facilityOrderStarted, construction, populationProjection, staffing, staffingPriorities, allocatedPopulation, freePopulation, facilityModifiers, lastAutomatedAction, roster, assigned, selectedRegion, selectedCost, resources, dailyNet, automationPlan, regions, onBack, onUpgrade, onHold, onShrink, onPriority, onMethod, onAssignment }: { selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; facilityOrders: Record<RegionId, FacilityOrderMode>; facilityOrderStarted: Record<RegionId, number>; construction: Record<RegionId, ConstructionProject | null>; populationProjection: PopulationProjection; staffing: Record<RegionId, number>; staffingPriorities: Record<RegionId, StaffingPriority>; allocatedPopulation: number; freePopulation: number; facilityModifiers: Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>; lastAutomatedAction: { id: RegionId; day: number; mode: FacilityOrderMode } | null; roster: Role[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; dailyNet: Partial<Resources>; automationPlan: AutomationPlan; regions: Region[]; onBack: () => void; onUpgrade: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'expand' | 'expand-continuous'>) => void; onHold: (id: RegionId) => void; onShrink: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'shrink' | 'shrink-continuous'>) => void; onPriority: (id: RegionId, priority: StaffingPriority) => void; onMethod: (methodId: ProductionMethodId) => void; onAssignment: (visitorId: string | undefined) => void }) {
   const selectedWorker = roster.find(item => item.id === assigned[selectedRegion.id])
   const SelectIcon = selectedRegion.icon
   const selectedSpec = facilityEconomySpecs[selectedRegion.id]
@@ -1508,6 +1610,8 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
   const activeConstruction = construction[selectedRegion.id]
   const constructionRemaining = activeConstruction ? Math.max(0, activeConstruction.completeDay - year) : 0
   const assignedPopulation = Math.min(workCapacity, staffing[selectedRegion.id] ?? 0)
+  const currentPriority = staffingPriorities[selectedRegion.id] ?? initialStaffingPriorities[selectedRegion.id]
+  const priorityEditable = !selectedFixed && !isHousingFacility(selectedRegion.id) && workCapacity > 0
   const staffRate = workCapacity > 0 ? assignedPopulation / workCapacity : housingCapacity > 0 || selectedFixed ? 1 : 0
   const selectedModifier = facilityModifiers[selectedRegion.id] ?? { outputMultiplier: 1, upkeepMultiplier: 1 }
   const selectedYield = isHousingFacility(selectedRegion.id)
@@ -1551,13 +1655,13 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
     hasTech(techs, 'TG-2') ? 'TG-2 电力消耗减免' : null,
     hasTech(techs, 'TL-2') && selectedRegion.id === 'L' ? 'TL-2 研究吞吐量' : null,
     hasTech(techs, 'TL-3') && selectedRegion.id === 'L' ? 'TL-3 高能课题' : null,
-  ].filter(Boolean)
+  ].filter(Boolean) as string[]
   const bonusSources = [
-    selectedFixed ? '固定贸易节点' : isHousingFacility(selectedRegion.id) ? `住房容量 ${housingCapacity}` : `人口分配 ${Math.round(staffRate * 100)}%`,
+    selectedFixed ? '固定贸易节点' : isHousingFacility(selectedRegion.id) ? `住房容量 ${housingCapacity}` : `优先级 ${currentPriority}，自动分配 ${Math.round(staffRate * 100)}%`,
     selectedModifier.outputMultiplier !== 1 ? `全局/居住/角色合计 x${selectedModifier.outputMultiplier.toFixed(2)}` : '基础吞吐 x1.00',
     selectedWorker ? `${selectedWorker.name} +${Math.round(selectedWorker.boost * 100)}%` : null,
     ...techBonusSources,
-  ].filter(Boolean)
+  ].filter(Boolean) as string[]
   const affordExpansion = canPay(resources, selectedCost)
   const actionReason = selectedFixed
     ? '这是固定贸易节点，不通过扩建、缩减或派驻人口改变能力。'
@@ -1598,99 +1702,123 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
       : selectedRegion.level === 0
       ? affordExpansion ? '可以直接签发扩张，建立第一级产能。' : '需要补齐扩建成本，暂不建议操作。'
       : needsStaff
-        ? '优先增派人口，否则等级容量不会转化为产出。'
+        ? '若本设施更关键，提高岗位优先级；系统会把空余人口按优先级自动填入。'
         : !affordExpansion && selectedRegion.level < selectedRegion.max
           ? '当前库存不足以继续扩张，建议保持或调整其他设施。'
           : hasNegativeYield
             ? '这座设施会消耗库存，确认全局净值能承受后再扩张。'
             : '当前状态稳定，可按目标选择扩张或保持。'
 
-  return <aside className={`inspector facility-detail-page building-command-page ${isSpecialDetail ? 'special-detail' : 'standard-detail'}`}>
-    <header className="building-command-header">
+  const orderAge = Math.max(0, year - (facilityOrderStarted[selectedRegion.id] ?? year))
+  const assignmentText = selectedFixed
+    ? '固定节点不占用人口'
+    : isHousingFacility(selectedRegion.id)
+      ? `本设施容量 ${housingCapacity}，全局住房 ${fmt(populationProjection.capacity)}`
+      : `${assignedPopulation}/${workCapacity} 岗位，优先级 ${currentPriority}/5`
+  const throughputText = selectedFixed ? '贸易节点' : isHousingFacility(selectedRegion.id) ? '容量设施' : `${Math.round(throughput * 100)}%`
+  const workerSlot = selectedWorker
+    ? { glyph: selectedWorker.glyph, title: `${selectedWorker.name} 正在执勤`, note: `专属区域日产出 +${Math.round(selectedWorker.boost * 100)}%`, action: '待命', onClick: () => onAssignment(undefined) }
+    : workerChoices.length
+      ? { glyph: workerChoices[0].glyph, title: `${workerChoices[0].name} 可派驻`, note: `专属区域日产出 +${Math.round(workerChoices[0].boost * 100)}%`, action: '派驻', onClick: () => onAssignment(workerChoices[0].id) }
+      : null
+
+  return <aside className={`inspector facility-detail-v2 ${isSpecialDetail ? 'special-detail' : 'standard-detail'}`}>
+    <header className="detail-v2-header">
       <button className="back-button" onClick={onBack}><ChevronLeft size={16} />建筑名录</button>
-      <div className={`building-status-chip ${statusTone}`}><span>{situationTitle}</span><small>{selected}</small></div>
+      <div className="detail-v2-title">
+        <span className="eyebrow">{isSpecialDetail ? '特殊建筑' : '普通建筑'} · {selected}</span>
+        <h2>{selectedRegion.name}</h2>
+        <p>{selectedRegion.subtitle}</p>
+      </div>
+      <div className={`building-status-chip ${statusTone}`}><span>{situationTitle}</span><small>{orderLabel(currentOrder)}</small></div>
     </header>
 
-    <section className="building-answer-grid">
-      <article className="building-identity-block">
-        <div className="building-art-slot" aria-label={`${selectedRegion.name}建筑图片占位`}>
-          <SelectIcon size={44} />
-          <span>建筑美术占位</span>
-        </div>
-        <div className="building-title-copy">
-          <span className="eyebrow">{isSpecialDetail ? '特殊建筑' : '普通建筑'} · 这是什么</span>
-          <h2>{selectedRegion.name}</h2>
-          <p>{selectedRegion.subtitle}</p>
-          <p className="building-duty-copy">{displayCopy(selectedRegion.interfaceDuty)}</p>
-          <div className="path-note compact"><Orbit size={15} /><span>{parents.length ? `${parents.join('、')} → 本设施` : '殖民地基础设施'}</span></div>
-        </div>
-      </article>
-
-      <article className="building-status-block">
-        <div className="building-block-title"><span className="eyebrow">当前状况</span><h3>{situationTitle}</h3></div>
-        <div className="building-metric-grid">
-          <div><span>{selectedFixed ? '状态' : '等级'}</span><strong>{selectedFixed ? '在线' : selectedRegion.level}<small>{selectedFixed ? '' : `/${selectedRegion.max}`}</small></strong></div>
-          <div><span>{selectedFixed ? '岗位' : isHousingFacility(selectedRegion.id) ? '容量' : '岗位'}</span><strong>{selectedFixed ? '无' : isHousingFacility(selectedRegion.id) ? housingCapacity : assignedPopulation}<small>{selectedFixed ? '' : `/${isHousingFacility(selectedRegion.id) ? populationProjection.capacity : workCapacity}`}</small></strong></div>
-          <div><span>{activeConstruction ? '剩余' : selectedFixed ? '模式' : '吞吐'}</span><strong>{activeConstruction ? constructionRemaining : selectedFixed ? '贸易' : Math.round(throughput * 100)}<small>{activeConstruction ? '日' : selectedFixed ? '' : '%'}</small></strong></div>
-        </div>
-        <div className="staffing-meter"><span style={{ width: `${selectedFixed ? 100 : isHousingFacility(selectedRegion.id) ? Math.min(100, Math.round(resources.population / Math.max(1, populationProjection.capacity) * 100)) : workCapacity ? Math.round(assignedPopulation / workCapacity * 100) : 0}%` }} /><small>{selectedFixed ? '固定节点，无需岗位' : isHousingFacility(selectedRegion.id) ? `住房占用 ${Math.min(100, Math.round(resources.population / Math.max(1, populationProjection.capacity) * 100))}%` : `岗位占用 ${workCapacity ? Math.round(assignedPopulation / workCapacity * 100) : 0}%`}</small></div>
-        <div className="building-net-row"><span>每日结算</span><ResourceBundle bundle={selectedYield} empty="无日结算" /></div>
-      </article>
+    <section className="detail-v2-overview">
+      <div className="detail-v2-art" aria-label={`${selectedRegion.name}建筑图片占位`}>
+        <SelectIcon size={38} />
+        <span>建筑美术占位</span>
+      </div>
+      <div className="detail-v2-brief">
+        <p>{displayCopy(selectedRegion.interfaceDuty)}</p>
+        <div className="detail-route"><Orbit size={14} /><span>{parents.length ? `${parents.join('、')} → 本设施` : '殖民地基础设施'}</span></div>
+      </div>
+      <div className="detail-v2-metrics">
+        <div><span>{selectedFixed ? '状态' : '等级'}</span><strong>{selectedFixed ? '在线' : selectedRegion.level}<small>{selectedFixed ? '' : `/${selectedRegion.max}`}</small></strong></div>
+        <div><span>{selectedFixed ? '类型' : isHousingFacility(selectedRegion.id) ? '人口容量' : '岗位'}</span><strong>{selectedFixed ? '贸易' : isHousingFacility(selectedRegion.id) ? housingCapacity : assignedPopulation}<small>{selectedFixed ? '' : `/${isHousingFacility(selectedRegion.id) ? populationProjection.capacity : workCapacity}`}</small></strong></div>
+        <div><span>{activeConstruction ? '施工剩余' : '吞吐'}</span><strong>{activeConstruction ? constructionRemaining : throughputText}<small>{activeConstruction ? '日' : ''}</small></strong></div>
+        <div><span>每日净值</span><ResourceBundle bundle={selectedYield} empty="无日结算" /></div>
+      </div>
     </section>
 
-    <section className={`building-intervention-block ${interventionTone}`}>
-      <div className="intervention-copy">
-        <span className="eyebrow">是否需要干预</span>
+    <section className={`detail-v2-command ${interventionTone}`}>
+      <div className="detail-decision-copy">
+        <span className="eyebrow">决策口</span>
         <h3>{interventionCopy}</h3>
         <p>{actionReason}</p>
       </div>
-      <div className="intervention-controls">
-        <div className="staffing-buttons"><button onClick={() => onStaff(selectedRegion.id, -1)} disabled={selectedFixed || isHousingFacility(selectedRegion.id) || assignedPopulation <= 0}>撤员</button><button onClick={() => onStaff(selectedRegion.id, 1)} disabled={selectedFixed || isHousingFacility(selectedRegion.id) || workCapacity <= assignedPopulation || freePopulation <= 0}>增员</button></div>
-        <div className="facility-actions">
-          <button className={`${currentOrder === 'expand' ? 'selected' : ''} ${recentAuto && lastAutomatedAction?.mode === 'expand' ? 'auto-feedback' : ''}`} onClick={() => onUpgrade(selectedRegion.id)} disabled={selectedFixed || Boolean(activeConstruction) || !selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />扩张</button>
-          <button className={currentOrder === 'hold' ? 'selected' : ''} onClick={() => onHold(selectedRegion.id)}><Minus size={15} />保持</button>
-          <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id)} disabled={selectedFixed || Boolean(activeConstruction) || selectedRegion.level <= 0}><ArrowDownRight size={15} />缩小</button>
+      <div className="detail-control-stack">
+        <div className="priority-control compact" aria-label="岗位分配优先级">
+          <span>岗位优先级</span>
+          <div>{priorityLevels.map(priority => <button key={priority} className={currentPriority === priority ? 'selected' : ''} onClick={() => onPriority(selectedRegion.id, priority)} disabled={!priorityEditable}>{priority}</button>)}</div>
+          <small>{priorityEditable ? assignmentText : selectedFixed ? '固定节点不占用人口。' : '人口容量建筑不占用生产岗位。'}</small>
+        </div>
+        <div className="facility-actions compact">
+          <button className={currentOrder === 'shrink-continuous' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink-continuous')} disabled={selectedFixed || Boolean(activeConstruction) || selectedRegion.level <= 0}><ArrowDownRight size={15} />持续收缩</button>
+          <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink')} disabled={selectedFixed || Boolean(activeConstruction) || selectedRegion.level <= 0}><ArrowDownRight size={15} />降低一级</button>
+          <button className={currentOrder === 'hold' ? 'selected' : ''} onClick={() => onHold(selectedRegion.id)}><Minus size={15} />保持不变</button>
+          <button className={`${currentOrder === 'expand' ? 'selected' : ''} ${recentAuto && lastAutomatedAction?.mode === 'expand' ? 'auto-feedback' : ''}`} onClick={() => onUpgrade(selectedRegion.id, 'expand')} disabled={selectedFixed || Boolean(activeConstruction) || !selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />增加一级</button>
+          <button className={currentOrder === 'expand-continuous' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand-continuous')} disabled={selectedFixed || Boolean(activeConstruction) || !selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />持续增加</button>
         </div>
       </div>
-      <div className="intervention-progress">
+      <div className="detail-command-ledger">
         <div><span>扩建成本</span><ResourceBundle bundle={selectedCost} empty="无需成本" /></div>
         <div><span>{optimizerDisabled ? '调度模式' : '自动建议'}</span><b>{automationSuggestionLabel}</b></div>
-        <div><span>王国人口</span><b>{allocatedPopulation}/{fmt(resources.population)} 已派用，住房 {fmt(populationProjection.capacity)}</b></div>
+        <div><span>人口</span><b>{allocatedPopulation}/{fmt(resources.population)} 已用，空余 {fmt(freePopulation)}</b></div>
+        <div><span>命令持续</span><b>{orderAge} 御日</b></div>
       </div>
       <div className={`operation-progress operation-${currentOrder}`} title={operationProgressTitle}><span style={{ width: `${operationProgress}%` }} /><small>{operationProgressLabel}</small></div>
     </section>
 
-    <section className="building-production-block">
-      <div className="building-block-title"><span className="eyebrow">我能操作什么</span><h3>生产方式</h3></div>
-      <div className="production-methods">{selectedSpec.productionMethods.map(method => {
-      const methodReady = hasTech(techs, method.unlockedBy) && method.autoSelect !== false
-      const techName = method.unlockedBy ? technologyCatalog[method.unlockedBy]?.name : undefined
-      return <article key={method.id} className={method.id === selectedMethod.id && methodReady ? 'active' : ''}>
-        <div className="method-copy"><b>{method.name}</b><small>{methodReady ? '已解锁，可切换' : method.autoSelect === false ? '由阶段推进启用' : `需要 ${techName ?? '对应科技'}`}</small></div>
-        <ProductionFlow input={method.input} output={method.output} />
-        <p className="method-note">{displayCopy(method.note)}</p>
-        {method.id === selectedMethod.id && methodReady ? <em>使用中</em> : <button onClick={() => onMethod(method.id)} disabled={!methodReady}>切换</button>}
-      </article>
-    })}</div></section>
-    {selectedWorker ? <div className="worker-card"><span>{selectedWorker.glyph}</span><div><b>{selectedWorker.name} 正在执勤</b><small>专属区域日产出 +{Math.round(selectedWorker.boost * 100)}%</small></div><button onClick={() => onAssignment(undefined)}>待命</button></div> : workerChoices.length ? <div className="worker-card"><span>{workerChoices[0].glyph}</span><div><b>{workerChoices[0].name} 可派驻</b><small>专属区域日产出 +{Math.round(workerChoices[0].boost * 100)}%</small></div><button onClick={() => onAssignment(workerChoices[0].id)}>派驻</button></div> : null}
-    <div className="inspector-footnote"><span>全局日净值 {Object.values(dailyNet).filter(Boolean).length} 项变化</span><InfoToggle title="自动操作说明"><p>系统自动操作会在调度按钮中短暂高亮。</p></InfoToggle></div>
+    <section className="detail-v2-lower">
+      <div className="method-ledger">
+        <div className="method-ledger-head"><span className="eyebrow">配方账簿</span><h3>生产方式</h3><small>{selectedMethod.name}</small></div>
+        <div className="method-ledger-table">{selectedSpec.productionMethods.map(method => {
+          const methodReady = hasTech(techs, method.unlockedBy) && method.autoSelect !== false
+          const techName = method.unlockedBy ? technologyCatalog[method.unlockedBy]?.name : undefined
+          const active = method.id === selectedMethod.id && methodReady
+          return <article key={method.id} className={active ? 'active' : ''}>
+            <div className="method-name"><b>{method.name}</b><small>{methodReady ? '已解锁' : method.autoSelect === false ? '阶段启用' : `需要 ${techName ?? '对应科技'}`}</small></div>
+            <ProductionFlow input={method.input} output={method.output} />
+            <p title={displayCopy(method.note)}>{displayCopy(method.note)}</p>
+            {active ? <em>使用中</em> : <button onClick={() => onMethod(method.id)} disabled={!methodReady}>切换</button>}
+          </article>
+        })}</div>
+      </div>
+
+      <div className="detail-facts">
+        <div><span>运作修正</span>{bonusSources.slice(0, 4).map(item => <b key={item}>{item}</b>)}</div>
+        <div><span>建设链</span><b>{parents.length ? parents.join('、') : '基础节点'}</b><b>{selectedBuildable ? '已授权' : `缺少 ${selectedRequiredTech?.name ?? selectedSpec.requiredTech}`}</b></div>
+        {workerSlot && <div className="worker-mini"><span>{workerSlot.glyph}</span><p><b>{workerSlot.title}</b><small>{workerSlot.note}</small></p><button onClick={workerSlot.onClick}>{workerSlot.action}</button></div>}
+        <div><span>全局日净值</span><b>{Object.values(dailyNet).filter(Boolean).length} 项变化</b><InfoToggle title="自动操作说明"><p>系统自动操作会在调度按钮中短暂高亮。</p></InfoToggle></div>
+      </div>
+    </section>
   </aside>
 }
 
-function SpecialFacilityPanel({ facility, tone, children, onSelectFacility }: { facility: SpecialFacilityViewModel; tone: string; children?: ReactNode; onSelectFacility: () => void }) {
+function SpecialFacilityPanel({ facility, tone, children }: { facility: SpecialFacilityViewModel; tone: string; children?: ReactNode; onSelectFacility?: () => void }) {
   const FacilityIcon = facility.region.icon
   const workCapacity = getFacilityWorkCapacity(facility.region.id, facility.region.level)
   const housingCapacity = getHousingCapacity(facility.region.id, facility.region.level)
   const fixed = isFixedFacility(facility.region.id)
   const staffingPercent = fixed ? 100 : workCapacity ? Math.round(facility.assignedPopulation / workCapacity * 100) : housingCapacity ? 100 : 0
   const throughputPercent = Math.round(facility.throughput * 100)
-  const statusLabel = facility.region.level <= 0 ? '尚未建造' : fixed ? '固定在线' : isHousingFacility(facility.region.id) ? '容量在线' : facility.assignedPopulation < workCapacity ? '需要增员' : facility.throughput >= 1 ? '系统在线' : facility.throughput > 0 ? '低负荷' : '停摆'
+  const statusLabel = facility.region.level <= 0 ? '尚未建造' : fixed ? '固定在线' : isHousingFacility(facility.region.id) ? '容量在线' : facility.assignedPopulation < workCapacity ? '等待人口' : facility.throughput >= 1 ? '系统在线' : facility.throughput > 0 ? '低负荷' : '停摆'
   const actionHint = facility.region.level <= 0
     ? '先在设施详情中签发扩张，专属系统才会进入有效运作。'
     : fixed
       ? '无需建筑调度。直接在贸易清单里设置采购量、倍率和自动保护。'
     : !isHousingFacility(facility.region.id) && facility.assignedPopulation < workCapacity
-      ? '建议进入设施详情补齐人口，再回到本系统做决策。'
+      ? '人口会按设施优先级自动补入；本页不再提供额外调度入口。'
       : '建筑状态稳定。此页右侧工作台是主要操作区。'
 
   return <section className={`special-facility-panel ${tone}`}>
@@ -1716,7 +1844,6 @@ function SpecialFacilityPanel({ facility, tone, children, onSelectFacility }: { 
       <p>{actionHint}</p>
     </div>
     {children}
-    <button className="special-secondary-action" onClick={onSelectFacility}><Orbit size={15} />{fixed ? '进入贸易调度' : '进入建筑调度'}</button>
   </section>
 }
 
@@ -1939,7 +2066,7 @@ function Shipyard({ facility, shipProgress, score, onSelectFacility }: { facilit
   </div>
 }
 
-function Palace({ facility, day, lastReignReport, onOpenReport, onSelectFacility }: { facility: SpecialFacilityViewModel; day: number; lastReignReport: ReignReport | null; onOpenReport: (report: ReignReport) => void; onSelectFacility: () => void }) {
+function Palace({ facility, day, lastReignReport, onOpenReport }: { facility: SpecialFacilityViewModel; day: number; lastReignReport: ReignReport | null; onOpenReport: (report: ReignReport) => void }) {
   const palaceCapacity = getHousingCapacity(facility.region.id, facility.region.level)
   const staffingPercent = palaceCapacity ? 100 : 0
   const palaceStatus = palaceCapacity ? '王城容量在线' : '等待建造'
@@ -1974,7 +2101,6 @@ function Palace({ facility, day, lastReignReport, onOpenReport, onSelectFacility
         <div><span>每日结算</span><ResourceBundle bundle={facility.net} empty="王城未产生净变动" /></div>
       </div>
       <div className="special-intervention-note"><span>是否需要干预</span><p>{palaceIntervention}</p></div>
-      <button onClick={onSelectFacility}><Orbit size={15} />进入建筑调度</button>
     </section>
 
     <section className="policy-board palace-report-board">

@@ -127,8 +127,8 @@
 }
 .facility-ledger-list button.throughput-idle::before { background: oklch(68% .018 250); }
 .facility-ledger-list button.throughput-thin::before { background: oklch(65% .14 28); }
-.facility-ledger-list button.throughput-steady::before { background: oklch(58% .12 145); }
-.facility-ledger-list button.throughput-surged::before { background: oklch(58% .12 76); }
+.facility-ledger-list button.throughput-steady::before { background: var(--ui-success); }
+.facility-ledger-list button.throughput-surged::before { background: var(--ui-brass); }
 .ledger-main {
   min-width: 0;
 }
@@ -241,15 +241,17 @@
 }
 .throughput-panel.throughput-idle { border-color: oklch(68% .018 250); }
 .throughput-panel.throughput-thin { border-color: oklch(67% .12 28); background: oklch(96% .022 35); }
-.throughput-panel.throughput-steady { border-color: oklch(58% .08 145); background: oklch(96% .018 145); }
-.throughput-panel.throughput-surged { border-color: oklch(57% .105 76); background: oklch(95% .035 80); }
+.throughput-panel.throughput-steady { border-color: var(--ui-success); background: var(--ui-success-soft); }
+.throughput-panel.throughput-surged { border-color: var(--ui-brass); background: var(--ui-brass-soft); }
 .operation-progress {
   height: 36px;
   border-color: oklch(64% .058 76);
 }
 .operation-progress > span { background: oklch(72% .105 78 / .46); }
-.operation-progress.operation-expand > span { background: oklch(59% .12 145 / .42); }
-.operation-progress.operation-shrink > span { background: oklch(65% .13 28 / .38); }
+.operation-progress.operation-expand > span,
+.operation-progress.operation-expand-continuous > span { background: var(--ui-success-soft); }
+.operation-progress.operation-shrink > span,
+.operation-progress.operation-shrink-continuous > span { background: var(--ui-danger-soft); }
 
 @media (max-width: 680px) {
   .facility-ledger-list button {

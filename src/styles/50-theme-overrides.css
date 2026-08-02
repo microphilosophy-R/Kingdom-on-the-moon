@@ -517,7 +517,7 @@
 }
 
 .building-status-chip.steady {
-  border-color: oklch(62% .07 145);
+  border-color: var(--ui-success);
   background: var(--ui-success-soft);
 }
 
@@ -574,4 +574,3 @@
   color: var(--ui-ink-strong);
   font-size: var(--font-panel);
 }
-
