@@ -7,10 +7,17 @@ import {
   facilityEconomySpecs,
   facilityOrder,
   gameCalendar,
-  planFacilityAutomation,
+  getConstructionDays,
+  getFacilityWorkCapacity,
+  getHousingCapacity,
+  isHousingFacility,
+  planAutoTradesForCost,
+  projectDailyFlow,
   projectAnnualNet,
   projectDailyNet,
   projectFacilityNet,
+  projectPopulationSystem,
+  projectFacilityCost,
   resourceMeta,
   resourceOrder,
   resourceWeights,
@@ -18,9 +25,11 @@ import {
   shipProjectStages,
   shipProjectTotalValue,
   technologyCatalog,
+  weightedValue,
   type FacilityState,
   type Resources,
 } from '../src/economy'
+import { createDisabledAutomationPlan, crownStewardOptimizer, gameOptimizers } from '../src/optimizers'
 
 const baseFacilities: FacilityState[] = facilityOrder.map(id => ({ id, level: id === 'E1' || id === 'C1' || id === 'K' ? 1 : 0 }))
 
@@ -57,9 +66,11 @@ describe('economy catalog', () => {
     expect(gameCalendar).toMatchObject({
       dayName: '御日',
       finalDay: 1000,
+      monthName: '王月',
+      reignMonthDays: 50,
       normalMsPerDay: 1600,
       fastMsPerDay: 1000,
-      optimizationIntervalDays: 20,
+      optimizationIntervalDays: 50,
       expectedRealMinutes: 60,
     })
     expect(projectAnnualNet).toBe(projectDailyNet)
@@ -195,9 +206,9 @@ describe('economy catalog', () => {
 
   it('splits the ship victory project into three material stages', () => {
     expect(shipProjectStages).toEqual([
-      expect.objectContaining({ id: 1, input: { alloy: 120, oxygen: 80, power: 160 } }),
-      expect.objectContaining({ id: 2, input: { alloy: 180, power: 220, regolith: 160, biomass: 100 } }),
-      expect.objectContaining({ id: 3, input: { quantumCore: 12, power: 300, alloy: 240, water: 120, biomass: 140 } }),
+      expect.objectContaining({ id: 1, input: { alloy: 160, oxygen: 80 } }),
+      expect.objectContaining({ id: 2, input: { alloy: 240, regolith: 160, biomass: 100 } }),
+      expect.objectContaining({ id: 3, input: { quantumCore: 16, alloy: 360, water: 120, biomass: 140 } }),
     ])
     shipProjectStages.forEach(stage => {
       expect(stage.input.currency).toBeUndefined()
@@ -217,7 +228,13 @@ describe('economy catalog', () => {
   })
 
   it('requires building technologies before construction', () => {
-    expect(defaultStartingTechs).toEqual(['TE1-0 日冕能源署建造许可', 'TC1-0 静海采掘署建造许可', 'TK-0 月面王城建造许可'])
+    expect(defaultStartingTechs).toEqual([
+      'TE1-0 日冕能源署建造许可',
+      'TC1-0 静海采掘署建造许可',
+      'TK-0 月面王城建造许可',
+      'TB-0 Hydroponic biosphere charter',
+      'TS-0 Starport charter',
+    ])
     expect(technologyCatalog['TE3-0'].unlocks).toBe('ME3-1')
     expect(facilityEconomySpecs.E3.requiredTech).toBe('TE3-0')
     expect(canBuildFacility(facilityEconomySpecs.E1, 0, defaultStartingTechs)).toBe(true)
@@ -227,8 +244,20 @@ describe('economy catalog', () => {
 })
 
 describe('automation planner', () => {
+  it('exposes Crown Steward as a named background optimizer and supports disabled plans', () => {
+    expect(gameOptimizers[crownStewardOptimizer.id]).toBe(crownStewardOptimizer)
+    expect(crownStewardOptimizer.purpose).toBe('test-baseline')
+
+    const disabled = createDisabledAutomationPlan(richResources, baseFacilities)
+    expect(disabled.mode).toBe('manual')
+    expect(disabled.reason).toBe('optimizer disabled')
+    expect(disabled.actions).toEqual([])
+    expect(disabled.technologyActions).toEqual([])
+    expect(disabled.projectedResources).toEqual(richResources)
+  })
+
   it('falls back to manual mode when reserve floors are breached', () => {
-    const plan = planFacilityAutomation({
+    const plan = crownStewardOptimizer.run({
       resources: {
         power: 0,
         water: 0,
@@ -253,7 +282,7 @@ describe('automation planner', () => {
   })
 
   it('chooses a positive weighted upgrade under abundant resources', () => {
-    const plan = planFacilityAutomation({
+    const plan = crownStewardOptimizer.run({
       resources: richResources,
       facilities: baseFacilities,
       year: 60,
@@ -271,7 +300,7 @@ describe('automation planner', () => {
   })
 
   it('does not auto-build technology-locked facilities before their tech is unlocked', () => {
-    const planWithoutTech = planFacilityAutomation({
+    const planWithoutTech = crownStewardOptimizer.run({
       resources: richResources,
       facilities: baseFacilities,
       year: 60,
@@ -281,7 +310,7 @@ describe('automation planner', () => {
     })
     expect(planWithoutTech.actions.some(action => action.id === 'E3')).toBe(false)
 
-    const planWithTech = planFacilityAutomation({
+    const planWithTech = crownStewardOptimizer.run({
       resources: richResources,
       facilities: baseFacilities,
       year: 60,
@@ -290,6 +319,135 @@ describe('automation planner', () => {
       capitalHorizonYears: 20,
     })
     expect(planWithTech.actions.some(action => action.id === 'E3')).toBe(true)
+  })
+})
+
+describe('population and construction scale', () => {
+  const emptyFacilityMap = Object.fromEntries(facilityOrder.map(id => [id, { id, level: 0 }])) as Record<(typeof facilityOrder)[number], FacilityState>
+
+  it('separates building level capacity from assigned production workers', () => {
+    expect(getFacilityWorkCapacity('E1', 3)).toBe(12)
+    expect(projectFacilityNet(facilityEconomySpecs.E1, 6, {}, defaultStartingTechs, 'ME1-1', 3).power).toBeCloseTo(40.32)
+    expect(projectFacilityNet(facilityEconomySpecs.E1, 12, {}, defaultStartingTechs, 'ME1-1', 3).power).toBeCloseTo(80.64)
+    expect(isHousingFacility('K')).toBe(true)
+    expect(getFacilityWorkCapacity('K', 2)).toBe(0)
+    expect(projectFacilityNet(facilityEconomySpecs.K, 16, {}, defaultStartingTechs)).toEqual({})
+  })
+
+  it('tracks gross daily production and consumption for GDP reports', () => {
+    const flow = projectDailyFlow({
+      facilities: { ...emptyFacilityMap, C1: { id: 'C1', level: 4 } },
+      facilityLevels: { C1: 1 },
+      modifiers: {},
+      techs: defaultStartingTechs,
+      productionMethods: { C1: 'MC1-1' },
+    })
+
+    expect(flow.production.regolith).toBeGreaterThan(0)
+    expect(flow.consumption.power).toBeGreaterThan(0)
+    expect(flow.net.regolith).toBe(flow.production.regolith)
+    expect(weightedValue(flow.production)).toBeGreaterThan(weightedValue(flow.net))
+  })
+
+  it('projects K2 opening housing capacity and migration pressure', () => {
+    const projection = projectPopulationSystem({
+      resources: { ...richResources, population: 12 },
+      facilities: { ...emptyFacilityMap, K: { id: 'K', level: 2 } },
+      policy: 'mandate',
+      techs: defaultStartingTechs,
+    })
+
+    expect(getHousingCapacity('K', 2)).toBe(16)
+    expect(projection.capacity).toBe(16)
+    expect(projection.availableCapacity).toBe(4)
+    expect(projection.net.population).toBeGreaterThan(0)
+    expect(projection.facilityNet.K?.currency).toBeCloseTo(0.48)
+  })
+
+  it('pauses migration at capacity and applies attrition after sustained pressure', () => {
+    const full = projectPopulationSystem({
+      resources: { ...richResources, population: 16 },
+      facilities: { ...emptyFacilityMap, K: { id: 'K', level: 2 } },
+      policy: 'mandate',
+      pressureDays: 0,
+    })
+    expect(full.net.population).toBe(0)
+    expect(full.nextPressureDays).toBe(1)
+
+    const strained = projectPopulationSystem({
+      resources: { ...richResources, water: 0, oxygen: 0, biomass: 0, population: 40 },
+      facilities: { ...emptyFacilityMap, K: { id: 'K', level: 2 } },
+      policy: 'mandate',
+      pressureDays: 2,
+    })
+    expect(strained.status).toBe('strained')
+    expect(strained.attrition).toBeGreaterThan(0)
+    expect(strained.net.population).toBeLessThan(0)
+  })
+
+  it('locks construction timing and discounted expansion costs by tech', () => {
+    expect(getConstructionDays([])).toBe(20)
+    expect(getConstructionDays(['TG-1 天工工业软件套装', 'TG-3 通用建筑预制件'])).toBe(17)
+    const base = projectFacilityCost(facilityEconomySpecs.E1, 0)
+    const discounted = projectFacilityCost(facilityEconomySpecs.E1, 0, ['TG-3 通用建筑预制件'])
+    expect(base.regolith).toBe(8)
+    expect(base.alloy).toBe(4)
+    expect(discounted.regolith).toBeCloseTo(7.6)
+  })
+
+  it('skips buildings that are already in construction cooldown', () => {
+    const plan = crownStewardOptimizer.run({
+      resources: richResources,
+      facilities: [{ id: 'E1', level: 1 }, ...facilityOrder.filter(id => id !== 'E1').map(id => ({ id, level: 0 as number }))],
+      year: 60,
+      techs: defaultStartingTechs,
+      blockedFacilities: ['E1'],
+      weights: { ...richResources, power: 100, population: 1, quantumCore: 1 },
+      capitalHorizonYears: 20,
+    })
+
+    expect(plan.actions.some(action => action.id === 'E1')).toBe(false)
+  })
+
+  it('keeps power out of construction material costs', () => {
+    facilityOrder.forEach(id => {
+      expect(facilityEconomySpecs[id].baseUpgradeCost.power).toBeUndefined()
+      expect(facilityEconomySpecs[id].baseUpgradeCost.population).toBeUndefined()
+      expect(projectFacilityCost(facilityEconomySpecs[id], 0).power).toBeUndefined()
+      expect(projectFacilityCost(facilityEconomySpecs[id], 0).population).toBeUndefined()
+    })
+  })
+
+  it('can use the opening starport to trade for construction alloy', () => {
+    const cost = { alloy: 12 }
+    const facilities = facilityOrder.map(id => ({ id, level: id === 'S' ? 1 : 0 }))
+    const tradePlan = planAutoTradesForCost(
+      { ...richResources, alloy: 8, regolith: 60, currency: 30 },
+      cost,
+      facilities,
+      ['TS-0 Starport charter'],
+      defaultReserveFloors,
+    )
+
+    expect(tradePlan.trades.length).toBeGreaterThan(0)
+    expect(tradePlan.resources.alloy).toBeGreaterThanOrEqual(cost.alloy + defaultReserveFloors.alloy)
+    expect(tradePlan.trades.some(trade => trade.output.alloy)).toBe(true)
+  })
+
+  it('can package a facility unlock with its first construction level', () => {
+    const plan = crownStewardOptimizer.run({
+      resources: richResources,
+      facilities: facilityOrder.map(id => ({ id, level: id === 'S' ? 1 : 0 })),
+      techs: ['TS-0 Starport charter'],
+      reserveFloors: defaultReserveFloors,
+      capitalHorizonYears: 360,
+    })
+
+    const labPackage = plan.actions.find(action => action.id === 'L')
+    expect(labPackage?.fromLevel).toBe(0)
+    expect(labPackage?.toLevel).toBe(1)
+    expect(labPackage?.technologyUnlocks).toContain('TL-0')
+    expect(labPackage?.cost.alloy).toBeGreaterThan(projectFacilityCost(facilityEconomySpecs.L, 0).alloy ?? 0)
   })
 })
 

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run tests/economy.test.ts tests/events.test.ts tests/gameContentAgent.test.ts",
+    "simulate": "vitest run tests/simulation.test.ts --reporter=verbose",
     "content-agent": "node agent/scripts/game-content-agent.js"
   },
   "dependencies": {

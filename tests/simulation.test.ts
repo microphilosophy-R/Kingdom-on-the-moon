@@ -1,0 +1,420 @@
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import {
+  applyBundle,
+  buildFacilityModifiers,
+  canAfford,
+  defaultReserveFloors,
+  defaultStartingTechs,
+  facilityEconomySpecs,
+  facilityOrder,
+  gameCalendar,
+  getConstructionDays,
+  getFacilityWorkCapacity,
+  hasTech,
+  isHousingFacility,
+  projectDailyNet,
+  projectFacilityCost,
+  projectPopulationSystem,
+  resourceOrder,
+  selectProductionMethod,
+  technologyCatalog,
+  type FacilityId,
+  type FacilityState,
+  type PopulationPolicy,
+  type ProductionMethodId,
+  type Resources,
+  type TechnologyId,
+} from '../src/economy'
+import { crownStewardOptimizer } from '../src/optimizers'
+
+type ConstructionProject = {
+  startedDay: number
+  completeDay: number
+  fromLevel: number
+  toLevel: number
+  cost: Partial<Resources>
+}
+
+type Snapshot = {
+  day: number
+  resources: Resources
+  dailyNet: Resources
+  population: {
+    total: number
+    capacity: number
+    availableCapacity: number
+    net: number
+    growthPotential: number
+    lifeSupportRatio: number
+    pressureDays: number
+    status: string
+  }
+  levels: Record<FacilityId, number>
+  staffing: Record<FacilityId, number>
+  construction: Partial<Record<FacilityId, ConstructionProject>>
+  cumulative: {
+    started: number
+    completed: number
+    skippedForCost: number
+    maxPopulation: number
+    minWater: number
+    minOxygen: number
+    minBiomass: number
+    capacityFullDays: number
+    strainedDays: number
+  }
+}
+
+type SimulationResult = {
+  scenario: string
+  assumptions: string[]
+  snapshots: Snapshot[]
+  final: Snapshot
+  findings: string[]
+}
+
+const initialResources: Resources = {
+  power: 24,
+  water: 12,
+  oxygen: 14,
+  biomass: 10,
+  regolith: 22,
+  alloy: 14,
+  quantumCore: 2,
+  currency: 10,
+  population: 12,
+  knowledge: 0,
+  luxury: 0,
+}
+
+const initialLevels: Partial<Record<FacilityId, number>> = { E1: 1, C1: 1, K: 2, S: 1 }
+
+const round = (value: number) => Number(value.toFixed(2))
+const roundResources = (resources: Resources): Resources =>
+  Object.fromEntries(resourceOrder.map(key => [key, round(resources[key])])) as Resources
+const emptyResources = (): Resources =>
+  Object.fromEntries(resourceOrder.map(key => [key, 0])) as Resources
+const mergeResources = (...bundles: Partial<Resources>[]): Resources => {
+  const total = emptyResources()
+  bundles.forEach(bundle => {
+    resourceOrder.forEach(key => {
+      total[key] += bundle[key] ?? 0
+    })
+  })
+  return total
+}
+
+const completedTechnologyIds = (techs: string[]) =>
+  Object.values(technologyCatalog).filter(tech => techs.some(item => item.startsWith(`${tech.id} `))).map(tech => tech.id)
+const hasResearchPrerequisites = (techId: TechnologyId, techs: string[]) =>
+  (technologyCatalog[techId].prerequisites ?? []).every(prerequisite => hasTech(techs, prerequisite))
+const firstResearchableTechnology = () =>
+  Object.values(technologyCatalog)
+    .filter(tech => tech.category !== 'construction')
+    .sort((a, b) => {
+      const eraRank = { early: 1, mid: 2, late: 3 }
+      return eraRank[a.era ?? 'early'] - eraRank[b.era ?? 'early'] || a.name.localeCompare(b.name, 'zh-Hans-CN')
+    })[0].id
+
+const makeFacilityMap = (levels: Record<FacilityId, number>): Record<FacilityId, FacilityState> =>
+  Object.fromEntries(facilityOrder.map(id => [id, { id, level: levels[id] }])) as Record<FacilityId, FacilityState>
+
+function simulateToDay1000(): SimulationResult {
+  let day = 1
+  let resources = { ...initialResources }
+  const levels = Object.fromEntries(facilityOrder.map(id => [id, initialLevels[id] ?? 0])) as Record<FacilityId, number>
+  const staffing = Object.fromEntries(facilityOrder.map(id => [
+    id,
+    isHousingFacility(id) ? 0 : getFacilityWorkCapacity(id, levels[id]),
+  ])) as Record<FacilityId, number>
+  const construction = Object.fromEntries(facilityOrder.map(id => [id, null])) as Record<FacilityId, ConstructionProject | null>
+  const productionMethods = Object.fromEntries(
+    facilityOrder.map(id => [id, selectProductionMethod(facilityEconomySpecs[id].productionMethods, defaultStartingTechs).id]),
+  ) as Record<FacilityId, ProductionMethodId>
+  let techs = [...defaultStartingTechs]
+  const researchProgress: Partial<Record<TechnologyId, number>> = {}
+  let activeResearch = firstResearchableTechnology()
+  let populationPressureDays = 0
+  const policy: PopulationPolicy = 'ration'
+  const snapshots: Snapshot[] = []
+  const cumulative = {
+    started: 0,
+    completed: 0,
+    skippedForCost: 0,
+    maxPopulation: resources.population,
+    minWater: resources.water,
+    minOxygen: resources.oxygen,
+    minBiomass: resources.biomass,
+    capacityFullDays: 0,
+    strainedDays: 0,
+  }
+
+  const buildSnapshot = (dailyNet = emptyResources()): Snapshot => {
+    const projection = projectPopulationSystem({
+      resources,
+      facilities: makeFacilityMap(levels),
+      policy,
+      techs,
+      pressureDays: populationPressureDays,
+    })
+    return {
+      day,
+      resources: roundResources(resources),
+      dailyNet: roundResources(dailyNet),
+      population: {
+        total: round(resources.population),
+        capacity: round(projection.capacity),
+        availableCapacity: round(projection.availableCapacity),
+        net: round(projection.net.population ?? 0),
+        growthPotential: round(projection.growthPotential),
+        lifeSupportRatio: round(projection.lifeSupportRatio),
+        pressureDays: populationPressureDays,
+        status: projection.status,
+      },
+      levels: { ...levels },
+      staffing: { ...staffing },
+      construction: Object.fromEntries(Object.entries(construction).filter(([, project]) => project)) as Partial<Record<FacilityId, ConstructionProject>>,
+      cumulative: { ...cumulative },
+    }
+  }
+
+  snapshots.push(buildSnapshot())
+
+  while (day < gameCalendar.finalDay) {
+    const nextDay = day + 1
+    const facilityStates = Object.fromEntries(facilityOrder.map(id => [
+      id,
+      { id, level: Math.min(getFacilityWorkCapacity(id, levels[id]), staffing[id]) },
+    ])) as Record<FacilityId, FacilityState>
+    const facilityLevels = { ...levels }
+    const modifiers = Object.fromEntries(facilityOrder.map(id => [
+      id,
+      buildFacilityModifiers(levels.M, policy, 1),
+    ]))
+    const productionNet = projectDailyNet({
+      facilities: facilityStates,
+      facilityLevels,
+      modifiers,
+      techs,
+      productionMethods,
+      globalBonus: policy === 'ration' ? { biomass: 1 } : {},
+    })
+    const populationProjection = projectPopulationSystem({
+      resources: applyBundle(resources, productionNet),
+      facilities: makeFacilityMap(levels),
+      policy,
+      techs,
+      pressureDays: populationPressureDays,
+    })
+    const dailyNet = mergeResources(productionNet, populationProjection.net)
+    resources = applyBundle(resources, dailyNet)
+    populationPressureDays = populationProjection.nextPressureDays
+
+    Object.entries(construction).forEach(([id, project]) => {
+      if (!project || project.completeDay > nextDay) return
+      levels[id as FacilityId] = project.toLevel
+      construction[id as FacilityId] = null
+      cumulative.completed += 1
+      if (!isHousingFacility(id as FacilityId)) {
+        const usedPopulation = facilityOrder.reduce((sum, facilityId) => sum + staffing[facilityId], 0)
+        const freePopulation = Math.max(0, Math.floor(resources.population - usedPopulation))
+        const addedCapacity = getFacilityWorkCapacity(id as FacilityId, project.toLevel) - getFacilityWorkCapacity(id as FacilityId, project.fromLevel)
+        staffing[id as FacilityId] = Math.min(
+          getFacilityWorkCapacity(id as FacilityId, project.toLevel),
+          staffing[id as FacilityId] + Math.min(freePopulation, addedCapacity),
+        )
+      }
+    })
+
+    const activeResearchSpec = technologyCatalog[activeResearch]
+    if (activeResearchSpec && !hasTech(techs, activeResearch) && hasResearchPrerequisites(activeResearch, techs)) {
+      const requiredKnowledge = activeResearchSpec.researchCost ?? 0
+      const currentProgress = researchProgress[activeResearch] ?? 0
+      const researchThroughput = Math.max(1, Math.min(10, 1 + Math.floor((staffing.L ?? 0) * 0.5) + (hasTech(techs, 'TL-2') ? 1 : 0) + (hasTech(techs, 'TL-3') ? 2 : 0)))
+      const spentKnowledge = Math.min(resources.knowledge, researchThroughput, Math.max(0, requiredKnowledge - currentProgress))
+      if (spentKnowledge > 0 || requiredKnowledge === 0) {
+        const nextProgress = Math.min(requiredKnowledge, currentProgress + spentKnowledge)
+        resources = { ...resources, knowledge: resources.knowledge - spentKnowledge }
+        researchProgress[activeResearch] = nextProgress
+        if (nextProgress >= requiredKnowledge) {
+          techs = techs.some(item => item.startsWith(`${activeResearch} `)) ? techs : [...techs, `${activeResearch} ${activeResearchSpec.name}`]
+          activeResearch = firstResearchableTechnology()
+        }
+      }
+    }
+
+    const postPopulationProjection = projectPopulationSystem({
+      resources,
+      facilities: makeFacilityMap(levels),
+      policy,
+      techs,
+      pressureDays: populationPressureDays,
+    })
+    const plan = crownStewardOptimizer.run({
+      resources,
+      facilities: facilityOrder.map(id => ({ id, level: levels[id] })),
+      staffing,
+      population: postPopulationProjection,
+      blockedFacilities: facilityOrder.filter(id => construction[id]),
+      modifiers,
+      globalBonus: policy === 'ration' ? { biomass: 1 } : {},
+      reserveFloors: defaultReserveFloors,
+      techs,
+      productionMethods,
+      year: day,
+      capitalHorizonYears: 360,
+    })
+    const startedIds = new Set<FacilityId>()
+    plan.technologyActions.forEach(action => {
+      if (!canAfford(resources, action.cost)) return
+      resources = applyBundle(resources, action.cost, -1)
+      if (!techs.some(item => item.startsWith(`${action.techId} `))) {
+        techs = [...techs, `${action.techId} ${action.name}`]
+      }
+    })
+    plan.actions.forEach(action => {
+      if (startedIds.has(action.id) || construction[action.id]) return
+      action.trades?.forEach(trade => {
+        if (canAfford(resources, trade.input)) {
+          resources = applyBundle(applyBundle(resources, trade.input, -1), trade.output)
+        }
+      })
+      if (!canAfford(resources, action.cost)) {
+        cumulative.skippedForCost += 1
+        return
+      }
+      resources = applyBundle(resources, action.cost, -1)
+      ;(action.technologyUnlocks ?? []).forEach(techId => {
+        if (!techs.some(item => item.startsWith(`${techId} `))) {
+          techs = [...techs, `${techId} ${technologyCatalog[techId].name}`]
+        }
+      })
+      construction[action.id] = {
+        startedDay: nextDay,
+        completeDay: nextDay + getConstructionDays(techs),
+        fromLevel: action.fromLevel,
+        toLevel: action.toLevel,
+        cost: action.cost,
+      }
+      cumulative.started += 1
+      startedIds.add(action.id)
+    })
+
+    day = nextDay
+    cumulative.maxPopulation = Math.max(cumulative.maxPopulation, resources.population)
+    cumulative.minWater = Math.min(cumulative.minWater, resources.water)
+    cumulative.minOxygen = Math.min(cumulative.minOxygen, resources.oxygen)
+    cumulative.minBiomass = Math.min(cumulative.minBiomass, resources.biomass)
+    if (postPopulationProjection.status === 'full') cumulative.capacityFullDays += 1
+    if (postPopulationProjection.status === 'strained') cumulative.strainedDays += 1
+    if (day % 50 === 0 || day === gameCalendar.finalDay) snapshots.push(buildSnapshot(dailyNet))
+  }
+
+  const final = snapshots[snapshots.length - 1]
+  const builtFacilities = facilityOrder.filter(id => final.levels[id] > 0)
+  const firstUnlockedExpansionCosts = facilityOrder
+    .filter(id => hasTech(techs, facilityEconomySpecs[id].requiredTech))
+    .map(id => ({ id, cost: projectFacilityCost(facilityEconomySpecs[id], levels[id], techs) }))
+  const findings = [
+    `默认无事件、无额外建造科技时，最终人口 ${final.population.total}/${final.population.capacity}，低于 500 目标。`,
+    `最终启用建筑 ${builtFacilities.join(', ')}；当前默认科技只允许 E1/C1/K 建造，B/L/H/M/S 等建筑没有进入自动经济。`,
+    final.cumulative.started === 0
+      ? `优化器共开工 0 项：新扩建成本按 4 岗/容量规模放大后，初始合金 14 不足以支付 E1/C1/K 任一首轮扩建。`
+      : `优化器共开工 ${final.cumulative.started} 项、完工 ${final.cumulative.completed} 项。`,
+    `最低生命维持库存：水 ${round(final.cumulative.minWater)}、氧气 ${round(final.cumulative.minOxygen)}、生物质 ${round(final.cumulative.minBiomass)}。`,
+    `氧气在第 50 御日前后跌入紧张；B 水培生态球未默认解锁，自动系统没有可用氧气补给建筑。`,
+    `容量满/紧张天数 ${final.cumulative.capacityFullDays}，生命维持紧张天数 ${final.cumulative.strainedDays}。`,
+    `已具备科技：${completedTechnologyIds(techs).join(', ') || '无' }。`,
+    `可诊断扩建候选：${firstUnlockedExpansionCosts.map(item => `${item.id} ${JSON.stringify(item.cost)}`).join('; ') || '无' }。`,
+  ]
+
+  findings.splice(
+    0,
+    findings.length,
+    final.population.total >= 500
+      ? `Without random events, final population is ${final.population.total}/${final.population.capacity}, meeting the 500 target.`
+      : `Without random events, final population is ${final.population.total}/${final.population.capacity}, below the 500 target.`,
+    `Built facilities: ${builtFacilities.join(', ')}. Opening S exists, and the optimizer can use starport trade to cover alloy and complete the first expansion wave.`,
+    final.cumulative.started === 0
+      ? 'The optimizer started no construction; early costs or tradable materials still need adjustment.'
+      : `The optimizer started ${final.cumulative.started} projects and completed ${final.cumulative.completed}.`,
+    `Minimum life-support stocks: water ${round(final.cumulative.minWater)}, oxygen ${round(final.cumulative.minOxygen)}, biomass ${round(final.cumulative.minBiomass)}.`,
+    final.population.status === 'full'
+      ? `The main bottleneck is now the designed housing cap: life support remains positive, and population fills ${final.population.capacity} capacity.`
+      : `Population is still growing at day 1000: net ${final.population.net}/day with ${final.population.availableCapacity} spare housing capacity.`,
+    `Capacity-full days: ${final.cumulative.capacityFullDays}; strained life-support days: ${final.cumulative.strainedDays}.`,
+    `Completed techs: ${completedTechnologyIds(techs).join(', ') || 'none'}.`,
+    `Diagnosable expansion candidates: ${firstUnlockedExpansionCosts.map(item => `${item.id} ${JSON.stringify(item.cost)}`).join('; ') || 'none'}.`,
+  )
+
+  return {
+    scenario: `default-no-random-events-${crownStewardOptimizer.id}`,
+    assumptions: [
+      '使用默认初始资源、默认科技、默认政策 ration。',
+      '不触发随机访客事件，不手动切换生产方式或政策。',
+      `每天运行 ${crownStewardOptimizer.name} 优化器；每座建筑有独立施工状态。`,
+      '每 50 御日记录一次结构化快照。',
+    ],
+    snapshots,
+    final,
+    findings,
+  }
+}
+
+function writeSimulationReport(result: SimulationResult) {
+  const outputDir = resolve(process.cwd(), 'docs', 'simulation')
+  mkdirSync(outputDir, { recursive: true })
+  const jsonPath = resolve(outputDir, 'latest-1000d.json')
+  const mdPath = resolve(outputDir, 'latest-1000d.md')
+  writeFileSync(jsonPath, `${JSON.stringify(result, null, 2)}\n`, 'utf8')
+  writeFileSync(mdPath, [
+    '# 1000 御日自动经济模拟',
+    '',
+    `场景：\`${result.scenario}\``,
+    '',
+    '## 假设',
+    ...result.assumptions.map(item => `- ${item}`),
+    '',
+    '## 主要发现',
+    ...result.findings.map(item => `- ${item}`),
+    '',
+    '## 最终快照',
+    '',
+    '```json',
+    JSON.stringify(result.final, null, 2),
+    '```',
+    '',
+    `结构化快照：\`${jsonPath}\``,
+    '',
+  ].join('\n'), 'utf8')
+  writeFileSync(resolve(outputDir, 'latest-1000d-findings.md'), [
+    '# 1000-day simulation findings',
+    '',
+    `Scenario: \`${result.scenario}\``,
+    '',
+    '## Findings',
+    ...result.findings.map(item => `- ${item}`),
+    '',
+    '## Final Snapshot',
+    '',
+    '```json',
+    JSON.stringify(result.final, null, 2),
+    '```',
+    '',
+    `Structured snapshots: \`${jsonPath}\``,
+    '',
+  ].join('\n'), 'utf8')
+}
+
+describe('1000-day headless simulation', () => {
+  it('runs the daily optimizer to day 1000 and records 50-day snapshots', () => {
+    const result = simulateToDay1000()
+    writeSimulationReport(result)
+
+    expect(result.final.day).toBe(1000)
+    expect(result.snapshots.map(snapshot => snapshot.day)).toEqual([1, ...Array.from({ length: 20 }, (_, index) => (index + 1) * 50)])
+    expect(result.final.resources.population).toBeGreaterThanOrEqual(defaultReserveFloors.population)
+  })
+})

@@ -67,7 +67,8 @@ h1, h2, h3 { font-family: 'Noto Serif SC', 'Songti SC', serif; }
 .docked-orbit { width: min(240px, 100%); animation: planetDockIn .58s cubic-bezier(.22, 1, .36, 1) both; }
 .planet-dock-copy { width: min(260px, 100%); text-align: center; animation: dockCopyIn .32s ease-out .22s both; }
 .king-profile { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .65rem; align-items: start; width: min(300px, 100%); margin-top: .2rem; padding: .45rem 0 0; animation: dockCopyIn .32s ease-out .28s both; }
-.king-portrait-slot { display: grid; width: 58px; height: 70px; place-items: center; border-radius: 6px; background: linear-gradient(160deg, oklch(92% .02 82), oklch(84% .018 250)); color: oklch(50% .095 76); }
+.king-portrait-slot { display: grid; width: 58px; height: 70px; place-items: center; border-radius: 6px; background: linear-gradient(160deg, oklch(92% .02 82), oklch(84% .018 250)); color: oklch(50% .095 76); overflow: hidden; }
+.king-portrait-slot img { width: 100%; height: 100%; object-fit: cover; }
 .king-portrait-slot span { color: oklch(46% .026 250); font-size: .54rem; }
 .king-profile h3 { margin: .12rem 0 .18rem; color: oklch(30% .034 250); font-size: .92rem; }
 .king-profile p { margin: 0; color: oklch(45% .026 250); font-size: .62rem; line-height: 1.55; }
@@ -3707,9 +3708,131 @@ button:disabled,
   color: oklch(98% .01 86);
 }
 
+.reign-report-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: oklch(21% .025 250 / .48);
+  backdrop-filter: blur(10px);
+}
+
+.reign-report-modal {
+  width: min(920px, 100%);
+  max-height: min(86vh, 760px);
+  overflow: auto;
+  border: 1px solid oklch(62% .07 76);
+  border-radius: 8px;
+  padding: 1.1rem;
+  background: linear-gradient(180deg, oklch(98% .011 86), oklch(94% .012 86));
+  box-shadow: 0 28px 90px oklch(18% .03 250 / .34);
+}
+
+.reign-report-modal header,
+.reign-report-modal footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.reign-report-modal h2,
+.reign-report-modal h3 {
+  margin: .15rem 0 0;
+  color: oklch(28% .035 250);
+}
+
+.reign-report-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .7rem;
+  margin: 1rem 0;
+}
+
+.reign-report-kpis > div,
+.reign-report-grid > section {
+  min-width: 0;
+  border: 1px solid oklch(75% .03 80);
+  border-radius: 7px;
+  padding: .75rem;
+  background: oklch(99% .01 86 / .78);
+}
+
+.reign-report-kpis span,
+.reign-resource-table span {
+  display: block;
+  color: oklch(48% .045 73);
+  font-size: .62rem;
+  font-weight: 700;
+}
+
+.reign-report-kpis strong {
+  display: block;
+  margin-top: .15rem;
+  color: oklch(31% .04 250);
+  font-family: ui-monospace, monospace;
+  font-size: 1.55rem;
+}
+
+.reign-report-kpis small,
+.reign-resource-table b {
+  color: oklch(47% .026 250);
+  font-family: ui-monospace, monospace;
+  font-size: .68rem;
+}
+
+.reign-report-kpis .negative,
+.reign-resource-table .negative {
+  color: oklch(54% .12 25);
+}
+
+.reign-report-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(240px, .8fr);
+  gap: .8rem;
+}
+
+.reign-resource-table {
+  display: grid;
+  gap: .25rem;
+  margin-top: .65rem;
+}
+
+.reign-resource-table > div {
+  display: grid;
+  grid-template-columns: minmax(72px, 1fr) repeat(3, minmax(54px, .55fr));
+  gap: .45rem;
+  align-items: center;
+  border-bottom: 1px solid oklch(82% .018 250);
+  padding: .32rem 0;
+}
+
+.reign-suggestion-list {
+  margin: .65rem 0 0;
+  padding-left: 1.1rem;
+  color: oklch(36% .03 250);
+  font-size: .82rem;
+  line-height: 1.65;
+}
+
+.reign-report-modal footer {
+  margin-top: 1rem;
+}
+
+.gdp-line strong {
+  color: oklch(46% .105 145);
+}
+
 @media (max-width: 900px) {
   .app-shell {
     padding-bottom: 9.2rem;
+  }
+
+  .reign-report-kpis,
+  .reign-report-grid {
+    grid-template-columns: 1fr;
   }
 
   .bottom-tabs .scoreline {
@@ -3735,6 +3858,10 @@ button:disabled,
   .day-counter,
   .time-dock .advance-year {
     grid-column: 1 / -1;
+  }
+
+  .reign-resource-table > div {
+    grid-template-columns: minmax(62px, 1fr) repeat(3, minmax(40px, .5fr));
   }
 
   .settings-scrim {
