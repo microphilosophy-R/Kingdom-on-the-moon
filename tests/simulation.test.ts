@@ -364,7 +364,7 @@ function simulateToDay1000(): SimulationResult {
 }
 
 function writeSimulationReport(result: SimulationResult) {
-  const outputDir = resolve(process.cwd(), 'docs', 'simulation')
+  const outputDir = resolve(process.cwd(), 'test-results', 'simulation')
   mkdirSync(outputDir, { recursive: true })
   const jsonPath = resolve(outputDir, 'latest-1000d.json')
   const mdPath = resolve(outputDir, 'latest-1000d.md')

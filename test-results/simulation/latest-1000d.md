@@ -119,4 +119,4 @@
 }
 ```
 
-结构化快照：`C:\Kingdom on the moon\docs\simulation\latest-1000d.json`
+结构化快照：`C:\Kingdom on the moon\test-results\simulation\latest-1000d.json`

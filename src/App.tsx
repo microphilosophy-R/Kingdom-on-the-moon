@@ -49,6 +49,7 @@ import {
   type Encounter,
   type Role,
 } from './events'
+import { policyDefinitions, type PolicyId } from './game/policies'
 import { createDisabledAutomationPlan, gameOptimizers, type OptimizerId } from './optimizers'
 import { PlanetScene, planetTextures } from './PlanetScene'
 import charChenlin from './assets/char-chenlin.jpg'
@@ -59,7 +60,6 @@ type RegionId = FacilityId
 type FacilityOrderMode = 'expand' | 'hold' | 'shrink'
 type FacilityEra = 'early' | 'mid' | 'late'
 type TechnologyEra = 'early' | 'mid' | 'late'
-type PolicyId = 'ration' | 'mandate' | 'festival'
 
 type PolicyReport = {
   policy: PolicyId
@@ -285,12 +285,6 @@ const resourceUiMeta: Record<ResourceKey, { label: string; icon: Icon; tone: str
 }
 
 const policyCooldownDays = gameCalendar.optimizationIntervalDays
-
-const policyDefinitions: { id: PolicyId; name: string; level: number; detail: string; icon: Icon }[] = [
-  { id: 'ration', name: '配给法典', level: 1, detail: '生物质 +1/日', icon: Leaf },
-  { id: 'mandate', name: '机令总动员', level: 2, detail: '正向产出 +16%', icon: Bot },
-  { id: 'festival', name: '失重庆典', level: 3, detail: '正向产出 +6%', icon: Theater },
-]
 
 const researchEraSections: { id: TechnologyEra; label: string; note: string }[] = [
   { id: 'early', label: '前期', note: '维持月面闭环与第一批生产方式。' },

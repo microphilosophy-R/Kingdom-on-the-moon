@@ -1,0 +1,523 @@
+
+.trade-offer-list button {
+  border: 1px solid var(--ui-brass-dark);
+  border-radius: 4px;
+  padding: .48rem .7rem;
+  background: var(--ui-brass);
+  color: oklch(97% .012 86);
+  font-size: var(--font-label);
+  font-weight: 700;
+}
+
+.trade-offer-list button:disabled {
+  border-color: var(--ui-line);
+  background: var(--ui-surface-2);
+  color: var(--ui-muted);
+}
+
+.facility-ledger-list button::before {
+  display: none;
+}
+
+.technology-tree-scroll {
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  padding: .85rem;
+  background: var(--ui-surface-2);
+  box-shadow: inset 18px 0 24px oklch(90% .018 84), inset -18px 0 24px oklch(90% .018 84);
+}
+
+.technology-tree {
+  grid-template-columns: repeat(3, minmax(300px, 1fr));
+  gap: 1.25rem;
+  min-width: 1020px;
+  background: transparent;
+}
+
+.technology-tree::before {
+  top: 4.9rem;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--ui-brass), var(--ui-signal), transparent);
+}
+
+.tech-era-column {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: .85rem;
+  min-width: 0;
+}
+
+.tech-era-column::before {
+  position: absolute;
+  content: '';
+  top: 5.35rem;
+  bottom: 1.1rem;
+  left: 1.05rem;
+  width: 2px;
+  border: 0;
+  background: var(--ui-line-strong);
+}
+
+.tech-era-column:not(:last-child)::after {
+  position: absolute;
+  content: '';
+  top: 5.35rem;
+  right: -1.25rem;
+  width: 1.25rem;
+  border-top: 2px solid var(--ui-line-strong);
+}
+
+.tech-era-column header {
+  min-height: 58px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .58rem .68rem;
+  background: var(--ui-raised);
+}
+
+.tech-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(108px, 1fr) auto auto;
+  gap: .62rem;
+  min-height: 286px;
+  border-radius: 7px;
+  padding: .72rem;
+  background: var(--ui-raised);
+}
+
+.tech-card::before {
+  position: absolute;
+  content: '';
+  top: 1.15rem;
+  left: -1.05rem;
+  width: .72rem;
+  border-top: 2px solid var(--ui-line-strong);
+}
+
+.tech-card.completed::before,
+.tech-card.researching::before {
+  border-color: var(--ui-brass);
+}
+
+.tech-card-top {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: .55rem;
+  align-items: start;
+}
+
+.tech-image-placeholder {
+  width: 96px;
+  height: 60px;
+}
+
+.tech-card-copy {
+  display: grid;
+  align-content: start;
+  gap: .48rem;
+}
+
+.tech-card-copy .tech-card-note {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--font-note);
+  line-height: 1.58;
+}
+
+.tech-prerequisites,
+.tech-cost-row {
+  min-height: 34px;
+}
+
+@media (max-width: 1100px) {
+  .start-gate {
+    grid-template-columns: 1fr;
+  }
+
+  .start-console {
+    position: absolute;
+    right: clamp(1rem, 4vw, 3rem);
+    bottom: clamp(1rem, 4vw, 3rem);
+  }
+
+  .facility-detail-page {
+    grid-template-columns: 1fr;
+  }
+
+  .production-methods article,
+  .trade-offer-list article,
+  .trade-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .trade-flow > svg {
+    transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    padding-bottom: 9.8rem;
+  }
+
+  .page-content {
+    padding-bottom: 9rem;
+  }
+
+  .start-gate {
+    padding: .75rem;
+  }
+
+  .start-orbit {
+    min-height: 520px;
+  }
+
+  .start-console {
+    right: .75rem;
+    bottom: .75rem;
+    left: .75rem;
+    max-width: none;
+    padding: 1rem;
+  }
+
+  .start-console h1 {
+    font-size: 1.85rem;
+  }
+
+  .resource-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .resource-atom {
+    min-width: 0;
+  }
+
+  .resource-atom em {
+    display: none;
+  }
+
+  .facility-identity-panel,
+  .population-strip,
+  .action-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .building-art-slot {
+    min-height: 180px;
+  }
+}
+
+/* Impeccable color system v2: warm lunar console, restrained product UI. */
+:root {
+  color-scheme: light;
+  --ui-font: 'Noto Sans SC', 'Microsoft YaHei UI', 'Segoe UI', system-ui, sans-serif;
+  --ui-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif;
+  --ui-mono: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --ui-shell: oklch(92% .018 86);
+  --ui-shell-2: oklch(88% .018 84);
+  --ui-surface: oklch(97% .01 86);
+  --ui-surface-2: oklch(94% .014 84);
+  --ui-raised: oklch(98% .008 86);
+  --ui-parchment: oklch(90% .022 82);
+  --ui-ink: oklch(24% .024 250);
+  --ui-ink-strong: oklch(18% .026 250);
+  --ui-muted: oklch(47% .018 250);
+  --ui-muted-2: oklch(57% .016 250);
+  --ui-line: oklch(73% .018 84);
+  --ui-line-strong: oklch(64% .026 78);
+  --ui-brass: oklch(55% .105 76);
+  --ui-brass-dark: oklch(45% .095 74);
+  --ui-brass-soft: oklch(94% .04 78);
+  --ui-brass-wash: oklch(88% .035 78);
+  --ui-signal: oklch(52% .075 205);
+  --ui-signal-soft: oklch(92% .022 205);
+  --ui-success: oklch(55% .09 145);
+  --ui-success-soft: oklch(94% .026 145);
+  --ui-danger: oklch(56% .12 28);
+  --ui-danger-soft: oklch(94% .026 35);
+  --ui-violet: oklch(50% .06 300);
+  --ui-shadow: oklch(35% .028 250 / .11);
+  --ui-shadow-strong: oklch(21% .025 250 / .26);
+  --font-label: .68rem;
+  --font-note: .72rem;
+  --font-body: .78rem;
+  --font-card: .92rem;
+  --font-panel: 1.18rem;
+  --font-page: 1.55rem;
+}
+
+body {
+  background:
+    linear-gradient(180deg, var(--ui-shell), var(--ui-shell-2));
+  color: var(--ui-ink);
+  font-family: var(--ui-font);
+}
+
+body * {
+  letter-spacing: 0 !important;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--ui-font);
+}
+
+button:focus-visible,
+[role='button']:focus-visible {
+  outline: 3px solid oklch(58% .105 76 / .46);
+  outline-offset: 3px;
+}
+
+h1,
+h2,
+h3,
+.brand-block h1,
+.letter-copy strong {
+  color: var(--ui-ink-strong);
+  font-family: var(--ui-serif);
+}
+
+.app-shell::before {
+  opacity: .28;
+  background-image:
+    radial-gradient(oklch(52% .025 78 / .14) .55px, transparent .7px),
+    linear-gradient(90deg, transparent 49.9%, oklch(58% .02 84 / .08) 50%, transparent 50.1%);
+}
+
+.eyebrow,
+.brand-block p,
+.group-label,
+.resource small,
+.resource-atom small,
+.facility-ledger-list small,
+.policy-cards small,
+.tech-card-top > span,
+.technology-book > div:first-child small,
+.event-transmission-head span,
+.event-transmission-head small,
+.retainer-copy > span,
+.retainer-duty small,
+.special-facility-stats span,
+.special-production-row span,
+.research-rule-box > span {
+  color: var(--ui-muted);
+  font-family: var(--ui-font);
+  font-size: var(--font-label);
+}
+
+.welcome-panel p,
+.chronicle-panel p,
+.signal-panel p,
+.inspector-description,
+.special-panel-note,
+.special-panel-head p,
+.special-panel-brief,
+.policy-cards p,
+.policy-report-body small,
+.tech-card-copy p,
+.research-rule-box p,
+.visitor-hero p,
+.retainer-copy p,
+.planet-dock p,
+.king-profile p,
+.letter-body {
+  color: var(--ui-muted);
+  font-size: var(--font-body);
+  line-height: 1.7;
+}
+
+.brand-seal,
+.letter-symbol,
+.signal-being,
+.facility-icon,
+.ledger-icon,
+.node-icon,
+.special-panel-icon,
+.palace-mark,
+.policy-cards button > span,
+.retainer-portrait,
+.king-portrait-slot,
+.tech-image-placeholder,
+.visitor-portrait-slot {
+  border-color: var(--ui-line-strong);
+  color: var(--ui-brass);
+}
+
+.welcome-panel,
+.overview-facilities,
+.chronicle-panel,
+.signal-panel,
+.facility-tree-panel,
+.inspector,
+.policy-board,
+.tech-cabinet,
+.visitor-hero,
+.roster-board,
+.planet-dock,
+.facility-ledger,
+.system-panel,
+.special-system-main,
+.technology-book,
+.policy-report,
+.action-brief,
+.throughput-panel,
+.population-strip,
+.staffing-control,
+.production-methods,
+.resource-rail,
+.diplomatic-letter {
+  border-color: var(--ui-line);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  box-shadow: 0 8px 22px var(--ui-shadow);
+}
+
+.welcome-panel,
+.signal-panel,
+.visitor-hero {
+  background: linear-gradient(135deg, var(--ui-parchment), var(--ui-surface) 64%);
+}
+
+.resource-rail,
+.bottom-tabs,
+.main-nav,
+.policy-status,
+.palace-building-stats,
+.policy-report-body,
+.special-facility-stats,
+.special-production-row,
+.technology-tree-scroll,
+.technology-tree,
+.research-rule-box {
+  border-color: var(--ui-line);
+  background: var(--ui-surface-2);
+}
+
+.resource-group,
+.resource-rail > .resource-atom,
+.resource,
+.facility-summary button,
+.facility-node,
+.facility-ledger-list button,
+.policy-cards button,
+.ship-stage-list article,
+.trade-board p,
+.tech-card,
+.technology-book > div:last-child span,
+.event-modal .event-exchange > div,
+.production-methods article,
+.action-facts > div,
+.phase-list > p,
+.retainer,
+.worker-card,
+.palace-output,
+.special-facility-stats > div,
+.special-production-row > div {
+  border-color: var(--ui-line);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+}
+
+.main-nav button,
+.tab-nav button,
+.reign-control button,
+.letter-actions button,
+.worker-card button,
+.back-button,
+.production-table button,
+.staffing-buttons button,
+.facility-actions button,
+.special-secondary-action,
+.retainer-duty button,
+.retainer-copy button,
+.art-button,
+.planet-title button,
+.system-hero button,
+.palace-hero button {
+  border-color: var(--ui-line-strong);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: var(--font-label);
+  transition: background .18s cubic-bezier(.16, 1, .3, 1), border-color .18s cubic-bezier(.16, 1, .3, 1), color .18s cubic-bezier(.16, 1, .3, 1), transform .18s cubic-bezier(.16, 1, .3, 1);
+}
+
+.main-nav button:hover,
+.tab-nav button:hover,
+.reign-control button:hover,
+.letter-actions button:hover,
+.worker-card button:hover,
+.back-button:hover,
+.production-table button:hover:not(:disabled),
+.staffing-buttons button:hover:not(:disabled),
+.facility-actions button:hover:not(:disabled),
+.special-secondary-action:hover,
+.retainer-duty button:hover,
+.retainer-copy button:hover,
+.art-button:hover,
+.planet-title button:hover,
+.system-hero button:hover,
+.palace-hero button:hover,
+.facility-summary button:hover,
+.facility-ledger-list button:hover,
+.policy-cards button:hover:not(:disabled),
+.tech-card:hover:not(:disabled),
+.production-methods article:hover {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+  color: var(--ui-ink-strong);
+}
+
+.main-nav button.active,
+.tab-nav button.active,
+.primary-action,
+.advance-year,
+.letter-actions .primary,
+.event-modal .letter-actions .primary,
+.upgrade-button,
+.facility-actions button.selected,
+.policy-cards button.selected,
+.tech-card.researching,
+.production-methods article.active,
+.facility-node.selected,
+.facility-ledger-list button.selected {
+  border-color: var(--ui-brass-dark);
+  background: var(--ui-brass-soft);
+  color: var(--ui-ink-strong);
+  box-shadow: 0 0 0 2px oklch(55% .105 76 / .16), 0 8px 20px oklch(45% .08 76 / .12);
+}
+
+.primary-action,
+.advance-year,
+.letter-actions .primary,
+.event-modal .letter-actions .primary,
+.upgrade-button {
+  background: var(--ui-brass);
+  color: oklch(97% .012 86);
+}
+
+.primary-action:hover,
+.advance-year:hover:not(:disabled),
+.letter-actions .primary:hover,
+.event-modal .letter-actions .primary:hover,
+.upgrade-button:hover:not(:disabled) {
+  background: oklch(60% .11 76);
+  color: oklch(98% .01 86);
+}
+
+button:disabled,
+.upgrade-button:disabled,
+.policy-cards button.locked,
+.tech-card.locked,
+.facility-node.locked {
+  border-color: oklch(80% .012 84);
+  background: oklch(92% .012 86);
+  color: var(--ui-muted-2);
+  box-shadow: none;
+}

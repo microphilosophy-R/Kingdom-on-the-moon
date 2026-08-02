@@ -113,4 +113,4 @@ Scenario: `default-no-random-events-crown-steward`
 }
 ```
 
-Structured snapshots: `C:\Kingdom on the moon\docs\simulation\latest-1000d.json`
+Structured snapshots: `C:\Kingdom on the moon\test-results\simulation\latest-1000d.json`
