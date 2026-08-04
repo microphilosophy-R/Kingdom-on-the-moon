@@ -257,7 +257,7 @@
   }
 
   .building-art-slot {
-    min-height: 180px;
+    min-height: 220px;
   }
 }
 
@@ -292,12 +292,18 @@
   --ui-violet: oklch(49% .045 300);
   --ui-shadow: oklch(35% .028 250 / .11);
   --ui-shadow-strong: oklch(21% .025 250 / .26);
+  --font-micro: .60rem;
   --font-label: .68rem;
-  --font-note: .72rem;
-  --font-body: .78rem;
-  --font-card: .92rem;
+  --font-note: .74rem;
+  --font-body: .84rem;
+  --font-button: .80rem;
+  --font-card: .98rem;
   --font-panel: 1.18rem;
   --font-page: 1.55rem;
+  --font-display: 2.20rem;
+  --font-data: .92rem;
+  --font-data-lg: 1.28rem;
+  --font-data-xl: 1.62rem;
 }
 
 body {

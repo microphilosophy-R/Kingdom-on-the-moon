@@ -314,21 +314,16 @@
 
 .building-art-slot {
   display: grid;
-  min-height: 150px;
-  place-items: center;
-  align-content: center;
-  gap: .5rem;
-  border: 1px dashed var(--ui-line-strong);
+  min-height: 260px;
+  overflow: hidden;
   border-radius: 6px;
-  background:
-    linear-gradient(135deg, var(--ui-parchment), var(--ui-surface-2)),
-    repeating-linear-gradient(45deg, transparent 0 8px, oklch(68% .018 84 / .18) 8px 9px);
-  color: var(--ui-brass-dark);
+  background: var(--ui-surface-2);
 }
 
-.building-art-slot span {
-  color: var(--ui-muted);
-  font-size: .62rem;
+.building-art-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .building-title-copy {

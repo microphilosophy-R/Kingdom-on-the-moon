@@ -60,6 +60,26 @@ import {
 import { createDisabledAutomationPlan, gameOptimizers, type OptimizerId } from './optimizers'
 import { PlanetScene, planetTextures } from './PlanetScene'
 import charChenlin from './assets/char-chenlin.jpg'
+import buildingKing from './assets/building-king.png'
+import visitorSava from './assets/visitor-1.png'
+import visitorMelu from './assets/visitor-2.png'
+import visitorOrri from './assets/visitor-3.png'
+import visitorNix from './assets/visitor-4.png'
+import visitorTaro from './assets/visitor-5.png'
+import visitorEvi from './assets/visitor-6.png'
+import visitorRosa from './assets/visitor-7.png'
+import visitorAtya from './assets/visitor-8.png'
+
+const visitorPortraits: Record<string, string> = {
+  sava: visitorSava,
+  melu: visitorMelu,
+  orri: visitorOrri,
+  nix: visitorNix,
+  taro: visitorTaro,
+  evi: visitorEvi,
+  rosa: visitorRosa,
+  atya: visitorAtya,
+}
 
 type AppView = 'facilities' | 'palace' | 'research' | 'ecology' | 'starport' | 'ship' | 'visitors'
 type Icon = ComponentType<LucideProps>
@@ -541,6 +561,13 @@ function ResourceBundle({ bundle, empty = '无', signed = true, boxedEmpty = fal
   return <span className="resource-bundle">
     {entries.map(key => <ResourceAtom key={key} resourceKey={key} value={bundle[key] ?? 0} compact signed={signed} />)}
   </span>
+}
+
+function ResourceDeltaRows({ input, output, inputEmpty = '无输入', outputEmpty = '无产出' }: { input: Partial<Resources>; output: Partial<Resources>; inputEmpty?: string; outputEmpty?: string }) {
+  return <div className="resource-delta-stack">
+    <div className="resource-delta-row consumption"><span aria-hidden="true">-</span><ResourceBundle bundle={input} empty={inputEmpty} signed={false} boxedEmpty /></div>
+    <div className="resource-delta-row production"><span aria-hidden="true">+</span><ResourceBundle bundle={output} empty={outputEmpty} signed={false} boxedEmpty /></div>
+  </div>
 }
 
 function MetricPill({ label, value, tone = 'neutral' }: { label: string; value: string; tone?: 'neutral' | 'success' | 'danger' }) {
@@ -1765,7 +1792,7 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
 
     <div className="detail-top-row">
       <div className="detail-v2-art" aria-label={`${selectedRegion.name}建筑主视觉`}>
-        <SelectIcon size={88} />
+        <img src={buildingKing} alt={selectedRegion.name} />
       </div>
       <section className="detail-advice-strip">
         <div><span className="eyebrow">王月方向</span><h3>相关操作建议</h3></div>
@@ -1801,7 +1828,7 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
         </div>
         <div className="method-stage">
           <span className="method-column-label">配方</span>
-          <div className="method-formula"><div className="recipe-flow"><ResourceBundle bundle={selectedMethod.input} empty="无输入" signed={false} boxedEmpty /><FlowArrowSvg /><ResourceBundle bundle={selectedMethod.output} empty="无产出" signed={false} boxedEmpty /></div></div>
+          <div className="method-formula"><ResourceDeltaRows input={selectedMethod.input} output={selectedMethod.output} /></div>
         </div>
         <FlowArrowSvg className="equation-operator multiply" kind="multiply" />
         <div className="method-stage">
@@ -1815,8 +1842,8 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
         </div>
         <FlowArrowSvg className="equation-operator equals" kind="equals" />
         <div className="method-stage">
-          <span className="method-column-label">净产出</span>
-          <div className="method-output"><ResourceBundle bundle={selectedNet} empty="无净产出" /></div>
+          <span className="method-column-label">总产量</span>
+          <div className="method-output"><ResourceDeltaRows input={selectedFlow.consumption} output={selectedFlow.production} /></div>
         </div>
       </article>
     </section>
@@ -1865,8 +1892,7 @@ function SpecialFacilityPanel({ facility, tone, children }: { facility: SpecialF
   return <section className={`special-facility-panel ${tone}`}>
     <div className="special-panel-head special-building-head">
       <div className="building-art-slot special-art-slot" aria-label={`${facility.region.name}建筑图片占位`}>
-        <FacilityIcon size={42} />
-        <span>建筑美术占位</span>
+        <img src={buildingKing} alt={facility.region.name} />
       </div>
       <div><span className="eyebrow">特殊建筑 · 这是什么</span><h2>{facility.region.name}</h2><p>{facility.region.subtitle}</p><p className="special-building-note">{displayCopy(facility.region.note)}</p></div>
     </div>
@@ -2126,8 +2152,7 @@ function Palace({ facility, day, lastReignReport, onOpenReport }: { facility: Sp
     <section className="palace-hero palace-building-panel">
       <div className="special-panel-head palace-summary-head">
         <div className="building-art-slot special-art-slot palace-art-slot" aria-label={`${facility.region.name}建筑图片占位`}>
-          <Crown size={42} />
-          <span>建筑美术占位</span>
+          <img src={buildingKing} alt={facility.region.name} />
         </div>
         <div><span className="eyebrow">特殊建筑 · 这是什么</span><h2>{facility.region.name}</h2><p>{facility.region.subtitle}</p><p className="special-building-note">{displayCopy(facility.region.note)}</p></div>
       </div>
@@ -2172,7 +2197,45 @@ function Palace({ facility, day, lastReignReport, onOpenReport }: { facility: Sp
 }
 
 function Visitors({ roster, assigned, regions, visitor, onSelect, onAssignment }: { roster: Role[]; assigned: Record<RegionId, string | undefined>; regions: Region[]; visitor: Encounter | null; onSelect: (id: RegionId) => void; onAssignment: (regionId: RegionId, visitorId: string | undefined) => void }) {
-  return <div className="visitor-layout"><section className="visitor-hero"><span className="eyebrow">异客留任簿 · {roster.length}/{roles.length}</span><h2>陌生人不是资源。<br />他们只是懂得让资源更好地工作。</h2><p>每一位来访者都有独立的族群、需求与专长。选择留任后，他们将持续改变一座设施的产出。</p>{visitor && <div className="pending-visitor"><span>{visitor.glyph}</span><div><b>{visitor.name} 正在等待</b><small>{visitor.species}，请在外交来函中决定去留。</small></div></div>}</section><section className="roster-board">{roster.length ? roster.map(member => { const region = regions.find(item => item.id === member.specialty)!; const RegionIcon = region.icon; const active = assigned[member.specialty] === member.id; return <article key={member.id} className={active ? 'retainer active' : 'retainer'}><div className="retainer-portrait"><span>{member.glyph}</span><small>portrait placeholder</small></div><div className="retainer-copy"><span>{member.species}</span><h3>{member.name}</h3><p>{member.portrait}</p><button onClick={() => onSelect(member.specialty)}><RegionIcon size={14} />{region.name}</button></div><div className="retainer-duty"><b>+{Math.round(member.boost * 100)}%</b><small>专属区域产出</small><button onClick={() => onAssignment(member.specialty, active ? undefined : member.id)}>{active ? '改为待命' : '安排执勤'}</button></div></article> }) : <div className="empty-roster"><Sparkles size={27} /><h3>留任簿仍为空白</h3><p>信标会随机抵达。交换可取得技术，留任则会带来长期区域增益。肖像美术会在这里以占位框接入。</p></div>}</section></div>
+  const recruitedIds = new Set(roster.map(member => member.id))
+  const allMembers = roles.map(role => ({ ...role, recruited: recruitedIds.has(role.id) }))
+
+  return <div className="visitor-layout">
+    <section className="visitor-hero">
+      <span className="eyebrow">异客留任簿 · {roster.length}/{roles.length}</span>
+      <h2>陌生人不是资源。<br />他们只是懂得让资源更好地工作。</h2>
+      <p>每一位来访者都有独立的族群、需求与专长。选择留任后，他们将持续改变一座设施的产出。</p>
+      {visitor && <div className="pending-visitor">
+        <div className="visitor-portrait-frame">
+          <img src={visitorPortraits[visitor.id]} alt={visitor.name} />
+        </div>
+        <div><b>{visitor.name} 正在等待</b><small>{visitor.species}，请在外交来函中决定去留。</small></div>
+      </div>}
+    </section>
+    <section className="roster-board">
+      {allMembers.map(member => {
+        const region = regions.find(item => item.id === member.specialty)!
+        const RegionIcon = region.icon
+        const active = assigned[member.specialty] === member.id
+        return <article key={member.id} className={`retainer ${active ? 'active' : ''} ${!member.recruited ? 'locked' : ''}`}>
+          <div className="retainer-portrait">
+            <img src={visitorPortraits[member.id]} alt={member.name} className={!member.recruited ? 'greyscale' : ''} />
+          </div>
+          <div className="retainer-copy">
+            <span>{member.recruited ? member.species : '???'}</span>
+            <h3>{member.recruited ? member.name : '未识别的来客'}</h3>
+            <p>{member.recruited ? member.portrait : '你尚未遇见这位旅者。信标会在恰当的时节抵达月面。'}</p>
+            {member.recruited && <button onClick={() => onSelect(member.specialty)}><RegionIcon size={14} />{region.name}</button>}
+          </div>
+          {member.recruited && <div className="retainer-duty">
+            <b>+{Math.round(member.boost * 100)}%</b>
+            <small>专属区域产出</small>
+            <button onClick={() => onAssignment(member.specialty, active ? undefined : member.id)}>{active ? '改为待命' : '安排执勤'}</button>
+          </div>}
+        </article>
+      })}
+    </section>
+  </div>
 }
 
 export default App

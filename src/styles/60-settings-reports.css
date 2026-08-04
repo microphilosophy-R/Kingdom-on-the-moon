@@ -271,21 +271,18 @@
 .detail-v2-art {
   display: grid;
   width: 100%;
-  aspect-ratio: 16 / 5;
-  min-height: 180px;
-  place-items: center;
-  border: 1px dashed var(--ui-line-strong);
+  aspect-ratio: 16 / 7;
+  min-height: 260px;
+  overflow: hidden;
   border-radius: 7px;
-  background:
-    radial-gradient(circle at 50% 42%, oklch(86% .05 78 / .6), transparent 64%),
-    linear-gradient(135deg, var(--ui-parchment), var(--ui-surface-2)),
-    repeating-linear-gradient(45deg, transparent 0 10px, oklch(68% .018 84 / .16) 10px 11px);
-  color: var(--ui-brass-dark);
+  background: var(--ui-surface-2);
   box-shadow: inset 0 0 0 1px oklch(70% .04 78 / .22);
 }
 
-.detail-v2-art > svg {
-  filter: drop-shadow(0 2px 6px oklch(45% .08 76 / .28));
+.detail-v2-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .detail-v2-metrics {
@@ -581,7 +578,7 @@
 }
 
 .special-art-slot {
-  min-height: 112px;
+  min-height: 260px;
 }
 
 .special-intervention-note {
@@ -1349,12 +1346,12 @@
 
 .resource-rail {
   grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
-  gap: .28rem;
+  gap: .46rem;
   overflow: hidden;
-  border: 1px solid color-mix(in oklab, var(--ui-line) 82%, var(--ui-brass));
-  border-radius: 7px;
-  padding: .32rem;
-  background: color-mix(in oklab, var(--ui-surface-2) 86%, var(--ui-parchment));
+  border: 0;
+  border-radius: 0;
+  padding: .18rem 0;
+  background: transparent;
 }
 
 .resource-atom {
@@ -1370,13 +1367,67 @@
 .resource-atom.tone-violet { --resource-tone: oklch(47% .064 304); --resource-wash: oklch(94% .020 304); }
 .resource-atom.tone-coral { --resource-tone: oklch(53% .085 35); --resource-wash: oklch(94% .024 35); }
 
-/* resource-rail context: tone-tinted borders & backgrounds */
+.resource-atom,
+.resource-bundle .resource-atom {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.resource-atom {
+  display: inline-grid;
+  grid-template-columns: var(--resource-icon-size, 18px) minmax(0, max-content);
+  align-items: center;
+  gap: .24rem;
+  min-height: 28px;
+  padding: 0;
+  color: var(--ui-ink);
+}
+
+.resource-atom > svg {
+  width: var(--resource-icon-size, 18px);
+  height: var(--resource-icon-size, 18px);
+  color: var(--resource-tone);
+  filter: drop-shadow(0 1px 0 oklch(97% .01 86 / .65));
+}
+
+.resource-main-value strong,
+.resource-atom.compact strong {
+  color: var(--ui-ink-strong);
+  font-family: var(--ui-mono);
+  font-size: var(--resource-number-size, .86rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.resource-atom.compact {
+  --resource-icon-size: 18px;
+  --resource-number-size: .88rem;
+  width: 4.8rem;
+  min-height: 28px;
+  gap: .22rem;
+  padding: 0;
+}
+
+.resource-atom.compact .resource-atom-content {
+  min-width: 0;
+}
+
+.resource-bundle {
+  gap: .36rem .48rem;
+}
+
+/* resource-rail context: same resource atom, only the text stack changes */
 .resource-rail > .resource-atom {
-  min-height: 48px;
-  border-color: color-mix(in oklab, var(--resource-tone) 34%, var(--ui-line));
-  padding: .38rem .5rem;
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--resource-wash) 64%, var(--ui-raised)), var(--ui-raised));
+  --resource-icon-size: 20px;
+  --resource-number-size: .92rem;
+  width: auto;
+  min-height: 42px;
+  grid-template-columns: 20px minmax(0, 1fr);
+  border: 0;
+  border-radius: 0;
+  padding: .08rem .12rem;
+  background: transparent;
 }
 
 .resource-rail > .resource-atom > svg {
@@ -1385,6 +1436,8 @@
 
 .resource-rail .resource-label {
   color: color-mix(in oklab, var(--resource-tone) 58%, var(--ui-ink));
+  font-size: .58rem;
+  font-weight: 700;
 }
 
 .resource-rail .resource-main-value strong,
@@ -1516,8 +1569,8 @@
   }
 
   .resource-rail > .resource-atom {
-    min-height: 56px;
-    padding: .3rem .34rem;
+    min-height: 48px;
+    padding: .08rem .1rem;
   }
 
   .resource-rail .resource-main-value {
@@ -1763,9 +1816,9 @@
 
 .detail-top-row .detail-v2-art {
   width: 100%;
-  min-height: 0;
-  max-height: 320px;
-  aspect-ratio: 16 / 10;
+  min-height: 180px;
+  max-height: 420px;
+  aspect-ratio: 16 / 8;
 }
 
 .detail-top-row .detail-advice-strip {
@@ -1784,7 +1837,8 @@
 
 .facility-detail-v2.standard-detail > .method-ledger {
   display: grid;
-  gap: .7rem;
+  gap: .86rem;
+  padding: .9rem;
 }
 
 .facility-detail-v2.standard-detail > .method-ledger .method-ledger-head {
@@ -1843,9 +1897,10 @@
 
 .method-equation {
   display: grid;
-  grid-template-columns: minmax(112px, .46fr) minmax(224px, 1.18fr) 50px minmax(96px, .46fr) 50px minmax(96px, .46fr) 50px minmax(168px, .82fr);
+  grid-template-columns: minmax(122px, .48fr) minmax(210px, .94fr) 50px minmax(104px, .46fr) 50px minmax(104px, .46fr) 50px minmax(210px, .94fr);
   gap: .46rem;
   align-items: stretch;
+  min-height: 176px;
   min-width: 0;
   padding: .08rem 0 0;
 }
@@ -1858,7 +1913,7 @@
 .method-stage {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: .24rem;
+  gap: .3rem;
 }
 
 .method-column-label {
@@ -1872,7 +1927,6 @@
   display: grid;
   min-height: 100%;
   place-items: center;
-  border: 1px dashed var(--ui-line-strong);
   border-radius: 5px;
   background: var(--ui-parchment);
   color: var(--ui-brass-dark);
@@ -1891,9 +1945,8 @@
 .method-output {
   display: grid;
   align-content: center;
-  border: 1px solid var(--ui-line);
   border-radius: 5px;
-  padding: .58rem .62rem;
+  padding: .72rem .7rem;
 }
 
 .method-staff b,
@@ -1920,25 +1973,52 @@
   background: oklch(95% .018 304);
 }
 
-.recipe-flow {
+.resource-delta-stack {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr);
-  gap: .42rem;
+  gap: .58rem;
+  min-width: 0;
+}
+
+.resource-delta-row {
+  display: grid;
+  grid-template-columns: 1.05rem minmax(0, 1fr);
+  gap: .36rem;
   align-items: center;
+  min-width: 0;
+}
+
+.resource-delta-row > span:first-child {
+  display: grid;
+  width: 1.05rem;
+  height: 1.05rem;
+  place-items: center;
+  border-radius: 3px;
+  color: oklch(97% .012 86);
+  font-family: var(--ui-mono);
+  font-size: .82rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.resource-delta-row.consumption > span:first-child {
+  background: var(--ui-danger);
+}
+
+.resource-delta-row.production > span:first-child {
+  background: var(--ui-success);
 }
 
 .method-equation .resource-bundle {
   gap: .28rem;
 }
 
-.recipe-flow .resource-bundle,
-.recipe-flow .resource-empty.boxed {
+.resource-delta-row .resource-empty.boxed {
   justify-self: center;
 }
 
 .method-equation .resource-atom.compact {
-  min-height: 30px;
-  padding: .24rem .32rem;
+  min-height: 28px;
+  padding: 0;
 }
 
 .method-equation .resource-atom.compact .resource-label {
@@ -1951,20 +2031,19 @@
 
 .method-equation .resource-empty.boxed {
   display: inline-flex;
-  min-height: 30px;
+  width: 4.8rem;
+  min-height: 28px;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--ui-line-strong);
   border-radius: 5px;
-  padding: .24rem .42rem;
-  background: oklch(93% .012 86);
+  padding: 0 .42rem;
+  background: color-mix(in oklab, var(--ui-muted) 10%, var(--ui-raised));
   color: var(--ui-muted);
   font-size: .68rem;
   font-weight: 800;
   white-space: nowrap;
 }
 
-.recipe-flow .flow-arrow-svg,
 .equation-operator {
   place-self: center;
   width: 44px;
@@ -1975,13 +2054,7 @@
   margin-top: .96rem;
 }
 
-.recipe-flow .flow-arrow-svg {
-  width: 58px;
-  height: 28px;
-}
-
 .equation-operator path,
-.recipe-flow .flow-arrow-svg path,
 .flow-arrow-svg path {
   fill: none;
   stroke: var(--ui-brass-dark);
@@ -2163,7 +2236,6 @@
 @media (max-width: 760px) {
   .facility-detail-v2.standard-detail .method-ledger-head,
   .method-equation,
-  .recipe-flow,
   .construction-actions {
     grid-template-columns: 1fr;
   }
@@ -2174,8 +2246,7 @@
     max-width: 7.4rem;
   }
 
-  .equation-operator,
-  .recipe-flow .flow-arrow-svg {
+  .equation-operator {
     transform: rotate(90deg);
   }
 
@@ -2189,5 +2260,250 @@
 
   .method-column-label {
     justify-self: start;
+  }
+}
+
+/* Final type hierarchy. Keep this last so legacy hard-coded sizes resolve to the game scale. */
+html {
+  font-size: 16px;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--ui-font);
+}
+
+body {
+  font-size: var(--font-body);
+  line-height: 1.58;
+}
+
+button,
+input,
+select,
+textarea,
+.primary-action,
+.settings-button,
+.time-control-btn,
+.back-button,
+.resource-inline-action,
+.facility-actions button,
+.construction-actions button,
+.method-book-tabs button,
+.trade-step-buttons button,
+.trade-limit-buttons button,
+.trade-count-row button,
+.trade-offer-list button,
+.letter-actions button,
+.worker-card button,
+.retainer-duty button,
+.special-secondary-action,
+.upgrade-button,
+.tab-nav button {
+  font-size: var(--font-button);
+  line-height: 1.18;
+}
+
+h1,
+h2,
+h3,
+.brand-block h1,
+.detail-v2-title h2,
+.section-heading h2,
+.section-heading h3,
+.special-panel-head h2,
+.inspector-head h2,
+.planet-title h2,
+.palace-hero h2,
+.visitor-hero h2,
+.system-hero h2 {
+  font-family: var(--ui-serif);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.brand-block h1 {
+  font-size: var(--font-page);
+  line-height: 1.12;
+}
+
+.planet-title h2,
+.welcome-panel h2,
+.palace-hero h2,
+.visitor-hero h2,
+.system-hero h2 {
+  font-size: var(--font-display);
+  line-height: 1.18;
+}
+
+.section-heading h2,
+.section-heading h3,
+.detail-v2-title h2,
+.special-panel-head h2,
+.inspector-head h2,
+.ship-meter .section-heading h2 {
+  font-size: var(--font-panel);
+  line-height: 1.22;
+}
+
+.facility-summary b,
+.facility-ledger-list b,
+.ledger-identity b,
+.policy-cards h3,
+.retainer-copy h3,
+.tech-card-copy h3,
+.technology-book > div:first-child,
+.ship-stage-list b,
+.production-methods b,
+.construction-card h3,
+.detail-advice-strip h3,
+.method-ledger-head h3,
+.intervention-copy h3,
+.king-profile h3,
+.palace-report-kpis strong,
+.settings-panel h3 {
+  font-size: var(--font-card);
+  line-height: 1.28;
+}
+
+p,
+li,
+.welcome-panel p,
+.chronicle-panel p,
+.signal-panel p,
+.inspector-description,
+.detail-advice-strip li,
+.special-panel-note,
+.special-panel-head p,
+.special-panel-brief,
+.special-building-note,
+.policy-cards p,
+.policy-report-body small,
+.tech-card-copy p,
+.research-rule-box p,
+.visitor-hero p,
+.retainer-copy p,
+.planet-dock p,
+.king-profile p,
+.letter-body,
+.building-net-row,
+.facility-detail-v2 p {
+  font-size: var(--font-body);
+  line-height: 1.62;
+}
+
+.eyebrow,
+.brand-block p,
+.group-label,
+.resource-label,
+.resource-atom small,
+.facility-ledger-list small,
+.ledger-method-tag,
+.ledger-stat-label,
+.policy-cards small,
+.tech-card-top > span,
+.technology-book > div:first-child small,
+.event-transmission-head span,
+.event-transmission-head small,
+.retainer-copy > span,
+.retainer-duty small,
+.special-facility-stats span,
+.special-production-row span,
+.research-rule-box > span,
+.method-column-label,
+.construction-resources > span,
+.metric-pill small,
+.detail-progress-line small,
+.resource-empty,
+.cost-resource-item > small {
+  font-size: var(--font-label);
+  line-height: 1.18;
+}
+
+small,
+.building-metric-grid small,
+.node-copy small,
+.worker-card small,
+.pending-visitor small,
+.ship-stage-list small,
+.tech-cabinet p small,
+.resource-atom-content .resource-net,
+.resource-atom .resource-detail,
+.scoreline small,
+.command-deck > p,
+.path-note,
+.tree-legend {
+  font-size: var(--font-note);
+  line-height: 1.45;
+}
+
+.resource-main-value strong,
+.resource-atom.compact strong,
+.resource-rail .resource-main-value strong,
+.resource-rail .resource-sub-value,
+.symbol-value,
+.ledger-stat-value,
+.metric-pill strong,
+.cost-resource-item > small,
+.detail-progress-line small,
+.policy-report-body strong,
+.special-facility-stats strong,
+.special-production-row strong,
+.retainer-duty b,
+.reign-control strong {
+  font-family: var(--ui-mono);
+  font-size: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.building-metric-grid strong,
+.scoreline strong,
+.ship-card strong,
+.policy-status strong,
+.reign-report-kpis strong,
+.palace-building-stats strong {
+  font-family: var(--ui-mono);
+  font-size: var(--font-data-lg);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.method-staff b,
+.method-throughput b,
+.ship-meter strong small {
+  font-family: var(--ui-mono);
+  font-size: var(--font-data-xl);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.resource-delta-row > span:first-child {
+  font-family: var(--ui-mono);
+  font-size: var(--font-button);
+  line-height: 1;
+}
+
+.ship-meter strong {
+  font-family: var(--ui-mono);
+  font-size: calc(var(--font-display) * 1.9);
+  font-variant-numeric: tabular-nums;
+  line-height: .95;
+}
+
+@media (max-width: 760px) {
+  .planet-title h2,
+  .welcome-panel h2,
+  .palace-hero h2,
+  .visitor-hero h2,
+  .system-hero h2 {
+    font-size: var(--font-page);
+  }
+
+  .brand-block h1 {
+    font-size: var(--font-panel);
   }
 }
