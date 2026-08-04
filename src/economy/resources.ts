@@ -205,16 +205,16 @@ export const defaultReserveFloors: Resources = {
 
 export const resourceWeights: Resources = {
   power: 0.5,
-  water: 1.0,
-  oxygen: 1.0,
-  biomass: 1.0,
+  water: 2.0,
+  oxygen: 2.0,
+  biomass: 3.0,
   regolith: 1.0,
-  alloy: 8.0,
-  quantumCore: 128.0,
+  alloy: 5.0,
+  quantumCore: 36.0,
   currency: 1.0,
-  population: 5.0,
-  knowledge: 2.0,
-  luxury: 3.0,
+  population: 1200.0,
+  knowledge: 3.0,
+  luxury: 6.0,
 }
 
 export const resourceText = (bundle: Partial<Resources>) =>

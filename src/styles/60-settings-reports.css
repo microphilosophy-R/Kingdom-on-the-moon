@@ -1346,3 +1346,227 @@
     justify-items: stretch;
   }
 }
+
+.resource-rail {
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: .28rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--ui-line) 82%, var(--ui-brass));
+  border-radius: 7px;
+  padding: .32rem;
+  background: color-mix(in oklab, var(--ui-surface-2) 86%, var(--ui-parchment));
+}
+
+.resource-atom {
+  --resource-tone: var(--ui-brass);
+  --resource-wash: var(--ui-brass-soft);
+}
+
+.resource-atom.tone-gold { --resource-tone: oklch(55% .092 76); --resource-wash: oklch(94% .032 78); }
+.resource-atom.tone-cyan { --resource-tone: oklch(48% .072 205); --resource-wash: oklch(93% .018 205); }
+.resource-atom.tone-green { --resource-tone: oklch(48% .074 145); --resource-wash: oklch(94% .022 145); }
+.resource-atom.tone-ochre { --resource-tone: oklch(50% .072 58); --resource-wash: oklch(94% .027 66); }
+.resource-atom.tone-slate { --resource-tone: oklch(43% .034 250); --resource-wash: oklch(93% .014 250); }
+.resource-atom.tone-violet { --resource-tone: oklch(47% .064 304); --resource-wash: oklch(94% .020 304); }
+.resource-atom.tone-coral { --resource-tone: oklch(53% .085 35); --resource-wash: oklch(94% .024 35); }
+
+.resource-rail > .resource-atom {
+  display: grid;
+  grid-template-columns: 15px minmax(0, 1fr);
+  min-width: 0;
+  min-height: 48px;
+  align-items: center;
+  gap: .28rem;
+  border-color: color-mix(in oklab, var(--resource-tone) 34%, var(--ui-line));
+  padding: .38rem .45rem;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--resource-wash) 64%, var(--ui-raised)), var(--ui-raised));
+}
+
+.resource-rail > .resource-atom > .resource-atom-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  gap: .08rem;
+}
+
+.resource-rail .resource-label {
+  display: block;
+  overflow: hidden;
+  color: color-mix(in oklab, var(--resource-tone) 58%, var(--ui-ink));
+  font-size: .58rem;
+  font-weight: 650;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource-rail .resource-main-value {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, max-content);
+  min-width: 0;
+  align-items: baseline;
+  justify-content: start;
+  gap: .1rem;
+}
+
+.resource-rail .resource-main-value strong,
+.resource-rail .resource-sub-value {
+  width: auto;
+  min-width: 0;
+  max-width: 6.2ch;
+  overflow: hidden;
+  color: var(--ui-ink-strong);
+  font-family: var(--ui-mono);
+  font-size: .78rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  text-align: left;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.resource-rail .resource-sub-value {
+  color: color-mix(in oklab, var(--resource-tone) 54%, var(--ui-ink));
+}
+
+.resource-rail > .resource-atom > svg {
+  width: 15px;
+  height: 15px;
+  color: var(--resource-tone);
+}
+
+.resource-inline-action,
+.settings-button,
+.time-control-btn,
+.trade-step-buttons button,
+.trade-limit-buttons button,
+.trade-count-row button,
+.method-ledger-table button,
+.priority-control button,
+.special-secondary-action,
+.letter-actions button:not(.primary),
+.worker-card button,
+.retainer-duty button,
+.back-button {
+  --button-tone: var(--ui-signal);
+  border-color: color-mix(in oklab, var(--button-tone) 34%, var(--ui-line));
+  background: color-mix(in oklab, var(--button-tone) 10%, var(--ui-raised));
+  color: color-mix(in oklab, var(--button-tone) 50%, var(--ui-ink));
+}
+
+.settings-button,
+.time-control-btn {
+  --button-tone: oklch(48% .074 205);
+}
+
+.resource-inline-action,
+.method-ledger-table button,
+.special-secondary-action {
+  --button-tone: oklch(50% .072 58);
+}
+
+.letter-actions button:not(.primary),
+.worker-card button,
+.retainer-duty button,
+.back-button {
+  --button-tone: oklch(43% .040 250);
+}
+
+.trade-step-buttons button,
+.trade-limit-buttons button,
+.trade-count-row button,
+.priority-control button {
+  --button-tone: oklch(49% .074 145);
+}
+
+.resource-inline-action:hover,
+.settings-button:hover,
+.time-control-btn:hover:not(:disabled),
+.trade-step-buttons button:hover:not(:disabled),
+.trade-limit-buttons button:hover:not(:disabled),
+.trade-count-row button:hover:not(:disabled),
+.method-ledger-table button:hover:not(:disabled),
+.priority-control button:hover:not(:disabled),
+.special-secondary-action:hover,
+.letter-actions button:not(.primary):hover,
+.worker-card button:hover,
+.retainer-duty button:hover,
+.back-button:hover {
+  border-color: var(--button-tone);
+  background: color-mix(in oklab, var(--button-tone) 18%, var(--ui-raised));
+  color: var(--ui-ink-strong);
+}
+
+.primary-action,
+.letter-actions .primary,
+.event-modal .letter-actions .primary,
+.upgrade-button,
+.trade-offer-list button {
+  border-color: oklch(43% .086 76);
+  background: linear-gradient(180deg, oklch(57% .095 76), oklch(49% .086 76));
+  color: oklch(97% .012 86);
+  font-weight: 700;
+}
+
+.primary-action:hover,
+.letter-actions .primary:hover,
+.event-modal .letter-actions .primary:hover,
+.upgrade-button:hover:not(:disabled),
+.trade-offer-list button:hover:not(:disabled) {
+  background: linear-gradient(180deg, oklch(61% .102 76), oklch(52% .092 76));
+  color: oklch(98% .010 86);
+}
+
+.facility-actions button:nth-child(-n + 2) {
+  --button-tone: var(--ui-danger);
+}
+
+.facility-actions button:nth-child(3) {
+  --button-tone: oklch(43% .040 250);
+}
+
+.facility-actions button:nth-child(n + 4) {
+  --button-tone: var(--ui-success);
+}
+
+.facility-actions button {
+  border-color: color-mix(in oklab, var(--button-tone, var(--ui-brass)) 30%, var(--ui-line));
+  background: color-mix(in oklab, var(--button-tone, var(--ui-brass)) 8%, var(--ui-raised));
+  color: color-mix(in oklab, var(--button-tone, var(--ui-brass)) 48%, var(--ui-ink));
+}
+
+.facility-actions button:hover:not(:disabled),
+.facility-actions button.selected {
+  border-color: var(--button-tone, var(--ui-brass));
+  background: color-mix(in oklab, var(--button-tone, var(--ui-brass)) 18%, var(--ui-raised));
+  color: var(--ui-ink-strong);
+}
+
+@media (max-width: 900px) {
+  .resource-rail {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .resource-rail .resource-label {
+    display: block;
+    font-size: .52rem;
+  }
+
+  .resource-rail > .resource-atom {
+    min-height: 56px;
+    padding: .3rem .34rem;
+  }
+
+  .resource-rail .resource-main-value {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .resource-rail .resource-main-value strong,
+  .resource-rail .resource-sub-value {
+    max-width: 100%;
+    font-size: .68rem;
+  }
+}

@@ -329,11 +329,11 @@ const resourceUiMeta: Record<ResourceKey, { label: string; icon: Icon; tone: str
   biomass: { label: resourceMeta.biomass.label, icon: Sprout, tone: 'green' },
   regolith: { label: resourceMeta.regolith.label, icon: Mountain, tone: 'ochre' },
   alloy: { label: resourceMeta.alloy.label, icon: Factory, tone: 'slate' },
-  quantumCore: { label: resourceMeta.quantumCore.label, icon: Orbit, tone: 'violet' },
-  currency: { label: resourceMeta.currency.label, icon: Coins, tone: 'gold' },
+  quantumCore: { label: '核心', icon: Orbit, tone: 'violet' },
+  currency: { label: '货币', icon: Coins, tone: 'gold' },
   population: { label: resourceMeta.population.label, icon: Users, tone: 'coral' },
   knowledge: { label: resourceMeta.knowledge.label, icon: FlaskConical, tone: 'violet' },
-  luxury: { label: resourceMeta.luxury.label, icon: Sparkles, tone: 'violet' },
+  luxury: { label: '奢侈', icon: Sparkles, tone: 'violet' },
 }
 
 const researchEraSections: { id: TechnologyEra; label: string; note: string }[] = [
@@ -360,6 +360,15 @@ const researchableTechIds = Object.values(technologyCatalog)
 
 const fmt = (value: number) => Math.round(value).toLocaleString('zh-CN')
 const fmtAmount = (value: number) => Number.isInteger(value) ? fmt(value) : value.toFixed(1)
+const fmtCompactAmount = (value: number) => {
+  const abs = Math.abs(value)
+  const sign = value < 0 ? '-' : ''
+  if (abs > 1_000_000_000) return `${sign}${Math.round(abs / 1_000_000_000)}B`
+  if (abs > 100_000) return `${sign}${Math.round(abs / 100_000)}M`
+  if (abs > 1_000) return `${sign}${Math.round(abs / 1_000)}K`
+  return fmtAmount(value)
+}
+const fmtSignedCompactAmount = (value: number) => `${value >= 0 ? '+' : ''}${fmtCompactAmount(value)}`
 const canPay = canAfford
 const apply = applyBundle
 const musicSource = '/audio/Gravity_s_Edge.mp3'
@@ -510,15 +519,15 @@ const techLabel = (techId: TechnologyId) => technologyCatalog[techId]?.name ?? t
 function ResourceAtom({ resourceKey, value, net, detail, actionLabel, onAction, compact = false, subValue, subLabel }: { resourceKey: ResourceKey; value: number; net?: number; detail?: string; actionLabel?: string; onAction?: () => void; compact?: boolean; subValue?: string; subLabel?: string }) {
   const meta = resourceUiMeta[resourceKey]
   const ResourceIcon = meta.icon
-  return <span className={`resource-atom ${compact ? 'compact' : ''}`}>
+  return <span className={`resource-atom tone-${meta.tone} ${compact ? 'compact' : ''}`}>
     <ResourceIcon className={meta.tone} size={compact ? 13 : 17} />
     <span className="resource-atom-content">
       <small className="resource-label">{meta.label}</small>
       <span className="resource-main-value">
-        <strong className={value < 0 ? 'negative' : ''}>{value > 0 && compact ? '+' : ''}{fmtAmount(value)}</strong>
+        <strong className={value < 0 ? 'negative' : ''}>{value > 0 && compact ? '+' : ''}{fmtCompactAmount(value)}</strong>
         {subValue !== undefined && <small className="resource-sub-value">{subValue}</small>}
       </span>
-      {net !== undefined && <small className={`resource-net ${net < 0 ? 'negative' : ''}`}>{net >= 0 ? '+' : ''}{net.toFixed(1)}/日</small>}
+      {net !== undefined && <small className={`resource-net ${net < 0 ? 'negative' : ''}`}>{fmtSignedCompactAmount(net)}/日</small>}
       {detail && !compact && <small className="resource-detail">{detail}</small>}
     </span>
     {actionLabel && !compact && <button type="button" className="resource-inline-action" onClick={onAction}>{actionLabel}</button>}
@@ -541,9 +550,9 @@ function ResourceSymbolStrip({ bundle, empty = '无' }: { bundle: Partial<Resour
       const meta = resourceUiMeta[key]
       const ResourceIcon = meta.icon
       const value = bundle[key] ?? 0
-      return <span key={key} className="resource-symbol-item" title={`${meta.label} ${fmtAmount(value)}`}>
+      return <span key={key} className="resource-symbol-item" title={`${meta.label} ${fmtCompactAmount(value)}`}>
         <ResourceIcon className={meta.tone} size={13} />
-        <small className={value < 0 ? 'negative' : ''}>{fmtAmount(value)}</small>
+        <small className={value < 0 ? 'negative' : ''}>{fmtCompactAmount(value)}</small>
       </span>
     })}
   </span>
@@ -1363,10 +1372,10 @@ function App() {
         const isPower = key === 'power'
         const isPopulation = key === 'population'
         const subValue = isPower
-          ? `/${fmtAmount(dailyConsumption.power)}`
+          ? `/${fmtCompactAmount(dailyConsumption.power)}`
           : isPopulation
-            ? `/${dailyNet.population >= 0 ? '+' : ''}${dailyNet.population.toFixed(1)}`
-            : `/${dailyNet[key] >= 0 ? '+' : ''}${dailyNet[key].toFixed(1)}`
+            ? `/${fmtSignedCompactAmount(dailyNet.population)}`
+            : `/${fmtSignedCompactAmount(dailyNet[key])}`
         return <ResourceAtom
           key={key}
           resourceKey={key}
