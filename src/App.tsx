@@ -26,6 +26,7 @@ import {
   isHousingFacility,
   projectDailyFlow,
   projectFacilityCost,
+  projectFacilityFlow,
   projectFacilityNet,
   projectPopulationSystem,
   resourceGroups,
@@ -516,7 +517,7 @@ const hasResearchPrerequisites = (techId: TechnologyId, techs: string[]) =>
   (technologyCatalog[techId].prerequisites ?? []).every(prerequisite => hasTech(techs, prerequisite))
 const techLabel = (techId: TechnologyId) => technologyCatalog[techId]?.name ?? techId
 
-function ResourceAtom({ resourceKey, value, net, detail, actionLabel, onAction, compact = false, subValue, subLabel }: { resourceKey: ResourceKey; value: number; net?: number; detail?: string; actionLabel?: string; onAction?: () => void; compact?: boolean; subValue?: string; subLabel?: string }) {
+function ResourceAtom({ resourceKey, value, net, detail, actionLabel, onAction, compact = false, signed = true, subValue }: { resourceKey: ResourceKey; value: number; net?: number; detail?: string; actionLabel?: string; onAction?: () => void; compact?: boolean; signed?: boolean; subValue?: string; subLabel?: string }) {
   const meta = resourceUiMeta[resourceKey]
   const ResourceIcon = meta.icon
   return <span className={`resource-atom tone-${meta.tone} ${compact ? 'compact' : ''}`}>
@@ -524,7 +525,7 @@ function ResourceAtom({ resourceKey, value, net, detail, actionLabel, onAction, 
     <span className="resource-atom-content">
       <small className="resource-label">{meta.label}</small>
       <span className="resource-main-value">
-        <strong className={value < 0 ? 'negative' : ''}>{value > 0 && compact ? '+' : ''}{fmtCompactAmount(value)}</strong>
+        <strong className={value < 0 ? 'negative' : ''}>{value > 0 && compact && signed ? '+' : ''}{fmtCompactAmount(value)}</strong>
         {subValue !== undefined && <small className="resource-sub-value">{subValue}</small>}
       </span>
       {net !== undefined && <small className={`resource-net ${net < 0 ? 'negative' : ''}`}>{fmtSignedCompactAmount(net)}/日</small>}
@@ -534,12 +535,36 @@ function ResourceAtom({ resourceKey, value, net, detail, actionLabel, onAction, 
   </span>
 }
 
-function ResourceBundle({ bundle, empty = '无', signed = false }: { bundle: Partial<Resources>; empty?: string; signed?: boolean }) {
+function ResourceBundle({ bundle, empty = '无', signed = true, boxedEmpty = false }: { bundle: Partial<Resources>; empty?: string; signed?: boolean; boxedEmpty?: boolean }) {
+  const entries = resourceOrder.filter(key => bundle[key])
+  if (!entries.length) return <span className={boxedEmpty ? 'resource-empty boxed' : 'resource-empty'}>{empty}</span>
+  return <span className="resource-bundle">
+    {entries.map(key => <ResourceAtom key={key} resourceKey={key} value={bundle[key] ?? 0} compact signed={signed} />)}
+  </span>
+}
+
+function MetricPill({ label, value, tone = 'neutral' }: { label: string; value: string; tone?: 'neutral' | 'success' | 'danger' }) {
+  return <span className={`metric-pill ${tone}`}><small>{label}</small><strong>{value}</strong></span>
+}
+
+function CostResourceList({ bundle, baseBundle, empty = '无' }: { bundle: Partial<Resources>; baseBundle?: Partial<Resources>; empty?: string }) {
   const entries = resourceOrder.filter(key => bundle[key])
   if (!entries.length) return <span className="resource-empty">{empty}</span>
-  return <span className="resource-bundle">
-    {entries.map(key => <ResourceAtom key={key} resourceKey={key} value={(bundle[key] ?? 0) * (signed ? 1 : 1)} compact />)}
+  return <span className="cost-resource-list">
+    {entries.map(key => {
+      const value = bundle[key] ?? 0
+      const baseValue = baseBundle?.[key] ?? value
+      const delta = baseValue - value
+      return <span key={key} className="cost-resource-item">
+        <ResourceAtom resourceKey={key} value={value} compact signed={false} />
+        {delta > 0 && <small>(-{fmtCompactAmount(delta)})</small>}
+      </span>
+    })}
   </span>
+}
+
+function ProgressLine({ value, label }: { value: number; label: string }) {
+  return <div className="detail-progress-line"><span style={{ width: `${Math.max(0, Math.min(100, value))}%` }} /><small>{label}</small></div>
 }
 
 function ResourceSymbolStrip({ bundle, empty = '无' }: { bundle: Partial<Resources>; empty?: string }) {
@@ -561,9 +586,28 @@ function ResourceSymbolStrip({ bundle, empty = '无' }: { bundle: Partial<Resour
 function ProductionFlow({ input, output }: { input: Partial<Resources>; output: Partial<Resources> }) {
   return <div className="production-flow">
     <div><small>输入</small><ResourceBundle bundle={input} empty="无输入" /></div>
-    <ArrowRight size={17} />
+    <FlowArrowSvg />
     <div><small>输出</small><ResourceBundle bundle={output} empty="无输出" /></div>
   </div>
+}
+
+function FlowArrowSvg({ className = 'flow-arrow-svg', kind = 'arrow' }: { className?: string; kind?: 'arrow' | 'multiply' | 'equals' }) {
+  if (kind === 'multiply') {
+    return <svg className={className} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M6 6l12 12" />
+      <path d="M18 6L6 18" />
+    </svg>
+  }
+  if (kind === 'equals') {
+    return <svg className={className} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M5 9h14" />
+      <path d="M5 15h14" />
+    </svg>
+  }
+  return <svg className={className} viewBox="0 0 56 18" aria-hidden="true" focusable="false">
+    <path d="M2 9h43" />
+    <path d="M38 3l9 6-9 6" />
+  </svg>
 }
 
 const throughputClass = (rate: number) => rate >= 1.1 ? 'surged' : rate >= 0.8 ? 'steady' : rate > 0 ? 'thin' : 'idle'
@@ -1480,7 +1524,7 @@ function ReignReportModal({ report, onClose }: { report: ReignReport; onClose: (
       </header>
 
       <div className="reign-report-kpis">
-        <div><span>人口变化</span><strong>{populationDelta}</strong><small>{fmtAmount(report.populationEnd)}/{fmtAmount(report.housingCapacity)} 人</small></div>
+        <div><span>人口变化</span><strong>{populationDelta}</strong><small>{fmt(report.populationEnd)}/{fmtAmount(report.housingCapacity)} 人</small></div>
         <div><span>GDP</span><strong>{report.gdp.toFixed(1)}</strong><small className={report.gdpDelta < 0 ? 'negative' : ''}>{gdpDelta} 星海货币/日</small></div>
         <div><span>阶段长度</span><strong>{report.endDay - report.startDay + 1}</strong><small>御日，50 御日为一王月</small></div>
       </div>
@@ -1642,63 +1686,19 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
   const activeConstruction = construction[selectedRegion.id]
   const constructionRemaining = activeConstruction ? Math.max(0, activeConstruction.completeDay - year) : 0
   const assignedPopulation = Math.min(workCapacity, staffing[selectedRegion.id] ?? 0)
-  const currentPriority = staffingPriorities[selectedRegion.id] ?? initialStaffingPriorities[selectedRegion.id]
-  const priorityEditable = !selectedFixed && !isHousingFacility(selectedRegion.id) && workCapacity > 0
   const staffRate = workCapacity > 0 ? assignedPopulation / workCapacity : housingCapacity > 0 || selectedFixed ? 1 : 0
   const selectedModifier = facilityModifiers[selectedRegion.id] ?? { outputMultiplier: 1, upkeepMultiplier: 1 }
-  const selectedYield = isHousingFacility(selectedRegion.id)
-    ? populationProjection.facilityNet[selectedRegion.id] ?? {}
-    : projectFacilityNet(selectedSpec, assignedPopulation, selectedModifier, techs, selectedMethod.id, selectedRegion.level)
+  const selectedFlow = projectFacilityFlow(selectedSpec, assignedPopulation, selectedModifier, techs, selectedMethod.id, selectedRegion.level)
+  const selectedNet = isHousingFacility(selectedRegion.id) ? populationProjection.facilityNet[selectedRegion.id] ?? {} : selectedFlow.net
   const selectedBuildable = canBuildFacility(selectedSpec, year, techs)
   const selectedRequiredTech = selectedSpec.requiredTech ? technologyCatalog[selectedSpec.requiredTech] : undefined
-  const parents = selectedRegion.parentIds.map(id => regions.find(region => region.id === id)?.name).filter(Boolean)
-  const workerChoices = roster.filter(item => item.specialty === selectedRegion.id)
   const currentOrder = facilityOrders[selectedRegion.id] ?? 'hold'
-  const nextAutoAction = automationPlan.actions.find(action => action.id === selectedRegion.id)
-  const optimizerDisabled = automationPlan.reason === 'optimizer disabled'
-  const cycleProgress = Math.round(((year % gameCalendar.optimizationIntervalDays) / gameCalendar.optimizationIntervalDays) * 100)
-  const operationProgress = activeConstruction
-    ? Math.min(100, Math.max(8, Math.round(((year - activeConstruction.startedDay + 1) / Math.max(1, activeConstruction.completeDay - activeConstruction.startedDay)) * 100)))
-    : currentOrder === 'hold' ? cycleProgress : 100
-  const automationSuggestionLabel = optimizerDisabled
-    ? '手动模式'
-    : nextAutoAction
-      ? `扩张至 ${nextAutoAction.toLevel}`
-      : '维持'
-  const operationProgressTitle = activeConstruction
-    ? `${activeConstruction.mode === 'expand' ? '扩建' : '冷却'}剩余 ${constructionRemaining} 御日`
-    : optimizerDisabled
-      ? '后台优化器默认关闭'
-      : currentOrder === 'hold'
-        ? `优化署每个${gameCalendar.monthName}复核一次，${gameCalendar.optimizationIntervalDays} 御日汇总一次`
-        : orderLabel(currentOrder)
-  const operationProgressLabel = activeConstruction
-    ? `${activeConstruction.mode === 'expand' ? '施工' : '冷却'} ${operationProgress}%`
-    : optimizerDisabled
-      ? '手动调度'
-      : currentOrder === 'hold'
-        ? `汇总周期 ${cycleProgress}%`
-        : `${orderLabel(currentOrder)} ${operationProgress}%`
-  const recentAuto = lastAutomatedAction?.id === selectedRegion.id && year - lastAutomatedAction.day <= 6
   const throughput = staffRate * (selectedModifier.outputMultiplier ?? 1)
   const isSpecialDetail = Boolean(specialFacilityViews[selectedRegion.id])
-  const techBonusSources = [
-    hasTech(techs, 'TG-1') ? 'TG-1 全局生产效率' : null,
-    hasTech(techs, 'TG-2') ? 'TG-2 电力消耗减免' : null,
-    hasTech(techs, 'TL-2') && selectedRegion.id === 'L' ? 'TL-2 研究吞吐量' : null,
-    hasTech(techs, 'TL-3') && selectedRegion.id === 'L' ? 'TL-3 高能课题' : null,
-  ].filter(Boolean) as string[]
-  const bonusSources = [
-    selectedFixed ? '固定贸易节点' : isHousingFacility(selectedRegion.id) ? `住房容量 ${housingCapacity}` : `优先级 ${currentPriority}，自动分配 ${Math.round(staffRate * 100)}%`,
-    selectedModifier.outputMultiplier !== 1 ? `全局/居住/角色合计 x${selectedModifier.outputMultiplier.toFixed(2)}` : '基础吞吐 x1.00',
-    selectedWorker ? `${selectedWorker.name} +${Math.round(selectedWorker.boost * 100)}%` : null,
-    ...techBonusSources,
-  ].filter(Boolean) as string[]
   const affordExpansion = canPay(resources, selectedCost)
-  const hasNegativeYield = resourceOrder.some(key => (selectedYield[key] ?? 0) < 0)
+  const hasNegativeYield = resourceOrder.some(key => (selectedNet[key] ?? 0) < 0)
   const needsStaff = !selectedFixed && workCapacity > assignedPopulation
   const statusTone = !selectedBuildable || selectedRegion.level === 0 || (!selectedFixed && !isHousingFacility(selectedRegion.id) && throughput <= 0) ? 'attention' : activeConstruction || needsStaff || (!selectedFixed && !isHousingFacility(selectedRegion.id) && throughput < 0.8) ? 'watch' : 'steady'
-  const interventionTone = !selectedBuildable || selectedRegion.level === 0 || Boolean(activeConstruction) || needsStaff || !affordExpansion ? 'attention' : hasNegativeYield ? 'watch' : 'steady'
   const situationTitle = !selectedBuildable
     ? '尚未授权'
     : activeConstruction
@@ -1716,33 +1716,42 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
           : throughput > 0
             ? '低负荷运行'
             : '停摆'
-  const interventionCopy = !selectedBuildable
-    ? `先完成 ${selectedRequiredTech?.name ?? '对应科技'}，再考虑建造。`
-    : selectedFixed
-      ? '无需建筑调度。请在星海交易港页面设置采购数量、倍率和自动购入保护。'
+  const staffText = selectedFixed ? '固定' : isHousingFacility(selectedRegion.id) ? `容量 ${housingCapacity}` : `${assignedPopulation}/${workCapacity}`
+  const throughputText = selectedFixed ? '在线' : isHousingFacility(selectedRegion.id) ? '容量' : `${Math.round(throughput * 100)}%`
+  const detailSuggestions = summarizeOptimizerDirections(automationPlan, populationProjection)
+  const selectedMethodReady = hasTech(techs, selectedMethod.unlockedBy) && selectedMethod.autoSelect !== false
+  const selectedMethodTech = selectedMethod.unlockedBy ? technologyCatalog[selectedMethod.unlockedBy] : undefined
+  const availableMethodIds = selectedSpec.productionMethods.filter(method => hasTech(techs, method.unlockedBy) && method.autoSelect !== false).map(method => method.id)
+  const baseExpansionCost = projectFacilityCost(selectedSpec, selectedRegion.level, [])
+  const constructionDays = getConstructionDays(techs)
+  const shrinkRefund = selectedRegion.level > 0 ? scaleResourceBundle(projectFacilityCost(selectedSpec, selectedRegion.level - 1, techs), 0.5) : {}
+  const baseShrinkRefund = selectedRegion.level > 0 ? scaleResourceBundle(projectFacilityCost(selectedSpec, selectedRegion.level - 1, []), 0.5) : {}
+  const progress = activeConstruction
+    ? Math.min(100, Math.max(8, Math.round(((year - activeConstruction.startedDay + 1) / Math.max(1, activeConstruction.completeDay - activeConstruction.startedDay)) * 100)))
+    : 0
+  const expandProgress = activeConstruction?.mode === 'expand' ? progress : currentOrder === 'expand-continuous' ? 100 : 0
+  const shrinkProgress = activeConstruction?.mode === 'shrink' ? progress : currentOrder === 'shrink-continuous' ? 100 : 0
+  const expandDisabledReason = selectedFixed
+    ? '固定建筑'
     : activeConstruction
-      ? `${activeConstruction.mode === 'expand' ? '扩建' : '拆除冷却'}还需 ${constructionRemaining} 御日完成。`
-      : selectedRegion.level === 0
-      ? affordExpansion ? '可以直接签发扩张，建立第一级产能。' : '需要补齐扩建成本，暂不建议操作。'
-      : needsStaff
-        ? '若本设施更关键，提高岗位优先级；系统会把空余人口按优先级自动填入。'
-        : !affordExpansion && selectedRegion.level < selectedRegion.max
-          ? '当前库存不足以继续扩张，建议保持或调整其他设施。'
-          : hasNegativeYield
-            ? '这座设施会消耗库存，确认全局净值能承受后再扩张。'
-            : '当前状态稳定，可按目标选择扩张或保持。'
-
-  const assignmentText = selectedFixed
-    ? '固定节点不占用人口'
-    : isHousingFacility(selectedRegion.id)
-      ? `本设施容量 ${housingCapacity}，全局住房 ${fmt(populationProjection.capacity)}`
-      : `${assignedPopulation}/${workCapacity} 岗位，优先级 ${currentPriority}/5`
-  const throughputText = selectedFixed ? '贸易节点' : isHousingFacility(selectedRegion.id) ? '容量设施' : `${Math.round(throughput * 100)}%`
-  const workerSlot = selectedWorker
-    ? { glyph: selectedWorker.glyph, title: `${selectedWorker.name} 正在执勤`, note: `专属区域日产出 +${Math.round(selectedWorker.boost * 100)}%`, action: '待命', onClick: () => onAssignment(undefined) }
-    : workerChoices.length
-      ? { glyph: workerChoices[0].glyph, title: `${workerChoices[0].name} 可派驻`, note: `专属区域日产出 +${Math.round(workerChoices[0].boost * 100)}%`, action: '派驻', onClick: () => onAssignment(workerChoices[0].id) }
-      : null
+      ? activeConstruction.mode === 'expand' ? '扩建中' : '缩减中'
+      : !selectedBuildable
+        ? `需要${selectedRequiredTech?.name ?? '科技'}`
+        : selectedRegion.level >= selectedRegion.max
+          ? '已满级'
+          : !affordExpansion
+            ? '材料不足'
+            : ''
+  const shrinkDisabledReason = selectedFixed
+    ? '固定建筑'
+    : activeConstruction
+      ? activeConstruction.mode === 'expand' ? '扩建中' : '缩减中'
+      : selectedRegion.level <= 0
+        ? '已最低'
+        : ''
+  const expandDisabled = Boolean(expandDisabledReason)
+  const shrinkDisabled = Boolean(shrinkDisabledReason)
+  const withDisabledReason = (label: string, reason: string) => reason ? `${label}（${reason}）` : label
 
   return <aside className={`inspector facility-detail-v2 ${isSpecialDetail ? 'special-detail' : 'standard-detail'}`}>
     <header className="detail-v2-header">
@@ -1754,66 +1763,84 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
       <div className={`building-status-chip ${statusTone}`}><span>{situationTitle}</span><small>{orderLabel(currentOrder)}</small></div>
     </header>
 
-    <div className="detail-v2-art" aria-label={`${selectedRegion.name}建筑主视觉`}>
-      <SelectIcon size={120} />
+    <div className="detail-top-row">
+      <div className="detail-v2-art" aria-label={`${selectedRegion.name}建筑主视觉`}>
+        <SelectIcon size={88} />
+      </div>
+      <section className="detail-advice-strip">
+        <div><span className="eyebrow">王月方向</span><h3>相关操作建议</h3></div>
+        <ol>{detailSuggestions.map(item => <li key={item}>{item}</li>)}</ol>
+      </section>
     </div>
 
-    <div className="detail-v2-body">
-      <section className="detail-v2-left">
-        <div className="detail-v2-metrics">
-          <div><span>{selectedFixed ? '状态' : '等级'}</span><strong>{selectedFixed ? '在线' : selectedRegion.level}<small>{selectedFixed ? '' : `/${selectedRegion.max}`}</small></strong></div>
-          <div><span>{selectedFixed ? '类型' : isHousingFacility(selectedRegion.id) ? '人口容量' : '岗位'}</span><strong>{selectedFixed ? '贸易' : isHousingFacility(selectedRegion.id) ? housingCapacity : assignedPopulation}<small>{selectedFixed ? '' : `/${isHousingFacility(selectedRegion.id) ? populationProjection.capacity : workCapacity}`}</small></strong></div>
-          <div><span>{activeConstruction ? '施工剩余' : '吞吐'}</span><strong>{activeConstruction ? constructionRemaining : throughputText}<small>{activeConstruction ? '日' : ''}</small></strong></div>
-          <div><span>每日净值</span><ResourceBundle bundle={selectedYield} empty="无日结算" /></div>
-        </div>
-        <div className="detail-v2-brief">
-          <p>{displayCopy(selectedRegion.interfaceDuty)}</p>
-        </div>
-        <div className="method-ledger">
-          <div className="method-ledger-head"><span className="eyebrow">配方账簿</span><h3>生产方式</h3><small>{selectedMethod.name}</small></div>
-          <div className="method-ledger-table">{selectedSpec.productionMethods.map(method => {
-            const methodReady = hasTech(techs, method.unlockedBy) && method.autoSelect !== false
+    <section className="method-ledger">
+      <div className="method-ledger-head">
+        <div className="method-book-tabs" role="tablist" aria-label="切换生产方式">
+          {selectedSpec.productionMethods.map(method => {
+            const ready = availableMethodIds.includes(method.id)
             const techName = method.unlockedBy ? technologyCatalog[method.unlockedBy]?.name : undefined
-            const active = method.id === selectedMethod.id && methodReady
-            return <article key={method.id} className={active ? 'active' : ''}>
-              <div className="method-name"><b>{method.name}</b><small>{methodReady ? '已解锁' : method.autoSelect === false ? '阶段启用' : `需要 ${techName ?? '对应科技'}`}</small></div>
-              <ProductionFlow input={method.input} output={method.output} />
-              <p title={displayCopy(method.note)}>{displayCopy(method.note)}</p>
-              {active ? <em>使用中</em> : <button onClick={() => onMethod(method.id)} disabled={!methodReady}>切换</button>}
-            </article>
-          })}</div>
+            return <button
+              key={method.id}
+              type="button"
+              role="tab"
+              aria-selected={method.id === selectedMethod.id}
+              className={method.id === selectedMethod.id ? 'active' : ''}
+              disabled={!ready}
+              title={ready ? method.name : `需要 ${techName ?? '科技'}`}
+              onClick={() => onMethod(method.id)}
+            >{method.name}</button>
+          })}
         </div>
-      </section>
+      </div>
+      <article className="method-equation">
+        <div className="method-stage">
+          <span className="method-column-label">图谱</span>
+          <div className="method-image-panel" aria-label={selectedMethodTech?.name ?? (selectedMethodReady ? '基础配方' : '待解锁科技')}>
+            <FlaskConical size={40} />
+          </div>
+        </div>
+        <div className="method-stage">
+          <span className="method-column-label">配方</span>
+          <div className="method-formula"><div className="recipe-flow"><ResourceBundle bundle={selectedMethod.input} empty="无输入" signed={false} boxedEmpty /><FlowArrowSvg /><ResourceBundle bundle={selectedMethod.output} empty="无产出" signed={false} boxedEmpty /></div></div>
+        </div>
+        <FlowArrowSvg className="equation-operator multiply" kind="multiply" />
+        <div className="method-stage">
+          <span className="method-column-label">在岗人数</span>
+          <div className="method-staff"><b>{staffText}</b></div>
+        </div>
+        <FlowArrowSvg className="equation-operator multiply" kind="multiply" />
+        <div className="method-stage">
+          <span className="method-column-label">吞吐率</span>
+          <div className="method-throughput"><b>{throughputText}</b></div>
+        </div>
+        <FlowArrowSvg className="equation-operator equals" kind="equals" />
+        <div className="method-stage">
+          <span className="method-column-label">净产出</span>
+          <div className="method-output"><ResourceBundle bundle={selectedNet} empty="无净产出" /></div>
+        </div>
+      </article>
+    </section>
 
-      <section className={`detail-v2-right ${interventionTone}`}>
-        <div className="detail-decision-copy">
-          <h3>{interventionCopy}</h3>
-        </div>
-        <div className="detail-control-stack">
-          <div className="priority-control compact" aria-label="岗位分配优先级">
-            <span>岗位优先级</span>
-            <div>{priorityLevels.map(priority => <button key={priority} className={currentPriority === priority ? 'selected' : ''} onClick={() => onPriority(selectedRegion.id, priority)} disabled={!priorityEditable}>{priority}</button>)}</div>
-            <small>{priorityEditable ? assignmentText : selectedFixed ? '固定节点不占用人口。' : '人口容量建筑不占用生产岗位。'}</small>
+    <div className="detail-operations-row">
+      <section className="construction-control-grid">
+        <article className="construction-card expand">
+          <h3>扩建</h3>
+          <div className="construction-resources"><span>扩建成本</span><CostResourceList bundle={selectedCost} baseBundle={baseExpansionCost} empty="无需成本" /><MetricPill label="周期" value={`${constructionDays}御日`} /></div>
+          <div className="construction-actions">
+            <button className={currentOrder === 'expand' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand')} disabled={expandDisabled}><ArrowUpRight size={15} />{withDisabledReason('立即扩建', expandDisabledReason)}</button>
+            <button className={currentOrder === 'expand-continuous' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand-continuous')} disabled={expandDisabled}><ArrowUpRight size={15} />{withDisabledReason('持续扩建', expandDisabledReason)}</button>
           </div>
-          <div className="facility-actions compact">
-            <button className={currentOrder === 'shrink-continuous' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink-continuous')} disabled={selectedFixed || Boolean(activeConstruction) || selectedRegion.level <= 0}><ArrowDownRight size={15} />持续收缩</button>
-            <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink')} disabled={selectedFixed || Boolean(activeConstruction) || selectedRegion.level <= 0}><ArrowDownRight size={15} />降低一级</button>
-            <button className={currentOrder === 'hold' ? 'selected' : ''} onClick={() => onHold(selectedRegion.id)}><Minus size={15} />保持不变</button>
-            <button className={`${currentOrder === 'expand' ? 'selected' : ''} ${recentAuto && lastAutomatedAction?.mode === 'expand' ? 'auto-feedback' : ''}`} onClick={() => onUpgrade(selectedRegion.id, 'expand')} disabled={selectedFixed || Boolean(activeConstruction) || !selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />增加一级</button>
-            <button className={currentOrder === 'expand-continuous' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand-continuous')} disabled={selectedFixed || Boolean(activeConstruction) || !selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />持续增加</button>
+          <ProgressLine value={expandProgress} label={activeConstruction?.mode === 'expand' ? `扩建 ${expandProgress}%` : currentOrder === 'expand-continuous' ? '持续扩建已记录' : '等待扩建命令'} />
+        </article>
+        <article className="construction-card shrink">
+          <h3>缩减</h3>
+          <div className="construction-resources"><span>回收资源</span><CostResourceList bundle={shrinkRefund} baseBundle={baseShrinkRefund} empty="无可回收" /><MetricPill label="周期" value={`${constructionDays}御日`} /></div>
+          <div className="construction-actions">
+            <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink')} disabled={shrinkDisabled}><ArrowDownRight size={15} />{withDisabledReason('立即缩减', shrinkDisabledReason)}</button>
+            <button className={currentOrder === 'shrink-continuous' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink-continuous')} disabled={shrinkDisabled}><ArrowDownRight size={15} />{withDisabledReason('持续缩减', shrinkDisabledReason)}</button>
           </div>
-        </div>
-        <div className="detail-command-ledger">
-          <div><span>扩建成本</span><ResourceBundle bundle={selectedCost} empty="无需成本" /></div>
-          <div><span>{optimizerDisabled ? '调度模式' : '自动建议'}</span><b>{automationSuggestionLabel}</b></div>
-          <div><span>人口</span><b>{allocatedPopulation}/{fmt(resources.population)} 已用，空余 {fmt(freePopulation)}</b></div>
-        </div>
-        <div className={`operation-progress operation-${currentOrder}`} title={operationProgressTitle}><span style={{ width: `${operationProgress}%` }} /><small>{operationProgressLabel}</small></div>
-        <div className="detail-facts">
-          <div><span>运作修正</span>{bonusSources.slice(0, 4).map(item => <b key={item}>{item}</b>)}</div>
-          <div><span>建设链</span><b>{parents.length ? parents.join('、') : '基础节点'}</b><b>{selectedBuildable ? '已授权' : `缺少 ${selectedRequiredTech?.name ?? selectedSpec.requiredTech}`}</b></div>
-          {workerSlot && <div className="worker-mini"><span>{workerSlot.glyph}</span><p><b>{workerSlot.title}</b><small>{workerSlot.note}</small></p><button onClick={workerSlot.onClick}>{workerSlot.action}</button></div>}
-        </div>
+          <ProgressLine value={shrinkProgress} label={activeConstruction?.mode === 'shrink' ? `缩减 ${shrinkProgress}%` : currentOrder === 'shrink-continuous' ? '持续缩减已记录' : '等待缩减命令'} />
+        </article>
       </section>
     </div>
   </aside>
@@ -2124,7 +2151,7 @@ function Palace({ facility, day, lastReignReport, onOpenReport }: { facility: Sp
       </div>
       {lastReignReport ? <>
       <div className="policy-status palace-report-kpis">
-        <div><span>人口变化</span><strong>{populationDelta}</strong><small>{fmtAmount(lastReignReport.populationEnd)}/{fmtAmount(lastReignReport.housingCapacity)} 人</small></div>
+        <div><span>人口变化</span><strong>{populationDelta}</strong><small>{fmt(lastReignReport.populationEnd)}/{fmtAmount(lastReignReport.housingCapacity)} 人</small></div>
         <div><span>GDP</span><strong>{lastReignReport.gdp.toFixed(1)}</strong><small>{lastReignReport.gdpDelta >= 0 ? '+' : ''}{lastReignReport.gdpDelta.toFixed(1)} 星海货币/日</small></div>
         <div><span>阶段</span><strong>{lastReignReport.monthNumber}</strong><small>{gameCalendar.monthName}</small></div>
       </div>

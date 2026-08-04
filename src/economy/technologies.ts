@@ -1,29 +1,37 @@
 import { resourceOrder } from './resources'
 import type { FacilityEconomySpec, ProductionMethod, ProductionMethodId, ResourceKey, Resources, TechnologyId, TechnologySpec } from './types'
 const eraPopulationScale: Record<NonNullable<TechnologySpec['era']>, number> = {
-  early: 5,
-  mid: 20,
-  late: 50,
+  early: 8,
+  mid: 24,
+  late: 60,
 }
 
 const globalTechnologyScale: Record<NonNullable<TechnologySpec['era']>, number> = {
+  early: 40,
+  mid: 300,
+  late: 1000,
+}
+
+const tradeTechnologyScale: Record<NonNullable<TechnologySpec['era']>, number> = {
   early: 20,
-  mid: 200,
-  late: 700,
+  mid: 150,
+  late: 500,
 }
 
 const technologyMagnitude = (tech: TechnologySpec) => {
   if (tech.category === 'construction') return 0
-  if (tech.category === 'global') return 0.01
-  if (tech.category === 'facility-efficiency') return 0.05
-  if (tech.category === 'production-method') return 0.08
+  if (tech.category === 'global') return 0.02
+  if (tech.category === 'facility-efficiency') return 0.06
+  if (tech.category === 'production-method') return 0.10
   if (tech.category === 'trade') return 0.04
   return 0.03
 }
 
 const technologyBaseScale = (tech: TechnologySpec) => {
   const era = tech.era ?? 'early'
-  return tech.scope === 'G' ? globalTechnologyScale[era] : eraPopulationScale[era]
+  if (tech.scope === 'G') return globalTechnologyScale[era]
+  if (tech.scope === 'S') return tradeTechnologyScale[era]
+  return eraPopulationScale[era]
 }
 
 export const estimateTechnologyValue = (tech: TechnologySpec) =>

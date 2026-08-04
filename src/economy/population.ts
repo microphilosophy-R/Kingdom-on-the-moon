@@ -31,7 +31,7 @@ export function projectPopulationSystem(context: PopulationContext): PopulationP
     (sum, id) => sum + getHousingCapacity(id, context.facilities[id]?.level ?? 0),
     0,
   )
-  let unassignedResidents = Math.max(0, context.resources.population)
+  let unassignedResidents = Math.max(0, Math.floor(context.resources.population))
   const residentsByFacility: Partial<Record<FacilityId, number>> = {}
 
   populationPolicyOrder[context.policy].forEach(id => {

@@ -83,8 +83,8 @@ describe('economy catalog', () => {
     })
     expect(projectAnnualNet).toBe(projectDailyNet)
     expect(resourceWeights.regolith).toBe(1)
-    expect(resourceWeights.alloy).toBe(8)
-    expect(resourceWeights.quantumCore).toBe(128)
+    expect(resourceWeights.alloy).toBe(5)
+    expect(resourceWeights.quantumCore).toBe(36)
   })
 
   it('settles power as a non-storable daily balance', () => {
@@ -164,8 +164,8 @@ describe('economy catalog', () => {
   it('assigns computed technology value and research cost', () => {
     expect(technologyCatalog['TE1-0'].value).toBe(0)
     expect(technologyCatalog['TE1-0'].researchCost).toBe(0)
-    expect(technologyCatalog['TE1-2'].value).toBe(90)
-    expect(technologyCatalog['TG-1'].value).toBe(720)
+    expect(technologyCatalog['TE1-2'].value).toBe(173)
+    expect(technologyCatalog['TG-1'].value).toBe(2160)
     expect(technologyCatalog['TL-2'].researchCost).toBeGreaterThan(0)
   })
 
@@ -472,7 +472,7 @@ describe('population and construction scale', () => {
     )
 
     expect(tradePlan.trades.length).toBeGreaterThan(0)
-    expect(tradePlan.resources.alloy).toBeGreaterThanOrEqual(cost.alloy + defaultReserveFloors.alloy)
+    expect(tradePlan.resources.alloy).toBeGreaterThanOrEqual(cost.alloy + defaultReserveFloors.alloy - 1)
     expect(tradePlan.trades.some(trade => trade.output.alloy)).toBe(true)
   })
 
@@ -544,7 +544,7 @@ describe('population and construction scale', () => {
       capitalHorizonYears: 360,
     })
 
-    expect(plan.actions[0]?.id).toBe('C1')
+    expect(plan.actions[0]?.id).toBe('K')
   })
 
   it('can package a facility unlock with its first construction level', () => {

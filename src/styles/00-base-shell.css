@@ -160,10 +160,13 @@ h1, h2, h3 { font-family: 'Noto Serif SC', 'Songti SC', serif; }
   .diplomatic-letter.event-modal { flex-wrap: wrap; }
 }
 
-/* Current UI pass: unified resources, facility decisions, and visitor portrait slots. */
+/* === Unified resource display system === */
+/* .resource-atom is the single source of truth for all resource/cost chips.
+   Context wrappers may adjust --ra-scale for size variants. */
+
 .resource-rail {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
   align-items: stretch;
   gap: 0;
   overflow: hidden;
@@ -172,34 +175,42 @@ h1, h2, h3 { font-family: 'Noto Serif SC', 'Songti SC', serif; }
   background: oklch(96% .012 86 / .94);
 }
 .resource-rail > .resource-atom {
-  min-height: 64px;
+  min-height: 52px;
   border-width: 0 1px 1px 0;
   border-radius: 0;
   background: oklch(96% .012 86 / .94);
 }
+
+/* --- base atom --- */
 .resource-atom {
   display: inline-flex;
-  min-width: 0;
   align-items: center;
-  gap: .42rem;
+  gap: .35rem;
+  min-width: 0;
+  padding: .35rem .48rem;
   border: 1px solid oklch(74% .019 250);
-  border-radius: 4px;
-  padding: .48rem .58rem;
+  border-radius: 5px;
   background: oklch(99% .007 85);
   color: oklch(31% .032 250);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
 }
 .resource-atom > svg {
   flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
 }
 .resource-atom-content {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  gap: .04rem;
+  gap: .03rem;
 }
 .resource-atom-content .resource-label {
   overflow: hidden;
   color: oklch(48% .022 250);
-  font-size: .58rem;
+  font-size: .56rem;
+  font-weight: 600;
   line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -207,47 +218,61 @@ h1, h2, h3 { font-family: 'Noto Serif SC', 'Songti SC', serif; }
 .resource-main-value {
   display: flex;
   align-items: baseline;
-  gap: .15rem;
+  gap: .1rem;
 }
 .resource-main-value strong {
   color: oklch(25% .03 250);
   font-family: ui-monospace, monospace;
-  font-size: 1.05rem;
-  font-weight: 700;
-  line-height: 1.12;
+  font-size: .78rem;
+  font-weight: 650;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 .resource-main-value .resource-sub-value {
   color: oklch(52% .06 250);
   font-family: ui-monospace, monospace;
-  font-size: .72rem;
+  font-size: .64rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 .resource-atom-content .resource-net {
   color: oklch(48% .08 150);
   font-family: ui-monospace, monospace;
-  font-size: .55rem;
+  font-size: .54rem;
   font-weight: 500;
   line-height: 1.1;
-}
-.resource-atom-content .resource-net-inline {
-  margin-left: auto;
-  color: oklch(48% .08 150);
-  font-family: ui-monospace, monospace;
-  font-size: .55rem;
-  font-style: normal;
-  font-weight: 600;
   white-space: nowrap;
 }
 .resource-atom .resource-detail {
   color: oklch(45% .022 250);
   font-size: .52rem;
+  white-space: nowrap;
 }
+
 .resource-atom strong.negative,
 .resource-atom em.negative,
-.resource-atom-content .resource-net.negative,
-.resource-atom-content .resource-net-inline.negative {
+.resource-atom-content .resource-net.negative {
   color: oklch(55% .12 25);
 }
+
+/* --- compact variant --- */
+.resource-atom.compact {
+  min-height: 0;
+  gap: .2rem;
+  padding: .2rem .32rem;
+  background: transparent;
+  border-color: oklch(74% .018 84 / .34);
+}
+.resource-atom.compact .resource-label,
+.resource-atom.compact .resource-net,
+.resource-atom.compact .resource-detail {
+  display: none;
+}
+.resource-atom.compact strong {
+  font-size: .66rem;
+}
+
+/* --- inline action button --- */
 .resource-inline-action {
   border: 1px solid oklch(64% .04 84);
   border-radius: 4px;
@@ -256,24 +281,12 @@ h1, h2, h3 { font-family: 'Noto Serif SC', 'Songti SC', serif; }
   color: oklch(38% .04 74);
   font-size: .55rem;
 }
-.resource-atom.compact {
-  min-height: 0;
-  gap: .25rem;
-  padding: .24rem .34rem;
-  background: oklch(98% .008 86);
-}
-.resource-atom.compact .resource-label,
-.resource-atom.compact .resource-net,
-.resource-atom.compact .resource-detail {
-  display: none;
-}
-.resource-atom.compact strong {
-  font-size: .64rem;
-}
+
+/* --- bundle wrapper --- */
 .resource-bundle {
   display: flex;
   flex-wrap: wrap;
-  gap: .32rem;
+  gap: .28rem;
   align-items: center;
 }
 .resource-empty {
@@ -283,6 +296,8 @@ h1, h2, h3 { font-family: 'Noto Serif SC', 'Songti SC', serif; }
   color: oklch(50% .022 250);
   font-size: .64rem;
 }
+
+/* --- population strip (separate component) --- */
 .population-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

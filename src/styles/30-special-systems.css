@@ -171,53 +171,29 @@
   box-shadow: none;
 }
 
+/* special-systems context: resource atoms use base layout, only tweak sizing */
 .resource-atom {
-  display: grid;
-  grid-template-columns: 18px minmax(4.7ch, 1fr) auto;
-  align-items: center;
-  gap: .32rem;
-  width: 100%;
-  min-width: 108px;
-  padding: .38rem .45rem;
+  --ra-base: 1;
+  padding: .35rem .42rem;
 }
 
 .resource-atom > span {
-  display: grid;
-  grid-template-columns: minmax(2.8rem, 1fr) 4.7ch;
-  align-items: baseline;
-  gap: .22rem;
+  min-width: 0;
 }
 
 .resource-atom small {
-  font-size: .58rem;
+  font-size: .56rem;
   white-space: nowrap;
 }
 
 .resource-atom strong {
-  justify-self: end;
-  width: 4.7ch;
-  font-size: .86rem;
+  font-size: .78rem;
   font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.resource-atom em {
-  min-width: 4.6ch;
-  margin-left: 0;
-  font-size: .55rem;
-  text-align: right;
 }
 
 .resource-atom.compact {
-  grid-template-columns: 14px 4.7ch;
-  width: auto;
-  min-width: 62px;
-  border-color: oklch(74% .018 84 / .34);
-  background: transparent;
-}
-
-.resource-atom.compact > span {
-  display: block;
+  padding: .18rem .28rem;
+  min-width: 0;
 }
 
 .bottom-tabs {
