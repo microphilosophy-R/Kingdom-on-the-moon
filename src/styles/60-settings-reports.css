@@ -27,12 +27,12 @@
 .building-metric-grid strong {
   color: var(--ui-brass-dark);
   font-family: var(--ui-mono);
-  font-size: 1.2rem;
+  font-size: 20px;
 }
 
 .building-metric-grid small {
   color: var(--ui-muted);
-  font-size: .7rem;
+  font-size: 11px;
 }
 
 .building-net-row {
@@ -65,7 +65,7 @@
 .intervention-copy h3 {
   margin: .12rem 0 .32rem;
   color: var(--ui-ink-strong);
-  font-size: 1.05rem;
+  font-size: 16px;
   line-height: 1.38;
 }
 
@@ -97,7 +97,7 @@
   min-height: 38px;
   padding-right: .42rem;
   padding-left: .42rem;
-  font-size: .62rem;
+  font-size: 10px;
 }
 
 .priority-control {
@@ -224,7 +224,7 @@
 .detail-v2-title h2 {
   margin: .08rem 0;
   color: var(--ui-ink-strong);
-  font-size: 1.28rem;
+  font-size: 20px;
   line-height: 1.22;
 }
 
@@ -313,13 +313,13 @@
 .detail-v2-metrics strong {
   color: var(--ui-brass-dark);
   font-family: var(--ui-mono);
-  font-size: 1rem;
+  font-size: 16px;
   line-height: 1.2;
 }
 
 .detail-v2-metrics small {
   color: var(--ui-muted);
-  font-size: .64rem;
+  font-size: 10px;
 }
 
 .detail-v2-brief {
@@ -358,7 +358,7 @@
 .detail-decision-copy h3 {
   margin: .1rem 0 .22rem;
   color: var(--ui-ink-strong);
-  font-size: .94rem;
+  font-size: 15px;
   line-height: 1.36;
 }
 
@@ -394,7 +394,7 @@
 .facility-detail-v2 .facility-actions.compact button {
   min-height: 32px;
   padding: .32rem .3rem;
-  font-size: .6rem;
+  font-size: 10px;
   white-space: nowrap;
 }
 
@@ -432,7 +432,7 @@
 .method-ledger-head h3 {
   margin: 0 auto 0 0;
   color: var(--ui-ink-strong);
-  font-size: .96rem;
+  font-size: 15px;
 }
 
 .method-ledger-head small {
@@ -480,7 +480,7 @@
 .method-name small,
 .method-ledger-table p {
   color: var(--ui-muted);
-  font-size: .58rem;
+  font-size: 10px;
   line-height: 1.38;
 }
 
@@ -500,7 +500,7 @@
   padding: .24rem .38rem;
   background: var(--ui-raised);
   color: var(--ui-ink);
-  font-size: .58rem;
+  font-size: 10px;
   font-style: normal;
 }
 
@@ -545,7 +545,7 @@
 .worker-mini small {
   display: block;
   color: var(--ui-muted);
-  font-size: .56rem;
+  font-size: 10px;
 }
 
 .worker-mini button,
@@ -555,7 +555,7 @@
   padding: .24rem .38rem;
   background: var(--ui-raised);
   color: var(--ui-ink);
-  font-size: .58rem;
+  font-size: 10px;
 }
 
 .special-facility-panel {
@@ -873,7 +873,7 @@
 
 .day-counter span {
   color: var(--ui-brass-dark);
-  font-size: .56rem;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1;
 }
@@ -887,14 +887,14 @@
 .day-counter strong {
   color: var(--ui-brass-dark);
   font-family: var(--ui-mono);
-  font-size: 1.05rem;
+  font-size: 16px;
   line-height: 1;
 }
 
 .day-counter small {
   color: var(--ui-muted);
   font-family: var(--ui-mono);
-  font-size: .56rem;
+  font-size: 10px;
 }
 
 .time-control-btn {
@@ -909,7 +909,7 @@
   padding: .5rem .85rem;
   background: color-mix(in oklab, var(--ui-brass) 8%, var(--ui-raised));
   color: var(--ui-ink);
-  font-size: .62rem;
+  font-size: 10px;
   white-space: nowrap;
   min-height: 42px;
   cursor: pointer;
@@ -967,7 +967,7 @@
 .settings-panel h2 {
   margin: .12rem 0 0;
   color: var(--ui-ink-strong);
-  font-size: 1.25rem;
+  font-size: 20px;
 }
 
 .settings-panel .icon-button {
@@ -1155,7 +1155,7 @@
 .reign-resource-table span {
   display: block;
   color: oklch(48% .045 73);
-  font-size: .62rem;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -1164,14 +1164,14 @@
   margin-top: .15rem;
   color: oklch(31% .04 250);
   font-family: ui-monospace, monospace;
-  font-size: 1.55rem;
+  font-size: 24px;
 }
 
 .reign-report-kpis small,
 .reign-resource-table b {
   color: oklch(47% .026 250);
   font-family: ui-monospace, monospace;
-  font-size: .68rem;
+  font-size: 11px;
 }
 
 .reign-report-kpis .negative,
@@ -1204,7 +1204,7 @@
   margin: .65rem 0 0;
   padding-left: 1.1rem;
   color: oklch(36% .03 250);
-  font-size: .82rem;
+  font-size: 13px;
   line-height: 1.65;
 }
 
@@ -1395,14 +1395,14 @@
 .resource-atom.compact strong {
   color: var(--ui-ink-strong);
   font-family: var(--ui-mono);
-  font-size: var(--resource-number-size, .86rem);
+  font-size: var(--resource-number-size, var(--font-data));
   font-weight: 800;
   line-height: 1;
 }
 
 .resource-atom.compact {
   --resource-icon-size: 18px;
-  --resource-number-size: .88rem;
+  --resource-number-size: var(--font-data);
   width: 4.8rem;
   min-height: 28px;
   gap: .22rem;
@@ -1420,7 +1420,7 @@
 /* resource-rail context: same resource atom, only the text stack changes */
 .resource-rail > .resource-atom {
   --resource-icon-size: 20px;
-  --resource-number-size: .92rem;
+  --resource-number-size: var(--font-data);
   width: auto;
   min-height: 42px;
   grid-template-columns: 20px minmax(0, 1fr);
@@ -1436,7 +1436,7 @@
 
 .resource-rail .resource-label {
   color: color-mix(in oklab, var(--resource-tone) 58%, var(--ui-ink));
-  font-size: .58rem;
+  font-size: var(--font-label);
   font-weight: 700;
 }
 
@@ -1565,7 +1565,7 @@
 
   .resource-rail .resource-label {
     display: block;
-    font-size: .52rem;
+    font-size: var(--font-label);
   }
 
   .resource-rail > .resource-atom {
@@ -1581,7 +1581,7 @@
   .resource-rail .resource-main-value strong,
   .resource-rail .resource-sub-value {
     max-width: 100%;
-    font-size: .68rem;
+    font-size: 11px;
   }
 }
 
@@ -1638,7 +1638,7 @@
 .method-bonus > span,
 .method-output > span {
   color: var(--ui-muted);
-  font-size: .54rem;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1;
 }
@@ -1649,7 +1649,7 @@
   overflow: hidden;
   color: var(--ui-ink-strong);
   font-family: var(--ui-mono);
-  font-size: .68rem;
+  font-size: 11px;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1697,7 +1697,7 @@
   background: var(--ui-raised);
   color: var(--ui-brass-dark);
   font-family: var(--ui-mono);
-  font-size: .72rem;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -1748,7 +1748,7 @@
 .detail-advice-strip h3 {
   margin: .12rem 0 0;
   color: var(--ui-ink-strong);
-  font-size: .98rem;
+  font-size: 16px;
 }
 
 .detail-advice-strip ol {
@@ -1848,7 +1848,7 @@
 
 .facility-detail-v2.standard-detail > .method-ledger .method-ledger-head h3 {
   margin: .1rem 0 0;
-  font-size: 1.28rem;
+  font-size: 20px;
 }
 
 .method-book-tabs {
@@ -1875,7 +1875,7 @@
   padding: .42rem .48rem;
   background: var(--ui-parchment);
   color: var(--ui-muted);
-  font-size: .82rem;
+  font-size: 13px;
   font-weight: 800;
   line-height: 1.15;
   text-align: center;
@@ -1918,7 +1918,7 @@
 
 .method-column-label {
   color: var(--ui-muted);
-  font-size: .72rem;
+  font-size: 12px;
   font-weight: 800;
   line-height: 1;
 }
@@ -1953,7 +1953,7 @@
 .method-throughput b {
   color: var(--ui-ink-strong);
   font-family: var(--ui-mono);
-  font-size: 1.52rem;
+  font-size: 24px;
   line-height: 1;
 }
 
@@ -1995,7 +1995,7 @@
   border-radius: 3px;
   color: oklch(97% .012 86);
   font-family: var(--ui-mono);
-  font-size: .82rem;
+  font-size: 13px;
   font-weight: 900;
   line-height: 1;
 }
@@ -2022,11 +2022,11 @@
 }
 
 .method-equation .resource-atom.compact .resource-label {
-  font-size: .68rem;
+  font-size: 11px;
 }
 
 .method-equation .resource-atom.compact strong {
-  font-size: .86rem;
+  font-size: 14px;
 }
 
 .method-equation .resource-empty.boxed {
@@ -2039,7 +2039,7 @@
   padding: 0 .42rem;
   background: color-mix(in oklab, var(--ui-muted) 10%, var(--ui-raised));
   color: var(--ui-muted);
-  font-size: .68rem;
+  font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -2098,7 +2098,7 @@
 .construction-card h3 {
   margin: 0;
   color: var(--ui-ink-strong);
-  font-size: 1.22rem;
+  font-size: 20px;
 }
 
 .construction-resources {
@@ -2109,7 +2109,7 @@
 
 .construction-resources > span {
   color: var(--ui-muted);
-  font-size: .72rem;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -2129,7 +2129,7 @@
 .cost-resource-item > small {
   color: var(--ui-success);
   font-family: var(--ui-mono);
-  font-size: .56rem;
+  font-size: 10px;
   white-space: nowrap;
 }
 
@@ -2147,13 +2147,13 @@
 
 .metric-pill small {
   color: var(--ui-muted);
-  font-size: .68rem;
+  font-size: 11px;
 }
 
 .metric-pill strong {
   color: var(--ui-ink-strong);
   font-family: var(--ui-mono);
-  font-size: .84rem;
+  font-size: 13px;
 }
 
 .construction-actions {
@@ -2173,7 +2173,7 @@
   padding: .42rem .54rem;
   background: var(--ui-raised);
   color: var(--ui-ink);
-  font-size: .78rem;
+  font-size: 12px;
   font-weight: 800;
   line-height: 1.15;
   text-align: center;
@@ -2217,7 +2217,7 @@
   align-items: center;
   padding: 0 .45rem;
   color: var(--ui-ink);
-  font-size: .72rem;
+  font-size: 12px;
   font-weight: 700;
 }
 

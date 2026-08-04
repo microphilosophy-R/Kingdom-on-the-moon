@@ -1462,9 +1462,8 @@ function App() {
     {activeReignReport && <ReignReportModal report={activeReignReport} onClose={() => setActiveReignReport(null)} />}
 
     {visitor && <div className="event-scrim" role="presentation"><section className="diplomatic-letter event-modal" aria-live="polite" aria-modal="true" role="dialog">
-      <div className="visitor-portrait-slot" aria-label="访客肖像占位">
-        <span>{visitor.glyph}</span>
-        <small>portrait placeholder</small>
+      <div className="visitor-portrait-slot" aria-label="访客肖像">
+        <img src={visitorPortraits[visitor.id]} alt={visitor.name} />
       </div>
       <div className="letter-copy">
         <div className="event-transmission-head">

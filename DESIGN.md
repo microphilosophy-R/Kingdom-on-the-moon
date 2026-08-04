@@ -25,7 +25,7 @@
 
 UI 主字体为 `Noto Sans SC`, `Microsoft YaHei UI`, `Segoe UI`, `system-ui`, `sans-serif`。标题可使用 `Noto Serif SC`, `Source Han Serif SC`, `Songti SC`, `serif` 保留王权气质。按钮、标签、数据、表格全部使用 UI 字体或等宽数字字体。
 
-字号使用固定 rem 阶梯，不随视口连续缩放。游戏内只允许使用语义字号令牌：`micro 0.60rem` 用于极少量状态脚注；`label 0.68rem` 用于资源名、表头、刻度、eyebrow；`note 0.74rem` 用于辅助说明；`body 0.84rem` 用于正文和面板文本；`button 0.80rem` 用于所有按钮与输入控件；`card 0.98rem` 用于建筑、科技、政策等卡片标题；`panel 1.18rem` 用于面板/分区标题；`page 1.55rem` 用于页面主标题；`display 2.20rem` 只用于星球首页、星舰进度等少量展示数字。资源数字和运算数字使用等宽字体，普通标题可使用宋体系标题字体，其余 UI 文本统一使用 UI 字体。所有组件字距为 0，数字不使用负字距。
+字号使用固定整数 px 阶梯，不随视口连续缩放。游戏内只允许使用语义字号令牌：`micro 10px` 用于极少量状态脚注；`label 11px` 用于资源名、表头、刻度、eyebrow；`note 12px` 用于辅助说明；`button 13px` 用于所有按钮与输入控件；`body 14px` 用于正文和面板文本；`data 15px` 用于资源和运算数字；`card 16px` 用于建筑、科技、政策等卡片标题；`panel 18px` 用于面板/分区标题；`data-lg 20px` 用于重点指标；`page 24px` 用于页面主标题；`data-xl 28px` 用于生产方式中的大号运算数字；`display 36px` 只用于星球首页、星舰进度等少量展示数字。资源数字和运算数字使用等宽字体，普通标题可使用宋体系标题字体，其余 UI 文本统一使用 UI 字体。所有组件字距为 0，数字不使用负字距。
 
 ## Components
 

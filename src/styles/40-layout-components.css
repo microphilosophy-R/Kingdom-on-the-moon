@@ -41,7 +41,7 @@
 .trade-step-buttons button,
 .trade-limit-buttons button {
   padding: .3rem .38rem;
-  font-size: .57rem;
+  font-size: 10px;
 }
 
 .trade-count-row button {
@@ -235,7 +235,7 @@
   }
 
   .start-console h1 {
-    font-size: 1.85rem;
+    font-size: 28px;
   }
 
   .resource-rail {
@@ -292,18 +292,18 @@
   --ui-violet: oklch(49% .045 300);
   --ui-shadow: oklch(35% .028 250 / .11);
   --ui-shadow-strong: oklch(21% .025 250 / .26);
-  --font-micro: .60rem;
-  --font-label: .68rem;
-  --font-note: .74rem;
-  --font-body: .84rem;
-  --font-button: .80rem;
-  --font-card: .98rem;
-  --font-panel: 1.18rem;
-  --font-page: 1.55rem;
-  --font-display: 2.20rem;
-  --font-data: .92rem;
-  --font-data-lg: 1.28rem;
-  --font-data-xl: 1.62rem;
+  --font-micro: 10px;
+  --font-label: 11px;
+  --font-note: 12px;
+  --font-button: 13px;
+  --font-body: 14px;
+  --font-data: 15px;
+  --font-card: 16px;
+  --font-panel: 18px;
+  --font-data-lg: 20px;
+  --font-page: 24px;
+  --font-data-xl: 28px;
+  --font-display: 36px;
 }
 
 body {

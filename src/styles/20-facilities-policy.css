@@ -9,7 +9,7 @@
   display: grid;
   place-items: center;
   color: oklch(97% .014 84);
-  font-size: .61rem;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: .06em;
 }
@@ -22,7 +22,7 @@
   padding: .62rem .68rem;
   background: oklch(22% .032 250 / .58);
   color: oklch(83% .025 250);
-  font-size: .66rem;
+  font-size: 11px;
   line-height: 1.6;
 }
 .special-panel-brief svg {
@@ -39,7 +39,7 @@
   padding: .5rem .65rem;
   background: transparent;
   color: oklch(92% .02 83);
-  font-size: .68rem;
+  font-size: 11px;
 }
 .special-system-main {
   min-width: 0;
@@ -147,14 +147,14 @@
   display: block;
   color: oklch(29% .035 250);
   font-family: 'Noto Serif SC', 'Songti SC', serif;
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: 700;
 }
 .tech-era-column header small {
   display: block;
   margin-top: .18rem;
   color: oklch(49% .024 250);
-  font-size: .62rem;
+  font-size: 10px;
   line-height: 1.5;
 }
 .tech-card {
@@ -201,7 +201,7 @@
   border-radius: 999px;
   padding: .22rem .42rem;
   color: oklch(42% .028 250);
-  font-size: .56rem;
+  font-size: 10px;
   white-space: nowrap;
 }
 .tech-image-placeholder {
@@ -222,13 +222,13 @@
 .tech-card-copy h3 {
   margin: 0 0 .32rem;
   color: oklch(28% .035 250);
-  font-size: 1rem;
+  font-size: 16px;
   line-height: 1.35;
 }
 .tech-card-copy p {
   margin: .45rem 0 0;
   color: oklch(43% .026 250);
-  font-size: .66rem;
+  font-size: 11px;
   line-height: 1.62;
 }
 .tech-tags {
@@ -245,7 +245,7 @@
   padding: .24rem .34rem;
   background: oklch(98% .008 86);
   color: oklch(39% .03 250);
-  font-size: .58rem;
+  font-size: 10px;
 }
 .tech-prerequisites {
   display: grid;
@@ -256,11 +256,11 @@
 .tech-prerequisites span,
 .tech-cost-row span {
   color: oklch(48% .023 250);
-  font-size: .58rem;
+  font-size: 10px;
 }
 .tech-prerequisites small {
   color: oklch(35% .03 250);
-  font-size: .62rem;
+  font-size: 10px;
   line-height: 1.45;
 }
 .tech-cost-row {
@@ -277,7 +277,7 @@
 }
 .tech-cost-row em {
   color: oklch(48% .085 76);
-  font-size: .58rem;
+  font-size: 10px;
   font-style: normal;
   white-space: nowrap;
 }
@@ -301,7 +301,7 @@
   place-items: center;
   color: oklch(30% .034 250);
   font-family: ui-monospace, monospace;
-  font-size: .58rem;
+  font-size: 10px;
   font-weight: 700;
 }
 .research-rule-box {
@@ -317,13 +317,13 @@
   gap: .35rem;
   align-items: center;
   color: oklch(84% .08 78);
-  font-size: .66rem;
+  font-size: 11px;
   font-weight: 700;
 }
 .research-rule-box p {
   margin: 0;
   color: oklch(82% .025 250);
-  font-size: .64rem;
+  font-size: 10px;
   line-height: 1.6;
 }
 .research-rule-box div:not(.tech-progress) {
@@ -336,7 +336,7 @@
   border-radius: 4px;
   padding: .28rem .38rem;
   color: oklch(94% .018 83);
-  font-size: .58rem;
+  font-size: 10px;
 }
 .technology-book {
   display: grid;
@@ -351,13 +351,13 @@
   gap: .45rem;
   align-items: center;
   color: oklch(32% .035 250);
-  font-size: .72rem;
+  font-size: 12px;
   font-weight: 700;
 }
 .technology-book > div:first-child small {
   margin-left: auto;
   color: oklch(48% .024 250);
-  font-size: .58rem;
+  font-size: 10px;
   font-weight: 400;
 }
 .technology-book > div:last-child {
@@ -371,7 +371,7 @@
   padding: .32rem .42rem;
   background: oklch(98% .008 86);
   color: oklch(35% .032 250);
-  font-size: .62rem;
+  font-size: 10px;
 }
 
 /* Impeccable pass: deeper alien encounter card and spacefaring typography. */
@@ -446,14 +446,14 @@ h3,
 .event-modal .visitor-portrait-slot span {
   position: relative;
   z-index: 1;
-  font-size: 4.2rem;
+  font-size: 64px;
   line-height: 1;
 }
 .event-modal .visitor-portrait-slot small {
   position: relative;
   z-index: 1;
   color: oklch(72% .035 250);
-  font-size: .62rem;
+  font-size: 10px;
   letter-spacing: .08em;
 }
 .event-modal .letter-copy {
@@ -476,19 +476,19 @@ h3,
 }
 .event-transmission-head span {
   color: oklch(47% .09 76);
-  font-size: .68rem;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: .18em;
 }
 .event-transmission-head small {
   color: oklch(45% .026 250);
   font-family: ui-monospace, monospace;
-  font-size: .62rem;
+  font-size: 10px;
 }
 .event-modal .letter-copy strong {
   max-width: 16ch;
   color: oklch(22% .034 250);
-  font-size: 2rem;
+  font-size: 32px;
   font-weight: 900;
   line-height: 1.22;
   letter-spacing: 0;
@@ -497,7 +497,7 @@ h3,
   max-width: 58ch;
   margin: 0;
   color: oklch(31% .028 250);
-  font-size: .92rem;
+  font-size: 15px;
   line-height: 1.95;
 }
 .event-modal .letter-portrait-text {
@@ -506,12 +506,12 @@ h3,
   padding: .78rem .86rem;
   background: oklch(91% .018 84);
   color: oklch(36% .028 250);
-  font-size: .78rem;
+  font-size: 12px;
   line-height: 1.82;
 }
 .event-modal .letter-note {
   max-width: 62ch;
   color: oklch(43% .07 76);
-  font-size: .72rem;
+  font-size: 12px;
   line-height: 1.65;
 }

@@ -65,7 +65,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'E1',
     category: 'facility-efficiency',
     era: 'early',
-    note: 'E1 日冕能源署电力输出 +5%。把光伏阵列的角度校准到太渊的光路，多一点电，多一点活路。',
+    note: 'E1 日冕能源署电力输出 +5%，水消耗 +5%。把光伏阵列的角度校准到太渊的光路——多产一点电，多喝一口水。',
   },
   'TE2-0': {
     id: 'TE2-0',
@@ -102,7 +102,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'C1',
     category: 'facility-efficiency',
     era: 'early',
-    note: 'C1 静海采掘署月壤输出 +5%。钻头阵列排得更密，月面少了一块皮。',
+    note: 'C1 静海采掘署月壤输出 +5%，电力消耗 +5%。钻头阵列排得更密，月面少了一块皮，电表也转得更急。',
   },
   'TC2-0': {
     id: 'TC2-0',
@@ -146,7 +146,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'B',
     category: 'facility-efficiency',
     era: 'early',
-    note: 'B 水培生态球生物质输出 +5%。藻膜闭环更密，少浪费一滴水。',
+    note: 'B 水培生态球生物质输出 +5%，水消耗 +5%。藻膜闭环更密，长得更快，也喝得更急。',
   },
   'TB-2': {
     id: 'TB-2',
@@ -324,7 +324,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'G',
     category: 'global',
     era: 'mid',
-    note: '全局生产效率 +1%；建筑扩大/缩小时间 -5%。天工软件让机器更勤快一点。',
+    note: '全局生产吞吐 +1%（输入与输出同步 +1%）；建筑扩大/缩小时间 -5%。天工软件让机器更勤快一点——进得多，出得多。',
   },
   'TG-2': {
     id: 'TG-2',
@@ -446,18 +446,28 @@ export const applyTechnologyToMethod = (
     resourceOrder.forEach(key => {
       if (key === 'population') return
       scaleBundleResource(output, key, 1.01)
+      scaleBundleResource(input, key, 1.01)
     })
   }
 
   if (hasTech(techs, 'TG-2')) scaleBundleResource(input, 'power', 0.95)
 
-  if (spec.id === 'E1' && hasTech(techs, 'TE1-2')) scaleBundleResource(output, 'power', 1.05)
-  if (spec.id === 'C1' && method.id === 'MC1-1' && hasTech(techs, 'TC1-1')) scaleBundleResource(output, 'regolith', 1.05)
+  if (spec.id === 'E1' && hasTech(techs, 'TE1-2')) {
+    scaleBundleResource(output, 'power', 1.05)
+    scaleBundleResource(input, 'water', 1.05)
+  }
+  if (spec.id === 'C1' && method.id === 'MC1-1' && hasTech(techs, 'TC1-1')) {
+    scaleBundleResource(output, 'regolith', 1.05)
+    scaleBundleResource(input, 'power', 1.05)
+  }
   if (spec.id === 'C2' && method.id === 'MC2-1' && hasTech(techs, 'TC2-1')) {
     scaleBundleResource(output, 'alloy', 1.05)
     scaleBundleResource(input, 'oxygen', 1.05)
   }
-  if (spec.id === 'B' && method.id === 'MB-1' && hasTech(techs, 'TB-1')) scaleBundleResource(output, 'biomass', 1.05)
+  if (spec.id === 'B' && method.id === 'MB-1' && hasTech(techs, 'TB-1')) {
+    scaleBundleResource(output, 'biomass', 1.05)
+    scaleBundleResource(input, 'water', 1.05)
+  }
   if (spec.id === 'L' && hasTech(techs, 'TL-2')) {
     scaleBundleResource(input, 'power', 1.25)
     scaleBundleResource(output, 'knowledge', 1.35)

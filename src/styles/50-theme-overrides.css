@@ -1,6 +1,6 @@
 
 .brand-block h1 {
-  font-size: 1.55rem;
+  font-size: 24px;
   line-height: 1.12;
 }
 
@@ -290,20 +290,6 @@
   opacity: .42;
 }
 
-.event-modal .visitor-portrait-slot {
-  background:
-    linear-gradient(180deg, oklch(91% .022 82), oklch(83% .026 80));
-  color: var(--ui-brass-dark);
-}
-
-.event-modal .visitor-portrait-slot::before {
-  border-color: oklch(58% .08 76 / .38);
-}
-
-.event-modal .visitor-portrait-slot small {
-  color: var(--ui-muted);
-}
-
 .event-transmission-head {
   border-color: var(--ui-line);
 }
@@ -315,12 +301,12 @@
 }
 
 .event-modal .letter-copy strong {
-  font-size: 1.7rem;
+  font-size: 28px;
 }
 
 .event-modal .letter-body {
   color: var(--ui-ink);
-  font-size: .9rem;
+  font-size: 14px;
   line-height: 1.86;
 }
 
@@ -349,7 +335,7 @@
 }
 
 .planet-title h2 {
-  font-size: 2.35rem;
+  font-size: 36px;
 }
 
 .planet-title button {
@@ -367,7 +353,7 @@
 
 @media (max-width: 760px) {
   .brand-block h1 {
-    font-size: 1.28rem;
+    font-size: 20px;
   }
 
   .welcome-panel h2,
@@ -375,22 +361,22 @@
   .palace-hero h2,
   .system-hero h2,
   .visitor-hero h2 {
-    font-size: 1.38rem;
+    font-size: 24px;
   }
 
   .section-heading h2,
   .section-heading h3,
   .inspector-head h2,
   .special-panel-head h2 {
-    font-size: 1.08rem;
+    font-size: 18px;
   }
 
   .event-modal .letter-copy strong {
-    font-size: 1.32rem;
+    font-size: 20px;
   }
 
   .event-modal .letter-body {
-    font-size: .82rem;
+    font-size: 13px;
   }
 
   .planet-title {
@@ -474,17 +460,18 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .resource-rail .resource-label {
-    display: none;
+    display: block;
+    font-size: var(--font-label);
   }
   .resource-rail > .resource-atom {
     min-height: 52px;
     padding: .35rem .42rem;
   }
   .resource-rail .resource-main-value strong {
-    font-size: .85rem;
+    font-size: 14px;
   }
   .resource-rail .resource-sub-value {
-    font-size: .6rem;
+    font-size: 10px;
   }
 }
 
@@ -575,7 +562,7 @@
 }
 
 .building-title-copy h2 {
-  font-size: 1.55rem;
+  font-size: 24px;
 }
 
 .building-status-block {

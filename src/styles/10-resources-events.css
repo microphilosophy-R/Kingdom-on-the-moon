@@ -1,8 +1,5 @@
 .retainer {
-  grid-template-columns: 74px minmax(0, 1fr) auto;
-}
-.retainer-portrait {
-  min-height: 74px;
+  grid-template-columns: 80px minmax(0, 1fr);
 }
 
 @media (max-width: 1100px) {
@@ -24,11 +21,11 @@
   .resource-rail { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .resource-rail > .resource-atom { min-height: 52px; }
   .resource-atom { padding: .35rem .4rem; gap: .3rem; }
-  .resource-atom-content .resource-label { display: none; }
-  .resource-main-value strong { font-size: .88rem; }
-  .resource-main-value .resource-sub-value { font-size: .62rem; }
-  .resource-atom-content .resource-net { font-size: .48rem; }
-  .resource-atom-content .resource-net-inline { font-size: .48rem; }
+  .resource-atom-content .resource-label { display: block; font-size: var(--font-label); }
+  .resource-main-value strong { font-size: 14px; }
+  .resource-main-value .resource-sub-value { font-size: 10px; }
+  .resource-atom-content .resource-net { font-size: 10px; }
+  .resource-atom-content .resource-net-inline { font-size: 10px; }
   .resource-atom > svg { width: 14px; height: 14px; }
   .population-strip,
   .facility-actions,
@@ -80,7 +77,7 @@
 .resource-symbol-item small {
   color: oklch(34% .032 250);
   font-family: ui-monospace, monospace;
-  font-size: .58rem;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1;
 }
@@ -90,7 +87,7 @@
 .symbol-empty {
   color: oklch(55% .018 250);
   font-family: ui-monospace, monospace;
-  font-size: .62rem;
+  font-size: 10px;
 }
 .facility-era-list {
   display: grid;
@@ -112,12 +109,12 @@
 .facility-era-section > header span {
   color: oklch(35% .034 250);
   font-family: 'Noto Serif SC', 'Songti SC', serif;
-  font-size: .95rem;
+  font-size: 15px;
   font-weight: 700;
 }
 .facility-era-section > header small {
   color: oklch(49% .024 250);
-  font-size: .62rem;
+  font-size: 10px;
 }
 .facility-ledger-list .ledger-card {
   position: relative;
@@ -190,7 +187,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   max-width: 100%;
-  font-size: .72rem;
+  font-size: 12px;
   line-height: 1.25;
   color: var(--ui-ink-strong);
   font-family: var(--ui-serif);
@@ -208,7 +205,7 @@
   border-radius: 50%;
   background: var(--ui-raised);
   color: oklch(48% .09 76);
-  font-size: .58rem;
+  font-size: 10px;
   font-style: normal;
 }
 
@@ -252,11 +249,11 @@
   background: oklch(95% .022 84 / .6);
   color: var(--ui-ink-strong);
   font-family: ui-monospace, monospace;
-  font-size: .66rem;
+  font-size: 11px;
   font-weight: 700;
 }
 .ledger-flow .resource-symbol-item > small {
-  font-size: .66rem;
+  font-size: 11px;
   font-weight: 700;
   font-family: ui-monospace, monospace;
 }
@@ -267,7 +264,7 @@
   align-items: center;
   justify-content: center;
   color: var(--ui-muted-2);
-  font-size: .66rem;
+  font-size: 11px;
   font-family: ui-monospace, monospace;
 }
 .ledger-method-row {
@@ -280,13 +277,13 @@
 }
 .ledger-method-tag {
   color: var(--ui-muted);
-  font-size: .62rem;
+  font-size: 10px;
   font-weight: 700;
   white-space: nowrap;
 }
 .ledger-method-name {
   color: var(--ui-brass-dark);
-  font-size: .66rem;
+  font-size: 11px;
   font-weight: 700;
   font-family: ui-monospace, monospace;
   text-align: right;
@@ -312,7 +309,7 @@
 }
 .ledger-stat-label {
   color: var(--ui-muted);
-  font-size: .62rem;
+  font-size: 10px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -333,7 +330,7 @@
   background: oklch(95% .022 84 / .6);
   color: oklch(50% .08 76);
   font-family: ui-monospace, monospace;
-  font-size: .66rem;
+  font-size: 11px;
   font-style: normal;
   font-weight: 700;
   line-height: 1;
@@ -353,7 +350,7 @@
   border-radius: 5px;
   background: var(--ui-raised);
   color: var(--ui-ink);
-  font-size: .66rem;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
   transition: background .14s ease, border-color .14s ease, color .14s ease;
@@ -410,7 +407,7 @@
   align-items: center;
   padding: 0 .6rem;
   color: oklch(34% .032 250);
-  font-size: .62rem;
+  font-size: 10px;
   font-weight: 700;
 }
 .staffing-buttons {
@@ -423,7 +420,7 @@
   padding: .5rem .62rem;
   background: oklch(98% .01 86);
   color: oklch(36% .034 250);
-  font-size: .66rem;
+  font-size: 11px;
   font-weight: 700;
 }
 .throughput-panel {
@@ -442,18 +439,18 @@
 }
 .throughput-panel span {
   color: oklch(48% .023 250);
-  font-size: .62rem;
+  font-size: 10px;
 }
 .throughput-panel strong {
   color: oklch(30% .034 250);
   font-family: ui-monospace, monospace;
-  font-size: 1.35rem;
+  font-size: 20px;
 }
 .throughput-panel em,
 .throughput-panel p {
   margin: 0;
   color: oklch(44% .026 250);
-  font-size: .63rem;
+  font-size: 10px;
   font-style: normal;
   line-height: 1.55;
 }
@@ -534,7 +531,7 @@
   display: block;
   margin-bottom: .22rem;
   color: oklch(48% .023 250);
-  font-size: .61rem;
+  font-size: 10px;
 }
 .palace-building-stats strong,
 .policy-status strong,
@@ -542,14 +539,14 @@
   display: block;
   color: oklch(29% .035 250);
   font-family: ui-monospace, monospace;
-  font-size: 1.18rem;
+  font-size: 18px;
   font-weight: 700;
 }
 .palace-building-stats small,
 .policy-status small,
 .policy-report-body small {
   color: oklch(50% .023 250);
-  font-size: .58rem;
+  font-size: 10px;
 }
 .palace-staffing-meter,
 .policy-cycle-bar {
@@ -573,7 +570,7 @@
   display: grid;
   place-items: center;
   color: oklch(96% .016 84);
-  font-size: .62rem;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: .06em;
 }
@@ -627,7 +624,7 @@
   padding: .72rem .8rem;
   background: oklch(98% .008 86);
   color: oklch(45% .025 250);
-  font-size: .68rem;
+  font-size: 11px;
 }
 .policy-report-empty svg {
   color: oklch(50% .09 76);
@@ -694,14 +691,14 @@
 }
 .special-panel-head h2 {
   margin: .2rem 0 .08rem;
-  font-size: 1.45rem;
+  font-size: 24px;
   line-height: 1.25;
 }
 .special-panel-head p,
 .special-panel-note {
   margin: 0;
   color: oklch(78% .025 250);
-  font-size: .68rem;
+  font-size: 11px;
   line-height: 1.7;
 }
 .special-facility-stats,
@@ -729,18 +726,18 @@
   display: block;
   margin-bottom: .2rem;
   color: oklch(48% .023 250);
-  font-size: .58rem;
+  font-size: 10px;
 }
 .special-facility-stats strong,
 .special-production-row strong {
   display: block;
   color: oklch(28% .035 250);
   font-family: ui-monospace, monospace;
-  font-size: 1.04rem;
+  font-size: 16px;
 }
 .special-facility-stats small {
   color: oklch(50% .023 250);
-  font-size: .56rem;
+  font-size: 10px;
 }
 .special-staffing-meter {
   position: relative;

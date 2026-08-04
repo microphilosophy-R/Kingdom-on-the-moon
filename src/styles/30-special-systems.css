@@ -9,7 +9,7 @@
 }
 .event-modal .event-exchange b {
   color: oklch(45% .075 76);
-  font-size: .66rem;
+  font-size: 11px;
 }
 .event-modal .letter-actions {
   position: absolute;
@@ -22,7 +22,7 @@
 .event-modal .letter-actions button {
   min-width: 76px;
   padding: .58rem .78rem;
-  font-size: .72rem;
+  font-size: 12px;
   font-weight: 700;
 }
 .event-modal .letter-actions .primary {
@@ -49,10 +49,10 @@
     padding: 1.35rem 1.1rem 5.2rem;
   }
   .event-modal .letter-copy strong {
-    font-size: 1.45rem;
+    font-size: 24px;
   }
   .event-modal .letter-body {
-    font-size: .82rem;
+    font-size: 13px;
   }
   .event-modal .event-exchange,
   .event-modal .event-exchange.concealed {
@@ -114,7 +114,7 @@
 
 .start-console h1 {
   margin: .05rem 0 0;
-  font-size: 2.35rem;
+  font-size: 36px;
   line-height: 1.12;
 }
 
@@ -182,12 +182,12 @@
 }
 
 .resource-atom small {
-  font-size: .56rem;
+  font-size: 10px;
   white-space: nowrap;
 }
 
 .resource-atom strong {
-  font-size: .78rem;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -335,7 +335,7 @@
 
 .building-title-copy h2 {
   margin: 0;
-  font-size: 1.42rem;
+  font-size: 24px;
 }
 
 .building-title-copy p {
@@ -464,7 +464,7 @@
 .trade-offer-list span {
   color: var(--ui-brass-dark);
   font-family: var(--ui-mono);
-  font-size: .62rem;
+  font-size: 10px;
 }
 
 .trade-offer-list h3 {
