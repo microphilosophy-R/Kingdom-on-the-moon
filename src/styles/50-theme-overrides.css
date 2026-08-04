@@ -352,11 +352,14 @@
   box-shadow: 0 14px 34px var(--ui-shadow);
 }
 
-.scoreline,
-.art-brief {
+.scoreline {
   border-color: var(--ui-line);
-  background: var(--ui-surface);
+  background: var(--ui-raised);
   color: var(--ui-ink);
+}
+
+.scoreline span {
+  color: var(--ui-brass-dark);
 }
 
 .planet-title {
@@ -431,21 +434,37 @@
 /* Final overrides for this pass. Keep these after the global color-system appendices. */
 .bottom-tabs {
   z-index: 7;
-  border-color: var(--ui-line-strong);
-  background: var(--ui-surface);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 0;
+  border-top: 1px solid var(--ui-line-strong);
+  border-radius: 0;
+  background: var(--ui-shell);
   backdrop-filter: none;
-  box-shadow: 0 18px 45px var(--ui-shadow-strong);
+  box-shadow: 0 -12px 32px var(--ui-shadow-strong);
 }
 
 .bottom-tabs::before {
   position: absolute;
   content: '';
-  left: -1.25rem;
-  right: -1.25rem;
-  top: -2.2rem;
-  height: 2.2rem;
+  left: 0;
+  right: 0;
+  top: -3.5rem;
+  height: 3.5rem;
   pointer-events: none;
-  background: linear-gradient(180deg, oklch(92% .018 86 / 0), var(--ui-shell));
+  background: linear-gradient(180deg, oklch(92% .018 86 / 0) 0%, oklch(92% .018 86 / .45) 50%, var(--ui-shell) 100%);
+}
+
+.bottom-tabs::after {
+  position: absolute;
+  content: '';
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  pointer-events: none;
+  background: var(--ui-line-strong);
 }
 
 .resource-rail {
@@ -469,10 +488,26 @@
   display: none;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .resource-rail {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+  .resource-rail .resource-label {
+    display: none;
+  }
+  .resource-rail > .resource-atom {
+    min-height: 52px;
+    padding: .35rem .42rem;
+  }
+  .resource-rail .resource-main-value strong {
+    font-size: .85rem;
+  }
+  .resource-rail .resource-sub-value {
+    font-size: .6rem;
+  }
+}
+
+@media (max-width: 760px) {
 }
 
 /* Building command redesign: answer player questions in order. */

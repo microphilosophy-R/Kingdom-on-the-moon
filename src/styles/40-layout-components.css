@@ -475,7 +475,6 @@ h3,
 }
 
 .main-nav button,
-.tab-nav button,
 .reign-control button,
 .letter-actions button,
 .worker-card button,
@@ -498,7 +497,6 @@ h3,
 }
 
 .main-nav button:hover,
-.tab-nav button:hover,
 .reign-control button:hover,
 .letter-actions button:hover,
 .worker-card button:hover,
@@ -524,7 +522,6 @@ h3,
 }
 
 .main-nav button.active,
-.tab-nav button.active,
 .primary-action,
 .letter-actions .primary,
 .event-modal .letter-actions .primary,

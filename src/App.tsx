@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import {
-  ArrowDownRight, ArrowLeftRight, ArrowRight, ArrowUpRight, BookOpen, Bot, Check, ChevronLeft, ChevronRight, CircleDot, Crown, Factory,
-  Coins, FlaskConical, FolderOpen, House, Info, Landmark, Leaf, Lock, LogOut, Minus, Mountain, Orbit,
-  Pause, Pickaxe, Play, Rocket, Save, Settings, Sparkles, Sprout, Sun, Theater, Volume2, Waves, X, Zap,
+  ArrowDownRight, ArrowLeftRight, ArrowRight, ArrowUpRight, BookOpen, Bot, Check, ChevronLeft, ChevronRight, CircleDot, Crown, Droplet, Factory,
+  Coins, FlaskConical, FolderOpen, Gauge, House, Info, Landmark, Leaf, Lock, LogOut, Minus, Mountain, Orbit,
+  Pause, Pickaxe, Play, Rocket, Save, Settings, Sparkles, Sprout, Sun, Theater, Users, Volume2, Waves, X, Zap,
   type LucideProps,
 } from 'lucide-react'
 import {
@@ -304,14 +304,14 @@ const regionTemplate: Region[] = facilityOrder.map(id => {
   }
 })
 
-const navItems: { id: AppView; label: string; icon: Icon }[] = [
-  { id: 'facilities', label: '设施', icon: Orbit },
-  { id: 'palace', label: '王城', icon: Landmark },
-  { id: 'research', label: '科技', icon: FlaskConical },
-  { id: 'ecology', label: '生态', icon: Waves },
-  { id: 'starport', label: '贸易', icon: ArrowLeftRight },
-  { id: 'ship', label: '星舰', icon: Rocket },
-  { id: 'visitors', label: '异客', icon: Sparkles },
+const navItems: { id: AppView; label: string; icon: Icon; color: string }[] = [
+  { id: 'facilities', label: '设施', icon: Orbit, color: 'oklch(52% .1 76)' },
+  { id: 'palace', label: '王城', icon: Landmark, color: 'oklch(45% .08 250)' },
+  { id: 'research', label: '科技', icon: FlaskConical, color: 'oklch(55% .09 300)' },
+  { id: 'ecology', label: '生态', icon: Waves, color: 'oklch(50% .1 160)' },
+  { id: 'starport', label: '贸易', icon: ArrowLeftRight, color: 'oklch(58% .1 40)' },
+  { id: 'ship', label: '星舰', icon: Rocket, color: 'oklch(50% .12 330)' },
+  { id: 'visitors', label: '异客', icon: Sparkles, color: 'oklch(60% .11 85)' },
 ]
 
 const specialFacilityViews: Partial<Record<RegionId, AppView>> = {
@@ -324,14 +324,14 @@ const specialFacilityViews: Partial<Record<RegionId, AppView>> = {
 
 const resourceUiMeta: Record<ResourceKey, { label: string; icon: Icon; tone: string }> = {
   power: { label: resourceMeta.power.label, icon: Zap, tone: 'gold' },
-  water: { label: resourceMeta.water.label, icon: Waves, tone: 'cyan' },
+  water: { label: resourceMeta.water.label, icon: Droplet, tone: 'cyan' },
   oxygen: { label: resourceMeta.oxygen.label, icon: CircleDot, tone: 'cyan' },
   biomass: { label: resourceMeta.biomass.label, icon: Sprout, tone: 'green' },
   regolith: { label: resourceMeta.regolith.label, icon: Mountain, tone: 'ochre' },
   alloy: { label: resourceMeta.alloy.label, icon: Factory, tone: 'slate' },
   quantumCore: { label: resourceMeta.quantumCore.label, icon: Orbit, tone: 'violet' },
   currency: { label: resourceMeta.currency.label, icon: Coins, tone: 'gold' },
-  population: { label: resourceMeta.population.label, icon: House, tone: 'coral' },
+  population: { label: resourceMeta.population.label, icon: Users, tone: 'coral' },
   knowledge: { label: resourceMeta.knowledge.label, icon: FlaskConical, tone: 'violet' },
   luxury: { label: resourceMeta.luxury.label, icon: Sparkles, tone: 'violet' },
 }
@@ -507,17 +507,20 @@ const hasResearchPrerequisites = (techId: TechnologyId, techs: string[]) =>
   (technologyCatalog[techId].prerequisites ?? []).every(prerequisite => hasTech(techs, prerequisite))
 const techLabel = (techId: TechnologyId) => technologyCatalog[techId]?.name ?? techId
 
-function ResourceAtom({ resourceKey, value, net, detail, actionLabel, onAction, compact = false }: { resourceKey: ResourceKey; value: number; net?: number; detail?: string; actionLabel?: string; onAction?: () => void; compact?: boolean }) {
+function ResourceAtom({ resourceKey, value, net, detail, actionLabel, onAction, compact = false, subValue, subLabel }: { resourceKey: ResourceKey; value: number; net?: number; detail?: string; actionLabel?: string; onAction?: () => void; compact?: boolean; subValue?: string; subLabel?: string }) {
   const meta = resourceUiMeta[resourceKey]
   const ResourceIcon = meta.icon
   return <span className={`resource-atom ${compact ? 'compact' : ''}`}>
     <ResourceIcon className={meta.tone} size={compact ? 13 : 17} />
-    <span>
-      <small>{meta.label}</small>
-      <strong className={value < 0 ? 'negative' : ''}>{value > 0 && compact ? '+' : ''}{fmtAmount(value)}</strong>
+    <span className="resource-atom-content">
+      <small className="resource-label">{meta.label}</small>
+      <span className="resource-main-value">
+        <strong className={value < 0 ? 'negative' : ''}>{value > 0 && compact ? '+' : ''}{fmtAmount(value)}</strong>
+        {subValue !== undefined && <small className="resource-sub-value">{subValue}</small>}
+      </span>
+      {net !== undefined && <small className={`resource-net ${net < 0 ? 'negative' : ''}`}>{net >= 0 ? '+' : ''}{net.toFixed(1)}/日</small>}
       {detail && !compact && <small className="resource-detail">{detail}</small>}
     </span>
-    {net !== undefined && <em className={net < 0 ? 'negative' : ''}>{net >= 0 ? '+' : ''}{net.toFixed(1)}/日</em>}
     {actionLabel && !compact && <button type="button" className="resource-inline-action" onClick={onAction}>{actionLabel}</button>}
   </span>
 }
@@ -1356,28 +1359,24 @@ function App() {
       {allResourceKeys.map(key => {
         const value = key === 'power' ? dailyProduction.power : resources[key]
         const canCancelAutoTrade = Boolean(autoTradeProtectionEnabled && tradeSourcedResources[key] && autoTradeEnabled[key] !== false && selfProducedSurplus[key])
-        const detail = key === 'power'
-          ? `占用 ${fmtAmount(dailyConsumption.power)}`
-          : key === 'population'
-            ? `占用 ${fmt(allocatedPopulation)}`
-            : canCancelAutoTrade
-              ? '自产盈余，可停购'
-            : undefined
+        const detail = canCancelAutoTrade ? '自产盈余，可停购' : undefined
+        const isPower = key === 'power'
+        const isPopulation = key === 'population'
+        const subValue = isPower
+          ? `/${fmtAmount(dailyConsumption.power)}`
+          : isPopulation
+            ? `/${dailyNet.population >= 0 ? '+' : ''}${dailyNet.population.toFixed(1)}`
+            : `/${dailyNet[key] >= 0 ? '+' : ''}${dailyNet[key].toFixed(1)}`
         return <ResourceAtom
           key={key}
           resourceKey={key}
-          value={value}
-          net={dailyNet[key] ?? 0}
+          value={isPopulation ? allocatedPopulation : value}
           detail={detail}
+          subValue={subValue}
           actionLabel={canCancelAutoTrade ? '停购' : undefined}
           onAction={canCancelAutoTrade ? () => setAutoTradeEnabled(previous => ({ ...previous, [key]: false })) : undefined}
         />
       })}
-    </section>
-    <section className="population-strip" aria-label="人口状态">
-      <div><span>住房容量</span><strong>{fmt(resources.population)}<small>/{fmt(populationProjection.capacity)}</small></strong><em>空位 {fmt(Math.max(0, populationProjection.availableCapacity))}</em></div>
-      <div><span>净增长</span><strong>{(populationProjection.net.population ?? 0).toFixed(2)}<small>/日</small></strong><em>潜力 {populationProjection.growthPotential.toFixed(2)}</em></div>
-      <div><span>生命维持</span><strong>{Math.round(populationProjection.lifeSupportRatio * 100)}<small>%</small></strong><em>{populationProjection.status === 'strained' ? `压力 ${populationProjection.nextPressureDays} 日` : populationProjection.status === 'full' ? '容量已满' : '稳定'}</em></div>
     </section>
 
     {activeReignReport && <ReignReportModal report={activeReignReport} onClose={() => setActiveReignReport(null)} />}
@@ -1419,13 +1418,17 @@ function App() {
     {settingsOpen && <SettingsPanel volume={musicVolume} saveStatus={saveStatus} autoTradeProtectionEnabled={autoTradeProtectionEnabled} onAutoTradeProtection={setAutoTradeProtectionEnabled} onVolume={setMusicVolume} onContinue={() => setSettingsOpen(false)} onSave={saveGame} onLoad={loadGame} onExit={exitGame} />}
 
     <footer className="command-deck bottom-tabs">
-      <div className="scoreline gdp-line"><span>GDP</span><strong>{gdp.toFixed(1)}</strong><small>星海货币/日</small></div>
-      <div className="scoreline"><span>国祚评分</span><strong>{score}</strong><small>星舰进度权重最高</small></div>
-      <nav className="tab-nav" aria-label="底部系统菜单">{navItems.map(item => { const NavIcon = item.icon; return <button key={item.id} className={view === item.id ? 'active' : ''} onClick={() => setView(item.id)}><NavIcon size={16} />{item.label}</button> })}</nav>
-      <div className="time-dock" aria-label="时间控制">
-        <div className="day-counter"><span>{gameCalendar.dayName}</span><strong>{String(Math.min(day, gameCalendar.finalDay)).padStart(3, '0')}</strong><small>/ {gameCalendar.finalDay}</small></div>
-        <button onClick={() => setSpeed(speed === 'normal' ? 'fast' : 'normal')} aria-label="切换时间速度">{speed === 'normal' ? '正常' : '加速'}</button>
-        <button onClick={() => setRunning(!isRunning)} aria-label={isRunning ? '暂停日历' : '恢复日历'} disabled={completed}>{isRunning ? <Pause size={15} /> : <Play size={15} />}{isRunning ? '暂停' : '恢复'}</button>
+      <div className="footer-row footer-row-left">
+        <div className="scoreline gdp-line"><span>GDP</span><strong>{gdp.toFixed(1)}</strong><small>星海货币/日</small></div>
+        <div className="scoreline"><span>国祚评分</span><strong>{score}</strong><small>星舰进度权重最高</small></div>
+      </div>
+      <nav className="tab-nav" aria-label="底部系统菜单">{navItems.map(item => { const NavIcon = item.icon; return <button key={item.id} className={view === item.id ? 'active' : ''} style={{ '--tab-color': item.color } as React.CSSProperties} onClick={() => setView(item.id)}><NavIcon size={16} />{item.label}</button> })}</nav>
+      <div className="footer-row footer-row-right">
+        <div className="time-dock" aria-label="时间控制">
+          <div className="day-counter"><span>{gameCalendar.dayName}</span><div><strong>{String(Math.min(day, gameCalendar.finalDay)).padStart(3, '0')}</strong><small>/ {gameCalendar.finalDay}</small></div></div>
+          <button className="time-control-btn" onClick={() => setSpeed(speed === 'normal' ? 'fast' : 'normal')} aria-label="切换时间速度"><Gauge size={15} /><span>{speed === 'normal' ? '正常' : '加速'}</span></button>
+          <button className="time-control-btn" onClick={() => setRunning(!isRunning)} aria-label={isRunning ? '暂停日历' : '恢复日历'} disabled={completed}>{isRunning ? <Pause size={15} /> : <Play size={15} />}<span>{isRunning ? '暂停' : '恢复'}</span></button>
+        </div>
       </div>
     </footer>
   </main>
@@ -1562,11 +1565,11 @@ function PlanetFacilities({ regions, selected, year, techs, productionMethods, f
         <div><span className="eyebrow">玩家国王</span><h3>月冠执政者</h3><p>陈林，拓殖署基层公务员，被强行推上龙椅。真实目标是密造御座号归乡，而非追求繁荣。</p></div>
       </aside>
     </section>}
-    {detailOpen ? <FacilityDetailPanel selected={selected} year={year} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} regions={regions} onBack={onBack} onUpgrade={onUpgrade} onHold={onHold} onShrink={onShrink} onPriority={onPriority} onMethod={onMethod} onAssignment={onAssignment} /> : <FacilityList regions={regions} selected={selected} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} staffing={staffing} facilityModifiers={facilityModifiers} assigned={assigned} roster={roster} onSelect={onSelect} />}
+    {detailOpen ? <FacilityDetailPanel selected={selected} year={year} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} regions={regions} onBack={onBack} onUpgrade={onUpgrade} onHold={onHold} onShrink={onShrink} onPriority={onPriority} onMethod={onMethod} onAssignment={onAssignment} /> : <FacilityList regions={regions} selected={selected} year={year} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} construction={construction} staffing={staffing} facilityModifiers={facilityModifiers} assigned={assigned} roster={roster} residentsByFacility={populationProjection.residentsByFacility} onSelect={onSelect} onUpgrade={onUpgrade} />}
   </div>
 }
 
-function FacilityList({ regions, selected, techs, productionMethods, facilityOrders, staffing, facilityModifiers, assigned, roster, onSelect }: { regions: Region[]; selected: RegionId; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; facilityOrders: Record<RegionId, FacilityOrderMode>; staffing: Record<RegionId, number>; facilityModifiers: Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>; assigned: Record<RegionId, string | undefined>; roster: Role[]; onSelect: (id: RegionId) => void }) {
+function FacilityList({ regions, selected, year, techs, productionMethods, facilityOrders, construction, staffing, facilityModifiers, assigned, roster, residentsByFacility, onSelect, onUpgrade }: { regions: Region[]; selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; facilityOrders: Record<RegionId, FacilityOrderMode>; construction: Record<RegionId, ConstructionProject | null>; staffing: Record<RegionId, number>; facilityModifiers: Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>; assigned: Record<RegionId, string | undefined>; roster: Role[]; residentsByFacility: Partial<Record<RegionId, number>>; onSelect: (id: RegionId) => void; onUpgrade: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'expand' | 'expand-continuous'>) => void }) {
   return <section className="facility-ledger">
     <div className="section-heading"><div><span className="eyebrow">主要设施</span><h2>建筑名录</h2></div><p>D/R/S/K/L 进入专属系统页。</p></div>
     <div className="facility-era-list">{facilityEraSections.map(section => {
@@ -1577,22 +1580,42 @@ function FacilityList({ regions, selected, techs, productionMethods, facilityOrd
           const RegionIcon = region.icon
           const worker = roster.find(item => item.id === assigned[region.id])
           const special = specialFacilityViews[region.id]
-          const method = selectProductionMethod(facilityEconomySpecs[region.id].productionMethods, techs, productionMethods[region.id])
+          const spec = facilityEconomySpecs[region.id]
+          const method = selectProductionMethod(spec.productionMethods, techs, productionMethods[region.id])
           const capacity = getFacilityWorkCapacity(region.id, region.level)
           const housingCapacity = getHousingCapacity(region.id, region.level)
           const assignedPop = Math.min(capacity, staffing[region.id] ?? 0)
           const fixed = isFixedFacility(region.id)
           const staffRate = capacity > 0 ? assignedPop / capacity : housingCapacity > 0 || fixed ? 1 : 0
-          const modifier = facilityModifiers[region.id]?.outputMultiplier ?? 1
-          const throughput = staffRate * modifier
+          const modifier = facilityModifiers[region.id] ?? { outputMultiplier: 1, upkeepMultiplier: 1 }
+          const throughput = staffRate * (modifier.outputMultiplier ?? 1)
+          const actualNet = isHousingFacility(region.id)
+            ? {}
+            : projectFacilityNet(spec, assignedPop, modifier, techs, method.id, region.level)
           const order = facilityOrders[region.id] ?? 'hold'
-          return <button key={region.id} className={`${selected === region.id ? 'selected' : ''} ${special ? 'special' : ''} throughput-${throughputClass(throughput)}`} onClick={() => onSelect(region.id)}>
-            <span className="ledger-icon"><RegionIcon size={19} /></span>
-            <div className="ledger-main"><b>{region.name}</b><small>{special ? navItems.find(item => item.id === special)?.label : region.subtitle}</small></div>
-            <div className="ledger-flow"><ResourceSymbolStrip bundle={method.input} empty="-" /><ArrowRight size={14} /><ResourceSymbolStrip bundle={method.output} empty="-" /></div>
-            <div className="ledger-state"><span>{fixed ? <Check size={13} /> : orderIcon(order)}{fixed ? '固定' : orderLabel(order)}</span><em>{fixed ? '无岗位' : housingCapacity ? `容 ${housingCapacity}` : capacity ? `${assignedPop}/${capacity}` : '未建'}</em><strong>{fixed ? '在线' : `${Math.round(throughput * 100)}%`}</strong></div>
-            {worker && <i>{worker.glyph}</i>}
-          </button>
+          const canQuickUpgrade = !fixed && !isHousingFacility(region.id) && !construction[region.id] && order === 'hold' && region.level < region.max && canBuildFacility(spec, year, techs)
+          const populationText = fixed ? '固定' : housingCapacity ? `${residentsByFacility[region.id] ?? 0}/${housingCapacity}` : capacity ? `${assignedPop}/${capacity}` : '未建'
+          const throughputText = fixed ? '在线' : region.level === 0 ? '未建' : `${Math.round(throughput * 100)}%`
+          return <div key={region.id} className={`ledger-card ${selected === region.id ? 'selected' : ''} ${special ? 'special' : ''} throughput-${throughputClass(throughput)}`}>
+            <div className="ledger-block ledger-identity">
+              <div className="ledger-icon-square"><RegionIcon size={28} /></div>
+              <b>{region.name}</b>
+              {worker && <i title={`${worker.name} 执勤`}>{worker.glyph}</i>}
+            </div>
+            <div className="ledger-block ledger-flow-block">
+              <div className="ledger-flow"><ResourceSymbolStrip bundle={actualNet} empty="-" /></div>
+              <div className="ledger-method-row"><span className="ledger-method-tag">生产方式</span><span className="ledger-method-name">{method.name}</span></div>
+            </div>
+            <div className="ledger-block ledger-action-block">
+              <div className="ledger-stat-row"><span className="ledger-stat-label">岗位占比</span><span className="ledger-stat-value"><em>{populationText}</em></span></div>
+              <button className="ledger-quick-upgrade" type="button" disabled={!canQuickUpgrade} onClick={event => { event.stopPropagation(); onUpgrade(region.id, 'expand') }}>
+                <ArrowUpRight size={14} />单次升级
+              </button>
+              <button className="ledger-detail" type="button" onClick={event => { event.stopPropagation(); onSelect(region.id) }}>
+                <Info size={14} />建筑详情
+              </button>
+            </div>
+          </div>
         })}</div>
       </section>
     })}</div>
@@ -1663,15 +1686,6 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
     ...techBonusSources,
   ].filter(Boolean) as string[]
   const affordExpansion = canPay(resources, selectedCost)
-  const actionReason = selectedFixed
-    ? '这是固定贸易节点，不通过扩建、缩减或派驻人口改变能力。'
-    : !selectedBuildable
-    ? `需要先取得 ${selectedRequiredTech ? selectedRequiredTech.name : selectedSpec.requiredTech}`
-    : selectedRegion.level >= selectedRegion.max
-      ? '现行设计已达到最高规模'
-      : affordExpansion
-        ? '库存满足扩建成本，扩张会立即消耗下列资源'
-        : '库存不足，扩张按钮会保留判断但暂不可签发'
   const hasNegativeYield = resourceOrder.some(key => (selectedYield[key] ?? 0) < 0)
   const needsStaff = !selectedFixed && workCapacity > assignedPopulation
   const statusTone = !selectedBuildable || selectedRegion.level === 0 || (!selectedFixed && !isHousingFacility(selectedRegion.id) && throughput <= 0) ? 'attention' : activeConstruction || needsStaff || (!selectedFixed && !isHousingFacility(selectedRegion.id) && throughput < 0.8) ? 'watch' : 'steady'
@@ -1709,7 +1723,6 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
             ? '这座设施会消耗库存，确认全局净值能承受后再扩张。'
             : '当前状态稳定，可按目标选择扩张或保持。'
 
-  const orderAge = Math.max(0, year - (facilityOrderStarted[selectedRegion.id] ?? year))
   const assignmentText = selectedFixed
     ? '固定节点不占用人口'
     : isHousingFacility(selectedRegion.id)
@@ -1726,82 +1739,74 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
     <header className="detail-v2-header">
       <button className="back-button" onClick={onBack}><ChevronLeft size={16} />建筑名录</button>
       <div className="detail-v2-title">
-        <span className="eyebrow">{isSpecialDetail ? '特殊建筑' : '普通建筑'} · {selected}</span>
         <h2>{selectedRegion.name}</h2>
         <p>{selectedRegion.subtitle}</p>
       </div>
       <div className={`building-status-chip ${statusTone}`}><span>{situationTitle}</span><small>{orderLabel(currentOrder)}</small></div>
     </header>
 
-    <section className="detail-v2-overview">
-      <div className="detail-v2-art" aria-label={`${selectedRegion.name}建筑图片占位`}>
-        <SelectIcon size={38} />
-        <span>建筑美术占位</span>
-      </div>
-      <div className="detail-v2-brief">
-        <p>{displayCopy(selectedRegion.interfaceDuty)}</p>
-        <div className="detail-route"><Orbit size={14} /><span>{parents.length ? `${parents.join('、')} → 本设施` : '殖民地基础设施'}</span></div>
-      </div>
-      <div className="detail-v2-metrics">
-        <div><span>{selectedFixed ? '状态' : '等级'}</span><strong>{selectedFixed ? '在线' : selectedRegion.level}<small>{selectedFixed ? '' : `/${selectedRegion.max}`}</small></strong></div>
-        <div><span>{selectedFixed ? '类型' : isHousingFacility(selectedRegion.id) ? '人口容量' : '岗位'}</span><strong>{selectedFixed ? '贸易' : isHousingFacility(selectedRegion.id) ? housingCapacity : assignedPopulation}<small>{selectedFixed ? '' : `/${isHousingFacility(selectedRegion.id) ? populationProjection.capacity : workCapacity}`}</small></strong></div>
-        <div><span>{activeConstruction ? '施工剩余' : '吞吐'}</span><strong>{activeConstruction ? constructionRemaining : throughputText}<small>{activeConstruction ? '日' : ''}</small></strong></div>
-        <div><span>每日净值</span><ResourceBundle bundle={selectedYield} empty="无日结算" /></div>
-      </div>
-    </section>
+    <div className="detail-v2-art" aria-label={`${selectedRegion.name}建筑主视觉`}>
+      <SelectIcon size={120} />
+    </div>
 
-    <section className={`detail-v2-command ${interventionTone}`}>
-      <div className="detail-decision-copy">
-        <span className="eyebrow">决策口</span>
-        <h3>{interventionCopy}</h3>
-        <p>{actionReason}</p>
-      </div>
-      <div className="detail-control-stack">
-        <div className="priority-control compact" aria-label="岗位分配优先级">
-          <span>岗位优先级</span>
-          <div>{priorityLevels.map(priority => <button key={priority} className={currentPriority === priority ? 'selected' : ''} onClick={() => onPriority(selectedRegion.id, priority)} disabled={!priorityEditable}>{priority}</button>)}</div>
-          <small>{priorityEditable ? assignmentText : selectedFixed ? '固定节点不占用人口。' : '人口容量建筑不占用生产岗位。'}</small>
+    <div className="detail-v2-body">
+      <section className="detail-v2-left">
+        <div className="detail-v2-metrics">
+          <div><span>{selectedFixed ? '状态' : '等级'}</span><strong>{selectedFixed ? '在线' : selectedRegion.level}<small>{selectedFixed ? '' : `/${selectedRegion.max}`}</small></strong></div>
+          <div><span>{selectedFixed ? '类型' : isHousingFacility(selectedRegion.id) ? '人口容量' : '岗位'}</span><strong>{selectedFixed ? '贸易' : isHousingFacility(selectedRegion.id) ? housingCapacity : assignedPopulation}<small>{selectedFixed ? '' : `/${isHousingFacility(selectedRegion.id) ? populationProjection.capacity : workCapacity}`}</small></strong></div>
+          <div><span>{activeConstruction ? '施工剩余' : '吞吐'}</span><strong>{activeConstruction ? constructionRemaining : throughputText}<small>{activeConstruction ? '日' : ''}</small></strong></div>
+          <div><span>每日净值</span><ResourceBundle bundle={selectedYield} empty="无日结算" /></div>
         </div>
-        <div className="facility-actions compact">
-          <button className={currentOrder === 'shrink-continuous' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink-continuous')} disabled={selectedFixed || Boolean(activeConstruction) || selectedRegion.level <= 0}><ArrowDownRight size={15} />持续收缩</button>
-          <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink')} disabled={selectedFixed || Boolean(activeConstruction) || selectedRegion.level <= 0}><ArrowDownRight size={15} />降低一级</button>
-          <button className={currentOrder === 'hold' ? 'selected' : ''} onClick={() => onHold(selectedRegion.id)}><Minus size={15} />保持不变</button>
-          <button className={`${currentOrder === 'expand' ? 'selected' : ''} ${recentAuto && lastAutomatedAction?.mode === 'expand' ? 'auto-feedback' : ''}`} onClick={() => onUpgrade(selectedRegion.id, 'expand')} disabled={selectedFixed || Boolean(activeConstruction) || !selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />增加一级</button>
-          <button className={currentOrder === 'expand-continuous' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand-continuous')} disabled={selectedFixed || Boolean(activeConstruction) || !selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />持续增加</button>
+        <div className="detail-v2-brief">
+          <p>{displayCopy(selectedRegion.interfaceDuty)}</p>
         </div>
-      </div>
-      <div className="detail-command-ledger">
-        <div><span>扩建成本</span><ResourceBundle bundle={selectedCost} empty="无需成本" /></div>
-        <div><span>{optimizerDisabled ? '调度模式' : '自动建议'}</span><b>{automationSuggestionLabel}</b></div>
-        <div><span>人口</span><b>{allocatedPopulation}/{fmt(resources.population)} 已用，空余 {fmt(freePopulation)}</b></div>
-        <div><span>命令持续</span><b>{orderAge} 御日</b></div>
-      </div>
-      <div className={`operation-progress operation-${currentOrder}`} title={operationProgressTitle}><span style={{ width: `${operationProgress}%` }} /><small>{operationProgressLabel}</small></div>
-    </section>
+        <div className="method-ledger">
+          <div className="method-ledger-head"><span className="eyebrow">配方账簿</span><h3>生产方式</h3><small>{selectedMethod.name}</small></div>
+          <div className="method-ledger-table">{selectedSpec.productionMethods.map(method => {
+            const methodReady = hasTech(techs, method.unlockedBy) && method.autoSelect !== false
+            const techName = method.unlockedBy ? technologyCatalog[method.unlockedBy]?.name : undefined
+            const active = method.id === selectedMethod.id && methodReady
+            return <article key={method.id} className={active ? 'active' : ''}>
+              <div className="method-name"><b>{method.name}</b><small>{methodReady ? '已解锁' : method.autoSelect === false ? '阶段启用' : `需要 ${techName ?? '对应科技'}`}</small></div>
+              <ProductionFlow input={method.input} output={method.output} />
+              <p title={displayCopy(method.note)}>{displayCopy(method.note)}</p>
+              {active ? <em>使用中</em> : <button onClick={() => onMethod(method.id)} disabled={!methodReady}>切换</button>}
+            </article>
+          })}</div>
+        </div>
+      </section>
 
-    <section className="detail-v2-lower">
-      <div className="method-ledger">
-        <div className="method-ledger-head"><span className="eyebrow">配方账簿</span><h3>生产方式</h3><small>{selectedMethod.name}</small></div>
-        <div className="method-ledger-table">{selectedSpec.productionMethods.map(method => {
-          const methodReady = hasTech(techs, method.unlockedBy) && method.autoSelect !== false
-          const techName = method.unlockedBy ? technologyCatalog[method.unlockedBy]?.name : undefined
-          const active = method.id === selectedMethod.id && methodReady
-          return <article key={method.id} className={active ? 'active' : ''}>
-            <div className="method-name"><b>{method.name}</b><small>{methodReady ? '已解锁' : method.autoSelect === false ? '阶段启用' : `需要 ${techName ?? '对应科技'}`}</small></div>
-            <ProductionFlow input={method.input} output={method.output} />
-            <p title={displayCopy(method.note)}>{displayCopy(method.note)}</p>
-            {active ? <em>使用中</em> : <button onClick={() => onMethod(method.id)} disabled={!methodReady}>切换</button>}
-          </article>
-        })}</div>
-      </div>
-
-      <div className="detail-facts">
-        <div><span>运作修正</span>{bonusSources.slice(0, 4).map(item => <b key={item}>{item}</b>)}</div>
-        <div><span>建设链</span><b>{parents.length ? parents.join('、') : '基础节点'}</b><b>{selectedBuildable ? '已授权' : `缺少 ${selectedRequiredTech?.name ?? selectedSpec.requiredTech}`}</b></div>
-        {workerSlot && <div className="worker-mini"><span>{workerSlot.glyph}</span><p><b>{workerSlot.title}</b><small>{workerSlot.note}</small></p><button onClick={workerSlot.onClick}>{workerSlot.action}</button></div>}
-        <div><span>全局日净值</span><b>{Object.values(dailyNet).filter(Boolean).length} 项变化</b><InfoToggle title="自动操作说明"><p>系统自动操作会在调度按钮中短暂高亮。</p></InfoToggle></div>
-      </div>
-    </section>
+      <section className={`detail-v2-right ${interventionTone}`}>
+        <div className="detail-decision-copy">
+          <h3>{interventionCopy}</h3>
+        </div>
+        <div className="detail-control-stack">
+          <div className="priority-control compact" aria-label="岗位分配优先级">
+            <span>岗位优先级</span>
+            <div>{priorityLevels.map(priority => <button key={priority} className={currentPriority === priority ? 'selected' : ''} onClick={() => onPriority(selectedRegion.id, priority)} disabled={!priorityEditable}>{priority}</button>)}</div>
+            <small>{priorityEditable ? assignmentText : selectedFixed ? '固定节点不占用人口。' : '人口容量建筑不占用生产岗位。'}</small>
+          </div>
+          <div className="facility-actions compact">
+            <button className={currentOrder === 'shrink-continuous' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink-continuous')} disabled={selectedFixed || Boolean(activeConstruction) || selectedRegion.level <= 0}><ArrowDownRight size={15} />持续收缩</button>
+            <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink')} disabled={selectedFixed || Boolean(activeConstruction) || selectedRegion.level <= 0}><ArrowDownRight size={15} />降低一级</button>
+            <button className={currentOrder === 'hold' ? 'selected' : ''} onClick={() => onHold(selectedRegion.id)}><Minus size={15} />保持不变</button>
+            <button className={`${currentOrder === 'expand' ? 'selected' : ''} ${recentAuto && lastAutomatedAction?.mode === 'expand' ? 'auto-feedback' : ''}`} onClick={() => onUpgrade(selectedRegion.id, 'expand')} disabled={selectedFixed || Boolean(activeConstruction) || !selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />增加一级</button>
+            <button className={currentOrder === 'expand-continuous' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand-continuous')} disabled={selectedFixed || Boolean(activeConstruction) || !selectedBuildable || selectedRegion.level >= selectedRegion.max || !affordExpansion}><ArrowUpRight size={15} />持续增加</button>
+          </div>
+        </div>
+        <div className="detail-command-ledger">
+          <div><span>扩建成本</span><ResourceBundle bundle={selectedCost} empty="无需成本" /></div>
+          <div><span>{optimizerDisabled ? '调度模式' : '自动建议'}</span><b>{automationSuggestionLabel}</b></div>
+          <div><span>人口</span><b>{allocatedPopulation}/{fmt(resources.population)} 已用，空余 {fmt(freePopulation)}</b></div>
+        </div>
+        <div className={`operation-progress operation-${currentOrder}`} title={operationProgressTitle}><span style={{ width: `${operationProgress}%` }} /><small>{operationProgressLabel}</small></div>
+        <div className="detail-facts">
+          <div><span>运作修正</span>{bonusSources.slice(0, 4).map(item => <b key={item}>{item}</b>)}</div>
+          <div><span>建设链</span><b>{parents.length ? parents.join('、') : '基础节点'}</b><b>{selectedBuildable ? '已授权' : `缺少 ${selectedRequiredTech?.name ?? selectedSpec.requiredTech}`}</b></div>
+          {workerSlot && <div className="worker-mini"><span>{workerSlot.glyph}</span><p><b>{workerSlot.title}</b><small>{workerSlot.note}</small></p><button onClick={workerSlot.onClick}>{workerSlot.action}</button></div>}
+        </div>
+      </section>
+    </div>
   </aside>
 }
 
