@@ -59,6 +59,20 @@ import {
 } from './events'
 import { createDisabledAutomationPlan, gameOptimizers, type OptimizerId } from './optimizers'
 import { Button, IconButton, PortraitSlot, ProgressLine } from './components/ui'
+import {
+  ConstructionDaysPill,
+  CostResourceList,
+  FlowArrowSvg,
+  ProductionFlow,
+  ResourceAtom,
+  ResourceBundle,
+  ResourceDeltaRows,
+  ResourceSymbolStrip,
+  resourceUiMeta,
+} from './components/resources'
+import { LetterActions, Modal, SectionHeading, TabNav } from './components/layout'
+import { ReignReportModal, SettingsPanel, StartGate } from './components/business'
+import { fmtCompactAmount, fmtSignedCompactAmount } from './utils/format'
 import { PlanetScene, planetTextures } from './PlanetScene'
 import charChenlin from './assets/char-chenlin.jpg'
 import buildingKing from './assets/building-king.png'
@@ -82,88 +96,11 @@ const visitorPortraits: Record<string, string> = {
   atya: visitorAtya,
 }
 
-type AppView = 'facilities' | 'palace' | 'research' | 'ecology' | 'starport' | 'ship' | 'visitors'
+import type { AppView, ConstructionProject, FacilityOrderMode, GameSaveState, ReignReport, ReignReportBaseline, RegionId, StaffingPriority } from './types/game'
+
 type Icon = ComponentType<LucideProps>
-type RegionId = FacilityId
-type FacilityOrderMode = 'shrink-continuous' | 'shrink' | 'hold' | 'expand' | 'expand-continuous'
-type StaffingPriority = 1 | 2 | 3 | 4 | 5
 type FacilityEra = 'early' | 'mid' | 'late'
 type TechnologyEra = 'early' | 'mid' | 'late'
-
-type ReignReport = {
-  id: string
-  startDay: number
-  endDay: number
-  monthNumber: number
-  populationStart: number
-  populationEnd: number
-  populationDelta: number
-  housingCapacity: number
-  gdp: number
-  gdpDelta: number
-  resourceRows: Partial<Record<ResourceKey, { produced: number; consumed: number; net: number }>>
-  suggestions: string[]
-}
-
-type ReignReportBaseline = {
-  day: number
-  resources: Resources
-  gdp: number
-}
-
-type ConstructionProject = {
-  mode: 'expand' | 'shrink'
-  startedDay: number
-  completeDay: number
-  fromLevel: number
-  toLevel: number
-  cost: Partial<Resources>
-}
-
-type GameSaveState = {
-  version: 4 | 5 | 6
-  savedAt: string
-  gameStarted: boolean
-  resources: Resources
-  regionLevels: Record<RegionId, number>
-  day: number
-  isRunning: boolean
-  speed: 'normal' | 'fast'
-  view: AppView
-  selected: RegionId
-  planetDocked: boolean
-  detailOpen: boolean
-  planetTextureId: string
-  visitor: Encounter | null
-  roster: Role[]
-  assigned: Record<RegionId, string | undefined>
-  chainProgress: Record<string, number>
-  techs: string[]
-  activeResearch: TechnologyId
-  researchProgress: Partial<Record<TechnologyId, number>>
-  productionMethods: Record<RegionId, ProductionMethodId>
-  staffing: Record<RegionId, number>
-  staffingPriorities?: Record<RegionId, StaffingPriority>
-  facilityOrders: Record<RegionId, FacilityOrderMode>
-  facilityOrderStarted: Record<RegionId, number>
-  construction: Record<RegionId, ConstructionProject | null>
-  populationPressureDays: number
-  activeOptimizerId: OptimizerId | 'none'
-  autoTradeProtectionEnabled?: boolean
-  autoTradeEnabled?: Partial<Record<ResourceKey, boolean>>
-  tradeSourcedResources?: Partial<Record<ResourceKey, boolean>>
-  lastAutomatedAction: { id: RegionId; day: number; mode: FacilityOrderMode } | null
-  policy: 'ration'
-  policyLastChangedDay: number
-  policyReportStartedDay: number
-  policyReportBaseline: Resources
-  lastPolicyReport: unknown
-  reignReportBaseline: ReignReportBaseline
-  lastReignReport: ReignReport | null
-  activeReignReport: ReignReport | null
-  log: string[]
-  pendingMonthlyReport: string | null
-}
 
 type SpecialFacilityViewModel = {
   region: Region
@@ -344,20 +281,6 @@ const specialFacilityViews: Partial<Record<RegionId, AppView>> = {
   D: 'ship',
 }
 
-const resourceUiMeta: Record<ResourceKey, { label: string; icon: Icon; tone: string }> = {
-  power: { label: resourceMeta.power.label, icon: Zap, tone: 'gold' },
-  water: { label: resourceMeta.water.label, icon: Droplet, tone: 'cyan' },
-  oxygen: { label: resourceMeta.oxygen.label, icon: CircleDot, tone: 'cyan' },
-  biomass: { label: resourceMeta.biomass.label, icon: Sprout, tone: 'green' },
-  regolith: { label: resourceMeta.regolith.label, icon: Mountain, tone: 'ochre' },
-  alloy: { label: resourceMeta.alloy.label, icon: Factory, tone: 'slate' },
-  quantumCore: { label: '核心', icon: Orbit, tone: 'violet' },
-  currency: { label: '货币', icon: Coins, tone: 'gold' },
-  population: { label: resourceMeta.population.label, icon: Users, tone: 'coral' },
-  knowledge: { label: resourceMeta.knowledge.label, icon: FlaskConical, tone: 'violet' },
-  luxury: { label: '奢侈', icon: Sparkles, tone: 'violet' },
-}
-
 const researchEraSections: { id: TechnologyEra; label: string; note: string }[] = [
   { id: 'early', label: '前期', note: '维持月面闭环与第一批生产方式。' },
   { id: 'mid', label: '中期', note: '打开工业、贸易、生态和外星接口。' },
@@ -382,15 +305,6 @@ const researchableTechIds = Object.values(technologyCatalog)
 
 const fmt = (value: number) => Math.round(value).toLocaleString('zh-CN')
 const fmtAmount = (value: number) => Number.isInteger(value) ? fmt(value) : value.toFixed(1)
-const fmtCompactAmount = (value: number) => {
-  const abs = Math.abs(value)
-  const sign = value < 0 ? '-' : ''
-  if (abs > 1_000_000_000) return `${sign}${Math.round(abs / 1_000_000_000)}B`
-  if (abs > 100_000) return `${sign}${Math.round(abs / 100_000)}M`
-  if (abs > 1_000) return `${sign}${Math.round(abs / 1_000)}K`
-  return fmtAmount(value)
-}
-const fmtSignedCompactAmount = (value: number) => `${value >= 0 ? '+' : ''}${fmtCompactAmount(value)}`
 const canPay = canAfford
 const apply = applyBundle
 const musicSource = '/audio/Gravity_s_Edge.mp3'
@@ -537,105 +451,6 @@ const completedTechnologyIds = (techs: string[]) =>
 const hasResearchPrerequisites = (techId: TechnologyId, techs: string[]) =>
   (technologyCatalog[techId].prerequisites ?? []).every(prerequisite => hasTech(techs, prerequisite))
 const techLabel = (techId: TechnologyId) => technologyCatalog[techId]?.name ?? techId
-
-function ResourceAtom({ resourceKey, value, net, detail, actionLabel, onAction, compact = false, signed = true, subValue }: { resourceKey: ResourceKey; value: number; net?: number; detail?: string; actionLabel?: string; onAction?: () => void; compact?: boolean; signed?: boolean; subValue?: string; subLabel?: string }) {
-  const meta = resourceUiMeta[resourceKey]
-  const ResourceIcon = meta.icon
-  return <span className={`resource-atom tone-${meta.tone} ${compact ? 'compact' : ''}`}>
-    <ResourceIcon className={meta.tone} size={compact ? 13 : 17} />
-    <span className="resource-atom-content">
-      <small className="resource-label">{meta.label}</small>
-      <span className="resource-main-value">
-        <strong className={value < 0 ? 'negative' : ''}>{value > 0 && compact && signed ? '+' : ''}{fmtCompactAmount(value)}</strong>
-        {subValue !== undefined && <small className="resource-sub-value">{subValue}</small>}
-      </span>
-      {net !== undefined && <small className={`resource-net ${net < 0 ? 'negative' : ''}`}>{fmtSignedCompactAmount(net)}/日</small>}
-      {detail && !compact && <small className="resource-detail">{detail}</small>}
-    </span>
-    {actionLabel && !compact && <button type="button" className="resource-inline-action" onClick={onAction}>{actionLabel}</button>}
-  </span>
-}
-
-function ResourceBundle({ bundle, empty = '无', signed = true, boxedEmpty = false }: { bundle: Partial<Resources>; empty?: string; signed?: boolean; boxedEmpty?: boolean }) {
-  const entries = resourceOrder.filter(key => bundle[key])
-  if (!entries.length) return <span className={boxedEmpty ? 'resource-empty boxed' : 'resource-empty'}>{empty}</span>
-  return <span className="resource-bundle">
-    {entries.map(key => <ResourceAtom key={key} resourceKey={key} value={bundle[key] ?? 0} compact signed={signed} />)}
-  </span>
-}
-
-function ResourceDeltaRows({ input, output, inputEmpty = '无输入', outputEmpty = '无产出' }: { input: Partial<Resources>; output: Partial<Resources>; inputEmpty?: string; outputEmpty?: string }) {
-  return <div className="resource-delta-stack">
-    <div className="resource-delta-row consumption"><span aria-hidden="true">-</span><ResourceBundle bundle={input} empty={inputEmpty} signed={false} boxedEmpty /></div>
-    <div className="resource-delta-row production"><span aria-hidden="true">+</span><ResourceBundle bundle={output} empty={outputEmpty} signed={false} boxedEmpty /></div>
-  </div>
-}
-
-function ConstructionDaysPill({ days }: { days: number }) {
-  return <span className="construction-days-pill" aria-label={`周期 ${days} 御日`} title={`周期 ${days} 御日`}>
-    <Clock size={13} />
-    <strong>{days}</strong>
-  </span>
-}
-
-function CostResourceList({ bundle, baseBundle, empty = '无' }: { bundle: Partial<Resources>; baseBundle?: Partial<Resources>; empty?: string }) {
-  const entries = resourceOrder.filter(key => bundle[key])
-  if (!entries.length) return <span className="resource-empty">{empty}</span>
-  return <span className="cost-resource-list">
-    {entries.map(key => {
-      const value = bundle[key] ?? 0
-      const baseValue = baseBundle?.[key] ?? value
-      const delta = baseValue - value
-      return <span key={key} className="cost-resource-item">
-        <ResourceAtom resourceKey={key} value={value} compact signed={false} />
-        {delta > 0 && <small>(-{fmtCompactAmount(delta)})</small>}
-      </span>
-    })}
-  </span>
-}
-
-function ResourceSymbolStrip({ bundle, empty = '无' }: { bundle: Partial<Resources>; empty?: string }) {
-  const entries = resourceOrder.filter(key => bundle[key])
-  if (!entries.length) return <span className="symbol-empty">{empty}</span>
-  return <span className="resource-symbol-strip">
-    {entries.map(key => {
-      const meta = resourceUiMeta[key]
-      const ResourceIcon = meta.icon
-      const value = bundle[key] ?? 0
-      return <span key={key} className="resource-symbol-item" title={`${meta.label} ${fmtCompactAmount(value)}`}>
-        <ResourceIcon className={meta.tone} size={13} />
-        <small className={value < 0 ? 'negative' : ''}>{fmtCompactAmount(value)}</small>
-      </span>
-    })}
-  </span>
-}
-
-function ProductionFlow({ input, output }: { input: Partial<Resources>; output: Partial<Resources> }) {
-  return <div className="production-flow">
-    <div><small>输入</small><ResourceBundle bundle={input} empty="无输入" /></div>
-    <FlowArrowSvg />
-    <div><small>输出</small><ResourceBundle bundle={output} empty="无输出" /></div>
-  </div>
-}
-
-function FlowArrowSvg({ className = 'flow-arrow-svg', kind = 'arrow' }: { className?: string; kind?: 'arrow' | 'multiply' | 'equals' }) {
-  if (kind === 'multiply') {
-    return <svg className={className} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M6 6l12 12" />
-      <path d="M18 6L6 18" />
-    </svg>
-  }
-  if (kind === 'equals') {
-    return <svg className={className} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M5 9h14" />
-      <path d="M5 15h14" />
-    </svg>
-  }
-  return <svg className={className} viewBox="0 0 56 18" aria-hidden="true" focusable="false">
-    <path d="M2 9h43" />
-    <path d="M38 3l9 6-9 6" />
-  </svg>
-}
 
 const throughputClass = (rate: number) => rate >= 1.1 ? 'surged' : rate >= 0.8 ? 'steady' : rate > 0 ? 'thin' : 'idle'
 const orderLabel = (mode: FacilityOrderMode) => {
@@ -1474,7 +1289,7 @@ function App() {
 
     {activeReignReport && <ReignReportModal report={activeReignReport} onClose={() => setActiveReignReport(null)} />}
 
-    {visitor && <div className="event-scrim" role="presentation"><section className="diplomatic-letter event-modal" aria-live="polite" aria-modal="true" role="dialog">
+    {visitor && <Modal scrimClassName="event-scrim" panelClassName="diplomatic-letter event-modal" ariaLabel="深空来讯" ariaLive="polite">
       <PortraitSlot src={visitorPortraits[visitor.id]} alt={visitor.name} aria-label="访客肖像" />
       <div className="letter-copy">
         <div className="event-transmission-head">
@@ -1491,9 +1306,13 @@ function App() {
           <div><b>留任</b><ResourceBundle bundle={visitor.retainerCost} /></div>
         </div>}
       </div>
-      <div className="letter-actions"><button onClick={dismiss}>礼送</button><button onClick={acceptTrade} disabled={!canPay(resources, visitor.offer.take) || Boolean(visitor.offer.give.population && (populationProjection.availableCapacity < visitor.offer.give.population || populationProjection.lifeSupportRatio < 1))}>{visitor.event.interaction === 'gift' ? '收下' : visitor.event.interaction === 'accident' ? '接入' : visitor.event.interaction === 'request' ? '准许' : '交换'}</button><button className="primary" onClick={employ} disabled={!canPay(resources, visitor.retainerCost)}>留任</button></div>
+      <LetterActions>
+        <button onClick={dismiss}>礼送</button>
+        <button onClick={acceptTrade} disabled={!canPay(resources, visitor.offer.take) || Boolean(visitor.offer.give.population && (populationProjection.availableCapacity < visitor.offer.give.population || populationProjection.lifeSupportRatio < 1))}>{visitor.event.interaction === 'gift' ? '收下' : visitor.event.interaction === 'accident' ? '接入' : visitor.event.interaction === 'request' ? '准许' : '交换'}</button>
+        <button className="primary" onClick={employ} disabled={!canPay(resources, visitor.retainerCost)}>留任</button>
+      </LetterActions>
       <IconButton className="letter-close" label="关闭来函" onClick={dismiss}><X size={16} /></IconButton>
-    </section></div>}
+    </Modal>}
 
     <section className="page-content">
       {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={(methodId) => setProductionMethods(previous => ({ ...previous, [selectedRegion.id]: methodId }))} onAssignment={visitorId => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))} />}
@@ -1512,7 +1331,7 @@ function App() {
         <div className="scoreline gdp-line"><span>GDP</span><strong>{gdp.toFixed(1)}</strong><small>星海货币/日</small></div>
         <div className="scoreline"><span>国祚评分</span><strong>{score}</strong><small>星舰进度权重最高</small></div>
       </div>
-      <nav className="tab-nav" aria-label="底部系统菜单">{navItems.map(item => { const NavIcon = item.icon; return <button key={item.id} className={view === item.id ? 'active' : ''} style={{ '--tab-color': item.color } as React.CSSProperties} onClick={() => setView(item.id)}><NavIcon size={16} />{item.label}</button> })}</nav>
+      <TabNav items={navItems} activeId={view} onSelect={setView} />
       <div className="footer-row footer-row-right">
         <div className="time-dock" aria-label="时间控制">
           <button className="time-control-btn" onClick={() => setSpeed(speed === 'normal' ? 'fast' : 'normal')} aria-label="切换时间速度"><Gauge size={15} /><span>{speed === 'normal' ? '正常' : '加速'}</span></button>
@@ -1521,118 +1340,6 @@ function App() {
       </div>
     </footer>
   </main>
-}
-
-function StartGate({ planetTexture, onStart }: { planetTexture: typeof planetTextures[number]; onStart: () => void }) {
-  return <main className="start-gate">
-    <section className="start-orbit" aria-label="殖民星球预览">
-      <PlanetScene texture={planetTexture} onActivate={onStart} />
-    </section>
-    <section className="start-console" aria-label="开始游戏">
-      <div className="brand-seal"><Crown size={25} /></div>
-      <span className="eyebrow">月面主权局 · 1000御日试验</span>
-      <h1>月冠纪元</h1>
-      <p>在第一个御日签发殖民诏令。资源会自动结算，设施、科技、贸易、王月报告与星舰共同决定国祚。</p>
-      <div className="start-facts">
-        <span><Orbit size={14} />{planetTexture.name}</span>
-        <span><Rocket size={14} />终局星舰</span>
-        <span><Landmark size={14} />政务舱</span>
-      </div>
-      <Button variant="primary" onClick={onStart}><Play size={16} />开始执政</Button>
-    </section>
-  </main>
-}
-
-function ReignReportModal({ report, onClose }: { report: ReignReport; onClose: () => void }) {
-  const rows = resourceOrder.filter(key => report.resourceRows[key])
-  const positiveGdp = report.gdpDelta > 0
-  const populationDelta = report.populationDelta >= 0 ? `+${fmtAmount(report.populationDelta)}` : fmtAmount(report.populationDelta)
-  const gdpDelta = report.gdpDelta === 0 ? '0.0' : `${positiveGdp ? '+' : ''}${report.gdpDelta.toFixed(1)}`
-
-  return <div className="reign-report-scrim" role="presentation">
-    <section className="reign-report-modal" role="dialog" aria-modal="true" aria-label="王月报告">
-      <header>
-        <div>
-          <span className="eyebrow">{gameCalendar.monthName} {report.monthNumber} · {formatDay(report.startDay)} 至 {formatDay(report.endDay)}</span>
-          <h2>王月报告</h2>
-        </div>
-        <IconButton label="关闭王月报告" onClick={onClose}><X size={16} /></IconButton>
-      </header>
-
-      <div className="reign-report-kpis">
-        <div><span>人口变化</span><strong>{populationDelta}</strong><small>{fmt(report.populationEnd)}/{fmtAmount(report.housingCapacity)} 人</small></div>
-        <div><span>GDP</span><strong>{report.gdp.toFixed(1)}</strong><small className={report.gdpDelta < 0 ? 'negative' : ''}>{gdpDelta} 星海货币/日</small></div>
-        <div><span>阶段长度</span><strong>{report.endDay - report.startDay + 1}</strong><small>御日，50 御日为一王月</small></div>
-      </div>
-
-      <div className="reign-report-grid">
-        <section>
-          <h3>每日产消</h3>
-          <div className="reign-resource-table">
-            {rows.map(key => {
-              const row = report.resourceRows[key]!
-              return <div key={key}>
-                <span>{resourceMeta[key].label}</span>
-                <b>{row.produced ? fmtAmount(row.produced) : '0'}</b>
-                <b>{row.consumed ? fmtAmount(row.consumed) : '0'}</b>
-                <b className={row.net < 0 ? 'negative' : ''}>{row.net > 0 ? '+' : ''}{fmtAmount(row.net)}</b>
-              </div>
-            })}
-          </div>
-        </section>
-
-        <section>
-          <h3>下个王月方向</h3>
-          <ol className="reign-suggestion-list">
-            {report.suggestions.map(item => <li key={item}>{item}</li>)}
-          </ol>
-        </section>
-      </div>
-
-      <footer>
-        <Button variant="primary" onClick={onClose}><Play size={15} />回到手动决策</Button>
-      </footer>
-    </section>
-  </div>
-}
-
-function SettingsPanel({ volume, saveStatus, autoTradeProtectionEnabled, onAutoTradeProtection, onVolume, onContinue, onSave, onLoad, onExit }: { volume: number; saveStatus: string; autoTradeProtectionEnabled: boolean; onAutoTradeProtection: (enabled: boolean) => void; onVolume: (volume: number) => void; onContinue: () => void; onSave: () => void; onLoad: () => void; onExit: () => void }) {
-  return <div className="settings-scrim" role="presentation" onPointerDown={onContinue}>
-    <aside className="settings-panel" role="dialog" aria-modal="true" aria-label="游戏设置" onPointerDown={event => event.stopPropagation()}>
-      <header>
-        <div><span className="eyebrow">系统</span><h2>设置</h2></div>
-        <IconButton label="关闭设置" onClick={onContinue}><X size={16} /></IconButton>
-      </header>
-
-      <section className="settings-section">
-        <div className="settings-section-title"><Volume2 size={16} /><span>音乐</span><strong>{Math.round(volume * 100)}%</strong></div>
-        <input type="range" min="0" max="100" value={Math.round(volume * 100)} onChange={event => onVolume(Number(event.target.value) / 100)} aria-label="游戏音乐音量" />
-      </section>
-
-      <section className="settings-section">
-        <label className="settings-toggle">
-          <span><ArrowLeftRight size={16} />自动购入保护</span>
-          <input type="checkbox" checked={autoTradeProtectionEnabled} onChange={event => onAutoTradeProtection(event.target.checked)} />
-          <i aria-hidden="true" />
-        </label>
-        <small>{autoTradeProtectionEnabled ? '赤字时允许星海交易港限量信用采购。' : '已关闭赤字兜底，库存短缺将交给玩家或优化器处理。'}</small>
-      </section>
-
-      <section className="settings-section">
-        <div className="settings-section-title"><Save size={16} /><span>存档读档</span></div>
-        <div className="settings-actions">
-          <button onClick={onSave}><Save size={15} />存档</button>
-          <button onClick={onLoad}><FolderOpen size={15} />读档</button>
-        </div>
-        <small>{saveStatus}</small>
-      </section>
-
-      <section className="settings-actions settings-main-actions">
-        <Button variant="primary" onClick={onContinue}><Play size={15} />继续游戏</Button>
-        <button onClick={onExit}><LogOut size={15} />退出游戏</button>
-      </section>
-    </aside>
-  </div>
 }
 
 function PlanetFacilities({ regions, selected, year, techs, productionMethods, facilityOrders, facilityOrderStarted, construction, populationProjection, staffing, staffingPriorities, allocatedPopulation, freePopulation, facilityModifiers, lastAutomatedAction, roster, assigned, selectedRegion, selectedCost, resources, dailyNet, automationPlan, planetTexture, docked, detailOpen, onDock, onBack, onSelect, onUpgrade, onHold, onShrink, onPriority, onMethod, onAssignment }: { regions: Region[]; selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; facilityOrders: Record<RegionId, FacilityOrderMode>; facilityOrderStarted: Record<RegionId, number>; construction: Record<RegionId, ConstructionProject | null>; populationProjection: PopulationProjection; staffing: Record<RegionId, number>; staffingPriorities: Record<RegionId, StaffingPriority>; allocatedPopulation: number; freePopulation: number; facilityModifiers: Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>; lastAutomatedAction: { id: RegionId; day: number; mode: FacilityOrderMode } | null; roster: Role[]; assigned: Record<RegionId, string | undefined>; selectedRegion: Region; selectedCost: Partial<Resources>; resources: Resources; dailyNet: Partial<Resources>; automationPlan: AutomationPlan; planetTexture: typeof planetTextures[number]; docked: boolean; detailOpen: boolean; onDock: () => void; onBack: () => void; onSelect: (id: RegionId) => void; onUpgrade: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'expand' | 'expand-continuous'>) => void; onHold: (id: RegionId) => void; onShrink: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'shrink' | 'shrink-continuous'>) => void; onPriority: (id: RegionId, priority: StaffingPriority) => void; onMethod: (methodId: ProductionMethodId) => void; onAssignment: (visitorId: string | undefined) => void }) {
@@ -1660,7 +1367,7 @@ function PlanetFacilities({ regions, selected, year, techs, productionMethods, f
 
 function FacilityList({ regions, selected, year, techs, productionMethods, facilityOrders, construction, staffing, facilityModifiers, assigned, roster, residentsByFacility, onSelect, onUpgrade }: { regions: Region[]; selected: RegionId; year: number; techs: string[]; productionMethods: Record<RegionId, ProductionMethodId>; facilityOrders: Record<RegionId, FacilityOrderMode>; construction: Record<RegionId, ConstructionProject | null>; staffing: Record<RegionId, number>; facilityModifiers: Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>; assigned: Record<RegionId, string | undefined>; roster: Role[]; residentsByFacility: Partial<Record<RegionId, number>>; onSelect: (id: RegionId) => void; onUpgrade: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'expand' | 'expand-continuous'>) => void }) {
   return <section className="facility-ledger">
-    <div className="section-heading"><div><span className="eyebrow">主要设施</span><h2>建筑名录</h2></div><p>D/R/S/K/L 进入专属系统页。</p></div>
+    <SectionHeading eyebrow="主要设施" title="建筑名录" description="D/R/S/K/L 进入专属系统页。" />
     <div className="facility-era-list">{facilityEraSections.map(section => {
       const sectionRegions = regions.filter(region => facilityEra[region.id] === section.id)
       return <section key={section.id} className="facility-era-section">
@@ -2033,7 +1740,7 @@ function ResearchLab({ facility, techs, activeResearch, researchProgress, resear
       </div>
     </SpecialFacilityPanel>
     <section className="special-system-main technology-workbench">
-      <div className="section-heading"><div><span className="eyebrow">L 问天研究实验室</span><h2>科技树</h2></div><p>从左到右按阶段推进，卡片只显示玩家需要判断的信息。</p></div>
+      <SectionHeading eyebrow="L 问天研究实验室" title="科技树" description="从左到右按阶段推进，卡片只显示玩家需要判断的信息。" />
       <div
         ref={treeScrollRef}
         className={`technology-tree-scroll ${treeDragging ? 'dragging' : ''}`}
@@ -2066,7 +1773,7 @@ function EcologyRing({ facility, onSelectFacility }: { facility: SpecialFacility
     <SpecialFacilityPanel facility={facility} tone="ecology" onSelectFacility={onSelectFacility}>
       <div className="special-panel-brief"><Waves size={16} /><span>生态环按阶段改变生态、人口与工业结构，阶段信息直接影响后续设施与人口包。</span></div>
     </SpecialFacilityPanel>
-    <section className="special-system-main phase-list"><div className="section-heading"><div><span className="eyebrow">R 月穹生态环</span><h2>生态阶段</h2></div><p>阶段不是装饰文本，是设施和人口经济的条件。</p></div>{facility.region.phaseNotes?.map(phase => <p key={phase.name}><b>{phase.name}</b><span>{displayCopy(phase.note)}</span></p>)}</section>
+    <section className="special-system-main phase-list"><SectionHeading eyebrow="R 月穹生态环" title="生态阶段" description="阶段不是装饰文本，是设施和人口经济的条件。" />{facility.region.phaseNotes?.map(phase => <p key={phase.name}><b>{phase.name}</b><span>{displayCopy(phase.note)}</span></p>)}</section>
   </div>
 }
 
@@ -2081,7 +1788,7 @@ function Starport({ facility, resources, populationProjection, techs, autoTradeP
       <div className="special-panel-brief"><ArrowLeftRight size={16} /><span>星港为固定贸易节点，不占用人口、不扩建等级；信用采购允许货币为负，债务每天计息。</span></div>
     </SpecialFacilityPanel>
     <section className="special-system-main trade-board">
-      <div className="section-heading"><div><span className="eyebrow">S 星海交易港</span><h2>贸易清单</h2></div><InfoToggle title="贸易规则"><p>交易立即结算库存。自动保护只会补足赤字与安全线，不会替玩家出售自产盈余。</p></InfoToggle></div>
+      <SectionHeading eyebrow="S 星海交易港" title="贸易清单"><InfoToggle title="贸易规则"><p>交易立即结算库存。自动保护只会补足赤字与安全线，不会替玩家出售自产盈余。</p></InfoToggle></SectionHeading>
       <label className="trade-protection-toggle">
         <span><ArrowLeftRight size={16} />自动购入保护</span>
         <input type="checkbox" checked={autoTradeProtectionEnabled} onChange={event => onProtection(event.target.checked)} />
@@ -2130,7 +1837,7 @@ function Shipyard({ facility, shipProgress, score, onSelectFacility }: { facilit
     <SpecialFacilityPanel facility={facility} tone="shipyard" onSelectFacility={onSelectFacility}>
       <div className="special-panel-brief"><Rocket size={16} /><span>千日试验以星舰完成度为核心结算，阶段投入会直接决定终局评分。</span></div>
     </SpecialFacilityPanel>
-    <section className="special-system-main ship-meter"><div className="section-heading"><div><span className="eyebrow">D 冠冕星舰坞</span><h2>御座号工程</h2></div><p>材料总价值 {Math.round(shipProjectTotalValue)}，当前国祚评分 {score}。</p></div><strong>{shipProgress}<small>%</small></strong><div className="ship-progress"><i style={{ width: `${shipProgress}%` }} /></div><div className="ship-stage-list">{shipProjectStages.map(stage => <article key={stage.id}><b>{stage.id}. {stage.name}</b><ResourceBundle bundle={stage.input} /><small>{stage.note}</small></article>)}</div></section>
+    <section className="special-system-main ship-meter"><SectionHeading eyebrow="D 冠冕星舰坞" title="御座号工程" description={`材料总价值 ${Math.round(shipProjectTotalValue)}，当前国祚评分 ${score}。`} /><strong>{shipProgress}<small>%</small></strong><div className="ship-progress"><i style={{ width: `${shipProgress}%` }} /></div><div className="ship-stage-list">{shipProjectStages.map(stage => <article key={stage.id}><b>{stage.id}. {stage.name}</b><ResourceBundle bundle={stage.input} /><small>{stage.note}</small></article>)}</div></section>
   </div>
 }
 
@@ -2171,10 +1878,7 @@ function Palace({ facility, day, lastReignReport, onOpenReport }: { facility: Sp
     </section>
 
     <section className="policy-board palace-report-board">
-      <div className="section-heading">
-        <div><span className="eyebrow">王城档案库</span><h2>{gameCalendar.monthName}报告</h2></div>
-        <p>{lastReignReport ? `${formatDay(lastReignReport.startDay)} 至 ${formatDay(lastReignReport.endDay)}` : '等待归档。'}</p>
-      </div>
+      <SectionHeading eyebrow="王城档案库" title={`${gameCalendar.monthName}报告`} description={lastReignReport ? `${formatDay(lastReignReport.startDay)} 至 ${formatDay(lastReignReport.endDay)}` : '等待归档。'} />
       {lastReignReport ? <>
       <div className="policy-status palace-report-kpis">
         <div><span>人口变化</span><strong>{populationDelta}</strong><small>{fmt(lastReignReport.populationEnd)}/{fmtAmount(lastReignReport.housingCapacity)} 人</small></div>
