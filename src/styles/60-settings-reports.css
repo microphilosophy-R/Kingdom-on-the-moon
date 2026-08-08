@@ -1360,7 +1360,8 @@
   overflow: visible;
   border: 0;
   border-radius: 0;
-  padding: .18rem 0;
+  margin: 0;
+  padding: 0;
   background: transparent;
 }
 
@@ -1372,9 +1373,11 @@
   gap: .3rem;
   min-height: 26px;
   padding: .15rem .5rem;
-  border: 1px solid color-mix(in oklab, var(--ui-brass) 38%, var(--ui-line));
+  border-width: 0px;
+  border-style: solid;
+  border-color: #000000;
   border-radius: 5px;
-  background: color-mix(in oklab, var(--ui-brass-soft) 45%, transparent);
+  background-color: rgba(0, 94, 0, 0);
   color: var(--ui-ink);
   font-size: var(--font-label);
   font-weight: 600;
@@ -1383,8 +1386,8 @@
   align-self: stretch;
 }
 .rail-collapse-toggle:hover {
-  background: color-mix(in oklab, var(--ui-brass-soft) 75%, transparent);
-  border-color: var(--ui-brass);
+  background-color: rgba(0, 94, 0, 0);
+  border-color: #000000;
 }
 .rail-collapse-toggle .rail-toggle-label {
   font-size: var(--font-label);

@@ -58,6 +58,7 @@ import {
   type Role,
 } from './events'
 import { createDisabledAutomationPlan, gameOptimizers, type OptimizerId } from './optimizers'
+import { Button, IconButton, PortraitSlot, ProgressLine } from './components/ui'
 import { PlanetScene, planetTextures } from './PlanetScene'
 import charChenlin from './assets/char-chenlin.jpg'
 import buildingKing from './assets/building-king.png'
@@ -591,10 +592,6 @@ function CostResourceList({ bundle, baseBundle, empty = '无' }: { bundle: Parti
       </span>
     })}
   </span>
-}
-
-function ProgressLine({ value, label }: { value: number; label: string }) {
-  return <div className="detail-progress-line"><span style={{ width: `${Math.max(0, Math.min(100, value))}%` }} /><small>{label}</small></div>
 }
 
 function ResourceSymbolStrip({ bundle, empty = '无' }: { bundle: Partial<Resources>; empty?: string }) {
@@ -1478,9 +1475,7 @@ function App() {
     {activeReignReport && <ReignReportModal report={activeReignReport} onClose={() => setActiveReignReport(null)} />}
 
     {visitor && <div className="event-scrim" role="presentation"><section className="diplomatic-letter event-modal" aria-live="polite" aria-modal="true" role="dialog">
-      <div className="visitor-portrait-slot" aria-label="访客肖像">
-        <img src={visitorPortraits[visitor.id]} alt={visitor.name} />
-      </div>
+      <PortraitSlot src={visitorPortraits[visitor.id]} alt={visitor.name} aria-label="访客肖像" />
       <div className="letter-copy">
         <div className="event-transmission-head">
           <span>深空来讯</span>
@@ -1497,7 +1492,7 @@ function App() {
         </div>}
       </div>
       <div className="letter-actions"><button onClick={dismiss}>礼送</button><button onClick={acceptTrade} disabled={!canPay(resources, visitor.offer.take) || Boolean(visitor.offer.give.population && (populationProjection.availableCapacity < visitor.offer.give.population || populationProjection.lifeSupportRatio < 1))}>{visitor.event.interaction === 'gift' ? '收下' : visitor.event.interaction === 'accident' ? '接入' : visitor.event.interaction === 'request' ? '准许' : '交换'}</button><button className="primary" onClick={employ} disabled={!canPay(resources, visitor.retainerCost)}>留任</button></div>
-      <button className="letter-close" onClick={dismiss} aria-label="关闭来函"><X size={16} /></button>
+      <IconButton className="letter-close" label="关闭来函" onClick={dismiss}><X size={16} /></IconButton>
     </section></div>}
 
     <section className="page-content">
@@ -1543,7 +1538,7 @@ function StartGate({ planetTexture, onStart }: { planetTexture: typeof planetTex
         <span><Rocket size={14} />终局星舰</span>
         <span><Landmark size={14} />政务舱</span>
       </div>
-      <button className="primary-action" onClick={onStart}><Play size={16} />开始执政</button>
+      <Button variant="primary" onClick={onStart}><Play size={16} />开始执政</Button>
     </section>
   </main>
 }
@@ -1561,7 +1556,7 @@ function ReignReportModal({ report, onClose }: { report: ReignReport; onClose: (
           <span className="eyebrow">{gameCalendar.monthName} {report.monthNumber} · {formatDay(report.startDay)} 至 {formatDay(report.endDay)}</span>
           <h2>王月报告</h2>
         </div>
-        <button className="icon-button" onClick={onClose} aria-label="关闭王月报告"><X size={16} /></button>
+        <IconButton label="关闭王月报告" onClick={onClose}><X size={16} /></IconButton>
       </header>
 
       <div className="reign-report-kpis">
@@ -1595,7 +1590,7 @@ function ReignReportModal({ report, onClose }: { report: ReignReport; onClose: (
       </div>
 
       <footer>
-        <button className="primary-action" onClick={onClose}><Play size={15} />回到手动决策</button>
+        <Button variant="primary" onClick={onClose}><Play size={15} />回到手动决策</Button>
       </footer>
     </section>
   </div>
@@ -1606,7 +1601,7 @@ function SettingsPanel({ volume, saveStatus, autoTradeProtectionEnabled, onAutoT
     <aside className="settings-panel" role="dialog" aria-modal="true" aria-label="游戏设置" onPointerDown={event => event.stopPropagation()}>
       <header>
         <div><span className="eyebrow">系统</span><h2>设置</h2></div>
-        <button className="icon-button" onClick={onContinue} aria-label="关闭设置"><X size={16} /></button>
+        <IconButton label="关闭设置" onClick={onContinue}><X size={16} /></IconButton>
       </header>
 
       <section className="settings-section">
@@ -1633,7 +1628,7 @@ function SettingsPanel({ volume, saveStatus, autoTradeProtectionEnabled, onAutoT
       </section>
 
       <section className="settings-actions settings-main-actions">
-        <button className="primary-action" onClick={onContinue}><Play size={15} />继续游戏</button>
+        <Button variant="primary" onClick={onContinue}><Play size={15} />继续游戏</Button>
         <button onClick={onExit}><LogOut size={15} />退出游戏</button>
       </section>
     </aside>
@@ -1655,7 +1650,7 @@ function PlanetFacilities({ regions, selected, year, techs, productionMethods, f
       <div className="docked-orbit"><PlanetScene texture={planetTexture} compact onActivate={() => onBack()} /></div>
       <div className="planet-dock-copy"><span className="eyebrow">殖民星球</span><h2>{planetTexture.name}</h2><p>{formatDay(year)}，国祚仍在设施、报告与星舰之间被重新分配。</p></div>
       <aside className="king-profile">
-        <div className="king-portrait-slot"><img src={charChenlin} alt="陈林 · 月面王" /></div>
+        <PortraitSlot src={charChenlin} alt="陈林 · 月面王" className="king-portrait-slot" />
         <div><span className="eyebrow">玩家国王</span><h3>月冠执政者</h3><p>陈林，拓殖署基层公务员，被强行推上龙椅。真实目标是密造御座号归乡，而非追求繁荣。</p></div>
       </aside>
     </section>}
