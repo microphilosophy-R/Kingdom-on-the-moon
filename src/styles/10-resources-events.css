@@ -3,7 +3,7 @@
 }
 
 @media (max-width: 1100px) {
-  .resource-rail { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); }
+  .resource-rail { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
   .production-methods article,
   .action-facts,
   .diplomatic-letter.event-modal {
@@ -21,9 +21,7 @@
   .resource-rail { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .resource-rail > .resource-atom { min-height: 52px; }
   .resource-atom { padding: .35rem .4rem; gap: .3rem; }
-  .resource-atom-content .resource-label { display: block; font-size: var(--font-label); }
-  .resource-main-value strong { font-size: 14px; }
-  .resource-main-value .resource-sub-value { font-size: 10px; }
+  .resource-atom-content .resource-label { display: block; }
   .resource-atom-content .resource-net { font-size: 10px; }
   .resource-atom-content .resource-net-inline { font-size: 10px; }
   .resource-atom > svg { width: 14px; height: 14px; }

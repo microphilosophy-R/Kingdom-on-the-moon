@@ -74,7 +74,7 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     weight: 2.5,
   },
   biomass: {
-    label: '生物质',
+    label: '生物',
     category: 'life',
     source: '水培生态球、伊犁河谷、月穹生态环、星海交易港',
     coreUse: '生命维持、人口供给与生产。控制人口增长的关键阀门。',

@@ -225,7 +225,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示人口、税收与上一轮王月执行报告。',
     note: '月面王城是陈林的龙椅所在。它同时是人口建筑、税收来源和王月报告归档处。陈林大部分时间坐在这里，不是因为他想，是因为封君律不让他站起来。',
     productionMethods: [
-      { id: 'MK-1', name: '王城安置与税收', input: {}, output: {}, note: '前期人口容量建筑。每级提供 8 人口容量；居民生命维持、人口增长与税收由全局人口系统结算。' },
+      { id: 'MK-1', name: '王城安置与税收', input: { water: 0.4, oxygen: 0.3, biomass: 0.3 }, output: { population: 1.2, currency: 0.8 }, note: '前期人口容量建筑。居民生命维持消耗水、氧气和生物质；人口增长与税收由全局人口系统结算。' },
     ],
     phaseNotes: [
       { name: '人口', note: '月面王城是前期人口建筑。住进来的人都知道王上走不了，但他们自己半年后可以走。' },
@@ -273,7 +273,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '中期人口建筑。翡翠宫是月面上最不实用的东西——它消耗更多资源，但产出艺术奢侈品。陈林批准建造时，述职报告里写的是"文化软实力"，心里想的是"有朝一日能卖给罗莎"。',
     productionMethods: [
-      { id: 'MH-1', name: '宫廷居住与供养', input: {}, output: {}, note: '中期人口容量建筑。每级提供 16 人口容量；宫廷居民消耗更高，但会按居住人口产出艺术奢侈品。' },
+      { id: 'MH-1', name: '宫廷居住与供养', input: { water: 0.5, oxygen: 0.4, biomass: 0.5 }, output: { population: 1, luxury: 0.9 }, note: '中期人口容量建筑。宫廷居民消耗更高，但会按居住人口产出艺术奢侈品。' },
     ],
   },
   M: {
@@ -292,7 +292,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '后期人口建筑。新月府的生态居民包单位消耗更低，但需要月穹生态环完成后才能解锁。陈林在图纸上的批注是："先让月面能呼吸，再让人住得像人。"',
     productionMethods: [
-      { id: 'MM-1', name: '新月府生态居住', input: {}, output: {}, note: '后期人口容量建筑。每级提供 24 人口容量；生态居民生命维持消耗更低。' },
+      { id: 'MM-1', name: '新月府生态居住', input: { water: 0.2, oxygen: 0.2, biomass: 0.3 }, output: { population: 1.2 }, note: '后期人口容量建筑。生态居民生命维持消耗更低，人口增长由全局人口系统结算。' },
     ],
   },
   D: {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import {
-  ArrowDownRight, ArrowLeftRight, ArrowRight, ArrowUpRight, BookOpen, Bot, Check, ChevronLeft, ChevronRight, CircleDot, Crown, Droplet, Factory,
+  ArrowDownRight, ArrowLeftRight, ArrowRight, ArrowUpRight, BookOpen, Bot, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleDot, Clock, Crown, Droplet, Factory,
   Coins, FlaskConical, FolderOpen, Gauge, House, Info, Landmark, Leaf, Lock, LogOut, Minus, Mountain, Orbit,
   Pause, Pickaxe, Play, Rocket, Save, Settings, Sparkles, Sprout, Sun, Theater, Users, Volume2, Waves, X, Zap,
   type LucideProps,
@@ -570,8 +570,11 @@ function ResourceDeltaRows({ input, output, inputEmpty = '无输入', outputEmpt
   </div>
 }
 
-function MetricPill({ label, value, tone = 'neutral' }: { label: string; value: string; tone?: 'neutral' | 'success' | 'danger' }) {
-  return <span className={`metric-pill ${tone}`}><small>{label}</small><strong>{value}</strong></span>
+function ConstructionDaysPill({ days }: { days: number }) {
+  return <span className="construction-days-pill" aria-label={`周期 ${days} 御日`} title={`周期 ${days} 御日`}>
+    <Clock size={13} />
+    <strong>{days}</strong>
+  </span>
 }
 
 function CostResourceList({ bundle, baseBundle, empty = '无' }: { bundle: Partial<Resources>; baseBundle?: Partial<Resources>; empty?: string }) {
@@ -711,6 +714,7 @@ function App() {
   const [selected, setSelected] = useState<RegionId>('E1')
   const [planetDocked, setPlanetDocked] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [railCollapsed, setRailCollapsed] = useState(false)
   const [planetTexture, setPlanetTexture] = useState(() => planetTextures[Math.floor(Math.random() * planetTextures.length)])
   const [visitor, setVisitor] = useState<Encounter | null>(null)
   const [roster, setRoster] = useState<Role[]>([])
@@ -1435,29 +1439,41 @@ function App() {
 
     <audio ref={audioRef} src={musicSource} loop preload="auto" />
 
-    <section className="resource-rail" aria-label="王国库存">
-      {allResourceKeys.map(key => {
-        const value = key === 'power' ? dailyProduction.power : resources[key]
-        const canCancelAutoTrade = Boolean(autoTradeProtectionEnabled && tradeSourcedResources[key] && autoTradeEnabled[key] !== false && selfProducedSurplus[key])
-        const detail = canCancelAutoTrade ? '自产盈余，可停购' : undefined
-        const isPower = key === 'power'
-        const isPopulation = key === 'population'
-        const subValue = isPower
-          ? `/${fmtCompactAmount(dailyConsumption.power)}`
-          : isPopulation
-            ? `/${fmtSignedCompactAmount(dailyNet.population)}`
-            : `/${fmtSignedCompactAmount(dailyNet[key])}`
-        return <ResourceAtom
-          key={key}
-          resourceKey={key}
-          value={isPopulation ? allocatedPopulation : value}
-          detail={detail}
-          subValue={subValue}
-          actionLabel={canCancelAutoTrade ? '停购' : undefined}
-          onAction={canCancelAutoTrade ? () => setAutoTradeEnabled(previous => ({ ...previous, [key]: false })) : undefined}
-        />
-      })}
-    </section>
+    <div className={`resource-rail-wrapper${railCollapsed ? ' rail-collapsed' : ''}`}>
+      <button
+        type="button"
+        className="rail-collapse-toggle"
+        onClick={() => setRailCollapsed(previous => !previous)}
+        aria-expanded={!railCollapsed}
+        aria-label={railCollapsed ? '展开资源栏' : '收起资源栏'}
+      >
+        {railCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+        <span className="rail-toggle-label">{railCollapsed ? '展开库存' : '收起'}</span>
+      </button>
+      <section className="resource-rail" aria-label="王国库存">
+        {allResourceKeys.map(key => {
+          const value = key === 'power' ? dailyProduction.power : resources[key]
+          const canCancelAutoTrade = Boolean(autoTradeProtectionEnabled && tradeSourcedResources[key] && autoTradeEnabled[key] !== false && selfProducedSurplus[key])
+          const detail = canCancelAutoTrade ? '自产盈余，可停购' : undefined
+          const isPower = key === 'power'
+          const isPopulation = key === 'population'
+          const subValue = isPower
+            ? `/${fmtCompactAmount(dailyConsumption.power)}`
+            : isPopulation
+              ? `/${fmtSignedCompactAmount(dailyNet.population)}`
+              : `/${fmtSignedCompactAmount(dailyNet[key])}`
+          return <ResourceAtom
+            key={key}
+            resourceKey={key}
+            value={isPopulation ? allocatedPopulation : value}
+            detail={detail}
+            subValue={subValue}
+            actionLabel={canCancelAutoTrade ? '停购' : undefined}
+            onAction={canCancelAutoTrade ? () => setAutoTradeEnabled(previous => ({ ...previous, [key]: false })) : undefined}
+          />
+        })}
+      </section>
+    </div>
 
     {activeReignReport && <ReignReportModal report={activeReignReport} onClose={() => setActiveReignReport(null)} />}
 
@@ -1504,7 +1520,6 @@ function App() {
       <nav className="tab-nav" aria-label="底部系统菜单">{navItems.map(item => { const NavIcon = item.icon; return <button key={item.id} className={view === item.id ? 'active' : ''} style={{ '--tab-color': item.color } as React.CSSProperties} onClick={() => setView(item.id)}><NavIcon size={16} />{item.label}</button> })}</nav>
       <div className="footer-row footer-row-right">
         <div className="time-dock" aria-label="时间控制">
-          <div className="day-counter"><span>{gameCalendar.dayName}</span><div><strong>{String(Math.min(day, gameCalendar.finalDay)).padStart(3, '0')}</strong><small>/ {gameCalendar.finalDay}</small></div></div>
           <button className="time-control-btn" onClick={() => setSpeed(speed === 'normal' ? 'fast' : 'normal')} aria-label="切换时间速度"><Gauge size={15} /><span>{speed === 'normal' ? '正常' : '加速'}</span></button>
           <button className="time-control-btn" onClick={() => setRunning(!isRunning)} aria-label={isRunning ? '暂停日历' : '恢复日历'} disabled={completed}>{isRunning ? <Pause size={15} /> : <Play size={15} />}<span>{isRunning ? '暂停' : '恢复'}</span></button>
         </div>
@@ -1745,8 +1760,6 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
   const staffText = selectedFixed ? '固定' : isHousingFacility(selectedRegion.id) ? `容量 ${housingCapacity}` : `${assignedPopulation}/${workCapacity}`
   const throughputText = selectedFixed ? '在线' : isHousingFacility(selectedRegion.id) ? '容量' : `${Math.round(throughput * 100)}%`
   const detailSuggestions = summarizeOptimizerDirections(automationPlan, populationProjection)
-  const selectedMethodReady = hasTech(techs, selectedMethod.unlockedBy) && selectedMethod.autoSelect !== false
-  const selectedMethodTech = selectedMethod.unlockedBy ? technologyCatalog[selectedMethod.unlockedBy] : undefined
   const availableMethodIds = selectedSpec.productionMethods.filter(method => hasTech(techs, method.unlockedBy) && method.autoSelect !== false).map(method => method.id)
   const baseExpansionCost = projectFacilityCost(selectedSpec, selectedRegion.level, [])
   const constructionDays = getConstructionDays(techs)
@@ -1820,12 +1833,6 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
       </div>
       <article className="method-equation">
         <div className="method-stage">
-          <span className="method-column-label">图谱</span>
-          <div className="method-image-panel" aria-label={selectedMethodTech?.name ?? (selectedMethodReady ? '基础配方' : '待解锁科技')}>
-            <FlaskConical size={40} />
-          </div>
-        </div>
-        <div className="method-stage">
           <span className="method-column-label">配方</span>
           <div className="method-formula"><ResourceDeltaRows input={selectedMethod.input} output={selectedMethod.output} /></div>
         </div>
@@ -1851,7 +1858,7 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
       <section className="construction-control-grid">
         <article className="construction-card expand">
           <h3>扩建</h3>
-          <div className="construction-resources"><span>扩建成本</span><CostResourceList bundle={selectedCost} baseBundle={baseExpansionCost} empty="无需成本" /><MetricPill label="周期" value={`${constructionDays}御日`} /></div>
+          <div className="construction-resources"><span>扩建成本</span><CostResourceList bundle={selectedCost} baseBundle={baseExpansionCost} empty="无需成本" /><ConstructionDaysPill days={constructionDays} /></div>
           <div className="construction-actions">
             <button className={currentOrder === 'expand' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand')} disabled={expandDisabled}><ArrowUpRight size={15} />{withDisabledReason('立即扩建', expandDisabledReason)}</button>
             <button className={currentOrder === 'expand-continuous' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand-continuous')} disabled={expandDisabled}><ArrowUpRight size={15} />{withDisabledReason('持续扩建', expandDisabledReason)}</button>
@@ -1860,7 +1867,7 @@ function FacilityDetailPanel({ selected, year, techs, productionMethods, facilit
         </article>
         <article className="construction-card shrink">
           <h3>缩减</h3>
-          <div className="construction-resources"><span>回收资源</span><CostResourceList bundle={shrinkRefund} baseBundle={baseShrinkRefund} empty="无可回收" /><MetricPill label="周期" value={`${constructionDays}御日`} /></div>
+          <div className="construction-resources"><span>回收资源</span><CostResourceList bundle={shrinkRefund} baseBundle={baseShrinkRefund} empty="无可回收" /><ConstructionDaysPill days={constructionDays} /></div>
           <div className="construction-actions">
             <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink')} disabled={shrinkDisabled}><ArrowDownRight size={15} />{withDisabledReason('立即缩减', shrinkDisabledReason)}</button>
             <button className={currentOrder === 'shrink-continuous' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink-continuous')} disabled={shrinkDisabled}><ArrowDownRight size={15} />{withDisabledReason('持续缩减', shrinkDisabledReason)}</button>

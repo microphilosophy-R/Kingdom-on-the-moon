@@ -54,14 +54,11 @@
 }
 
 .resource-rail {
-  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
 }
 
 .resource-atom small,
 .facility-ledger-list small {
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
 }
 
 .ship-card,
@@ -461,17 +458,10 @@
   }
   .resource-rail .resource-label {
     display: block;
-    font-size: var(--font-label);
   }
   .resource-rail > .resource-atom {
     min-height: 52px;
     padding: .35rem .42rem;
-  }
-  .resource-rail .resource-main-value strong {
-    font-size: 14px;
-  }
-  .resource-rail .resource-sub-value {
-    font-size: 10px;
   }
 }
 
