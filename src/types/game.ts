@@ -1,12 +1,40 @@
-import type { FacilityId, ProductionMethodId, ResourceKey, Resources, TechnologyId } from '../economy'
+import type { ComponentType } from 'react'
+import type { LucideProps } from 'lucide-react'
+import type { FacilityId, FacilityState, ProductionMethodId, ResourceKey, Resources, TechnologyId } from '../economy'
 import type { Encounter, Role } from '../events'
 import type { OptimizerId } from '../optimizers'
+
+export type Icon = ComponentType<LucideProps>
 
 export type RegionId = FacilityId
 
 export type FacilityOrderMode = 'shrink-continuous' | 'shrink' | 'hold' | 'expand' | 'expand-continuous'
 
 export type StaffingPriority = 1 | 2 | 3 | 4 | 5
+
+export type Region = FacilityState & {
+  icon: Icon
+  name: string
+  subtitle: string
+  unlock: number
+  max: number
+  note: string
+  interfaceDuty: string
+  phaseNotes?: { name: string; note: string }[]
+  yields: Partial<Resources>
+  cost: Partial<Resources>
+  parentIds: RegionId[]
+  position: { x: number; y: number }
+}
+
+export type SpecialFacilityViewModel = {
+  region: Region
+  assignedPopulation: number
+  net: Partial<Resources>
+  modifier: { outputMultiplier?: number; upkeepMultiplier?: number }
+  throughput: number
+  methodName: string
+}
 
 export type ReignReport = {
   id: string

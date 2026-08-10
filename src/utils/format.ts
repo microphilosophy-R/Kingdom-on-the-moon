@@ -16,3 +16,6 @@ export const fmtSignedCompactAmount = (value: number) =>
   `${value >= 0 ? '+' : ''}${fmtCompactAmount(value)}`
 
 export const formatDay = (day: number) => `御日 ${String(day).padStart(3, '0')}`
+
+export const displayCopy = (text: string) =>
+  text.replace(/\b[TM][A-Z0-9]+-\d+\s*为/g, '').replace(/\b[TM][A-Z0-9]+-\d+\s*/g, '')

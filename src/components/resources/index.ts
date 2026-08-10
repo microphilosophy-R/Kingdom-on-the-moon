@@ -1,5 +1,6 @@
 export * from './ConstructionDaysPill'
 export * from './CostResourceList'
+export * from './FacilityNetRow'
 export * from './ProductionFlow'
 export * from './ResourceAtom'
 export * from './ResourceBundle'

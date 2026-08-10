@@ -2244,6 +2244,179 @@
   cursor: not-allowed;
 }
 
+.compact-player {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  width: min(260px, 100%);
+  padding: .62rem .7rem;
+}
+
+.compact-player .king-portrait-slot {
+  width: 54px;
+  height: 54px;
+}
+
+.compact-player h3 {
+  margin: .12rem 0 0;
+}
+
+.facility-ledger-list .ledger-card {
+  grid-template-columns: minmax(104px, .72fr) minmax(220px, 1.12fr) minmax(170px, .86fr);
+}
+
+.ledger-economy-block {
+  grid-template-rows: auto minmax(0, 1fr);
+  justify-items: stretch;
+  align-items: stretch;
+  gap: .42rem;
+  padding: .35rem .6rem;
+  border-left: 1px solid oklch(80% .018 84);
+  border-right: 1px solid oklch(80% .018 84);
+}
+
+.ledger-economy-block .ledger-stat-row {
+  min-height: 26px;
+  padding: 0 .12rem;
+}
+
+.ledger-economy-block .building-net-row {
+  align-content: center;
+  min-height: 54px;
+  padding: .42rem .48rem;
+  background: var(--ui-parchment);
+}
+
+.building-net-row.compact .resource-bundle {
+  gap: .32rem;
+}
+
+.building-net-row.compact .resource-atom.compact {
+  min-height: 26px;
+  padding: 0;
+}
+
+.ledger-action-block {
+  grid-template-rows: auto 1fr 1fr;
+}
+
+.ledger-method-switch {
+  position: relative;
+  display: grid;
+  gap: .18rem;
+  min-width: 0;
+}
+
+.ledger-method-switch span {
+  color: var(--ui-muted);
+  font-size: var(--font-label);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ledger-method-switch select {
+  width: 100%;
+  min-height: 34px;
+  appearance: none;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 5px;
+  padding: .36rem 1.72rem .36rem .48rem;
+  background: var(--ui-parchment);
+  color: var(--ui-brass-dark);
+  font-size: var(--font-button);
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.ledger-method-switch select:hover,
+.ledger-method-switch select:focus-visible {
+  border-color: var(--ui-brass-dark);
+  background: var(--ui-brass-soft);
+  color: var(--ui-ink-strong);
+  outline: none;
+}
+
+.ledger-method-switch svg {
+  position: absolute;
+  right: .44rem;
+  bottom: .58rem;
+  pointer-events: none;
+  color: var(--ui-brass-dark);
+}
+
+.detail-top-row {
+  grid-template-columns: minmax(300px, .42fr) minmax(360px, .58fr);
+}
+
+.detail-command-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .62rem;
+  min-width: 0;
+}
+
+.detail-command-column .construction-card {
+  min-height: 100%;
+}
+
+.facility-order-glyph {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.15;
+}
+
+.facility-order-glyph.continuous {
+  stroke-width: 1.9;
+}
+
+.construction-card.expand .construction-actions button {
+  color: color-mix(in oklab, var(--ui-success) 58%, var(--ui-ink));
+}
+
+.construction-card.shrink .construction-actions button {
+  color: color-mix(in oklab, var(--ui-danger) 58%, var(--ui-ink));
+}
+
+.construction-card .construction-actions button.selected {
+  color: var(--ui-ink-strong);
+}
+
+.detail-description-row {
+  display: grid;
+  grid-template-columns: minmax(180px, .36fr) minmax(0, 1fr) minmax(220px, .54fr);
+  gap: .72rem;
+  align-items: start;
+  min-width: 0;
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  padding: .78rem .9rem;
+  background: var(--ui-parchment);
+}
+
+.detail-description-row h3 {
+  margin: .12rem 0 0;
+  color: var(--ui-ink-strong);
+  font-size: var(--font-card);
+  line-height: 1.28;
+}
+
+.detail-description-row p {
+  max-width: 72ch;
+  margin: 0;
+  color: var(--ui-ink);
+}
+
+.detail-description-row .building-net-row {
+  align-self: stretch;
+  background: var(--ui-surface);
+}
+
 .detail-progress-line {
   position: relative;
   min-height: 24px;
@@ -2274,12 +2447,41 @@
 @media (max-width: 980px) {
   .detail-top-row,
   .detail-operations-row,
-  .construction-control-grid {
+  .construction-control-grid,
+  .detail-command-column,
+  .detail-description-row {
     grid-template-columns: 1fr;
   }
 
   .detail-top-row .detail-v2-art {
     max-height: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .facility-ledger-list .ledger-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "identity"
+      "economy"
+      "action";
+  }
+
+  .ledger-identity {
+    grid-area: identity;
+  }
+
+  .ledger-economy-block {
+    grid-area: economy;
+    border: 1px solid var(--ui-line);
+    border-radius: 5px;
+    padding: .48rem;
+  }
+
+  .ledger-action-block {
+    grid-area: action;
+    min-width: 0;
+    padding: .48rem 0 0;
   }
 }
 
