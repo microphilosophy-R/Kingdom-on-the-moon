@@ -46,5 +46,6 @@ export const getUpgradeCostScale = (id: FacilityId) => {
   if (id === 'K') return 2
   if (id === 'H') return 4
   if (id === 'M') return 6
+  if (id === 'E3') return 2
   return jobsPerFacilityLevel
 }

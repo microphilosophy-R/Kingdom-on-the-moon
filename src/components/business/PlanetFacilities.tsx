@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { PlanetScene, planetTextures } from '../../PlanetScene'
 import { PortraitSlot } from '../ui'
 import { FacilityList } from './FacilityList'
@@ -41,8 +41,10 @@ export interface PlanetFacilitiesProps {
   planetTexture: typeof planetTextures[number]
   docked: boolean
   detailOpen: boolean
+  dockCollapsed: boolean
   onDock: () => void
   onBack: () => void
+  onToggleDockCollapse: () => void
   onSelect: (id: RegionId) => void
   onUpgrade: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'expand' | 'expand-continuous'>) => void
   onHold: (id: RegionId) => void
@@ -78,8 +80,10 @@ export function PlanetFacilities({
   planetTexture,
   docked,
   detailOpen,
+  dockCollapsed,
   onDock,
   onBack,
+  onToggleDockCollapse,
   onSelect,
   onUpgrade,
   onHold,
@@ -105,8 +109,8 @@ export function PlanetFacilities({
   }
 
   return (
-    <div className={detailOpen ? 'planet-workbench detail-mode' : 'planet-workbench'}>
-      {!detailOpen && (
+    <div className={`planet-workbench ${detailOpen ? 'detail-mode' : ''} ${dockCollapsed ? 'dock-collapsed' : ''}`}>
+      {!detailOpen && !dockCollapsed && (
         <section className="planet-dock">
           <div className="docked-orbit"><PlanetScene texture={planetTexture} compact onActivate={() => onBack()} /></div>
           <div className="planet-dock-copy"><span className="eyebrow">殖民星球</span><h2>{planetTexture.name}</h2><p>{formatDay(year)}，国祚仍在设施、报告与星舰之间被重新分配。</p></div>
@@ -166,7 +170,18 @@ export function PlanetFacilities({
           onSelect={onSelect}
           onUpgrade={onUpgrade}
           onMethod={onMethod}
-        />
+        >
+          <button
+            type="button"
+            className="dock-collapse-toggle"
+            onClick={onToggleDockCollapse}
+            aria-label={dockCollapsed ? '展开左侧信息' : '收起左侧信息'}
+            title={dockCollapsed ? '展开左侧信息' : '收起左侧信息'}
+          >
+            {dockCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
+            <span>{dockCollapsed ? '展开' : '收起'}</span>
+          </button>
+        </FacilityList>
       )}
     </div>
   )

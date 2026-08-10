@@ -81,6 +81,7 @@ export type GameSaveState = {
   selected: RegionId
   planetDocked: boolean
   detailOpen: boolean
+  dockCollapsed: boolean
   planetTextureId: string
   visitor: Encounter | null
   roster: Role[]

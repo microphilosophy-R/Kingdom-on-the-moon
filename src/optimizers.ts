@@ -37,6 +37,7 @@ export const createDisabledAutomationPlan = (
   reason: 'optimizer disabled',
   actions: [],
   technologyActions: [],
+  methodActions: [],
   targetLevels: Object.fromEntries(
     facilityOrder.map(id => [id, facilities.find(facility => facility.id === id)?.level ?? 0]),
   ) as Record<FacilityId, number>,

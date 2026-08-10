@@ -1,10 +1,10 @@
 import { getFacilityWorkCapacity, getHousingCapacity, isFixedFacility, isHousingFacility } from './calendar'
 import { facilityEconomySpecs, facilityOrder } from './facilities'
 import { canAfford, applyBundle, defaultReserveFloors, emptyResources, resourceMeta, resourceOrder, resourceWeights, weightedValue } from './resources'
-import { canBuildFacility, estimateTechnologyValue, hasTech, hasTechnologyPrerequisites, technologyCatalog } from './technologies'
+import { canBuildFacility, canUseProductionMethod, estimateTechnologyValue, hasTech, hasTechnologyPrerequisites, selectProductionMethod, technologyCatalog } from './technologies'
 import { estimateResourceDeficitPremium, estimateTradePremium, planAutoTradesForCost } from './trade'
 import { projectFacilityCost, projectFacilityNet, projectTechnologyCost } from './production'
-import type { AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, PopulationProjection, ProductionMethodId, Resources, TechnologyAutomationAction, TechnologySpec } from './types'
+import type { AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, MethodAutomationAction, PopulationProjection, ProductionMethod, ProductionMethodId, Resources, TechnologyAutomationAction, TechnologySpec } from './types'
 const mergeBundles = (...bundles: Partial<Resources>[]) => {
   const total = emptyResources()
   bundles.forEach(bundle => {
@@ -114,6 +114,12 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   const stateById: Record<FacilityId, FacilityState> = Object.fromEntries(
     facilityOrder.map(id => [id, input.facilities.find(item => item.id === id) ?? { id, level: 0 }]),
   ) as Record<FacilityId, FacilityState>
+  const workingMethods = Object.fromEntries(
+    facilityOrder.map(id => [
+      id,
+      selectProductionMethod(facilityEconomySpecs[id].productionMethods, input.techs ?? [], input.productionMethods?.[id]).id,
+    ]),
+  ) as Record<FacilityId, ProductionMethodId>
   const targetLevels: Record<FacilityId, number> = Object.fromEntries(
     facilityOrder.map(id => [id, stateById[id].level]),
   ) as Record<FacilityId, number>
@@ -125,6 +131,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   let weightedProfit = 0
   const actions: AutomationAction[] = []
   const technologyActions: TechnologyAutomationAction[] = []
+  const methodActions: MethodAutomationAction[] = []
 
   const overstockTechnologyBonus = () => {
     const materialSurplus =
@@ -258,16 +265,82 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     }
   }
 
+  const evaluateMethod = (id: FacilityId): ReturnType<typeof evaluateTechnology> | (MethodAutomationAction & { kind: 'method'; projectedResources: Resources }) | null => {
+    const spec = facilityEconomySpecs[id]
+    if (isFixedFacility(id) || isHousingFacility(id)) return null
+    const currentAssigned = Math.min(
+      getFacilityWorkCapacity(id, stateById[id].level),
+      input.staffing?.[id] ?? getFacilityWorkCapacity(id, stateById[id].level),
+    )
+    if (currentAssigned <= 0) return null
+    const currentMethod = selectProductionMethod(spec.productionMethods, workingTechs, workingMethods[id])
+    if (!canUseProductionMethod(currentMethod, workingTechs)) return null
+    const alternatives = spec.productionMethods.filter(method => method.id !== currentMethod.id && canUseProductionMethod(method, workingTechs))
+    if (!alternatives.length) return null
+
+    const modifiers = input.modifiers?.[id] ?? {}
+    const evaluationTechs = workingTechs
+    const presentNet = projectFacilityNet(spec, currentAssigned, modifiers, evaluationTechs, currentMethod.id, stateById[id].level)
+
+    let best: ProductionMethod | null = null
+    let bestScore = 0
+
+    alternatives.forEach(method => {
+      const candidateNet = projectFacilityNet(spec, currentAssigned, modifiers, evaluationTechs, method.id, stateById[id].level)
+      const annualGain = mergeBundles(candidateNet)
+      resourceOrder.forEach(key => {
+        annualGain[key] = (candidateNet[key] ?? 0) - (presentNet[key] ?? 0)
+      })
+      let strategicBonus = 0
+      resourceOrder.forEach(key => {
+        if (workingResources[key] < reserveFloors[key] && annualGain[key] > 0) strategicBonus += annualGain[key] * weights[key] * 3
+        if (workingResources[key] < reserveFloors[key] && annualGain[key] < 0) strategicBonus += annualGain[key] * weights[key] * 2
+      })
+      const score = weightedValue(annualGain, weights) + strategicBonus
+      if (score > bestScore) {
+        bestScore = score
+        best = method
+      }
+    })
+
+    if (!best || bestScore <= 0) return null
+
+    return {
+      kind: 'method' as const,
+      facilityId: id,
+      fromMethodId: currentMethod.id,
+      toMethodId: best.id,
+      score: bestScore,
+      weightedGain: bestScore,
+      projectedResources: { ...workingResources },
+    }
+  }
+
   while (true) {
     const ranked = [
       ...facilityOrder.map(evaluate),
       ...Object.values(technologyCatalog).map(evaluateTechnology),
+      ...facilityOrder.map(evaluateMethod),
     ]
-      .filter((candidate): candidate is NonNullable<ReturnType<typeof evaluate> | ReturnType<typeof evaluateTechnology>> => Boolean(candidate))
+      .filter((candidate): candidate is NonNullable<typeof evaluate> | NonNullable<typeof evaluateTechnology> | NonNullable<ReturnType<typeof evaluateMethod>> => Boolean(candidate))
       .sort((a, b) => b.score - a.score)
 
     const best = ranked[0]
     if (!best || best.score <= 0) break
+
+    if (best.kind === 'method') {
+      workingMethods[best.facilityId] = best.toMethodId
+      weightedProfit += best.score
+      methodActions.push({
+        facilityId: best.facilityId,
+        fromMethodId: best.fromMethodId,
+        toMethodId: best.toMethodId,
+        score: best.score,
+        weightedGain: best.weightedGain,
+        projectedResources: best.projectedResources,
+      })
+      continue
+    }
 
     if (best.kind === 'technology') {
       workingResources = applyBundle(workingResources, best.cost, -1)
@@ -317,6 +390,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
       reason: `${resourceMeta[initialBreach].label} 低于最低要求`,
       actions: [],
       technologyActions: [],
+      methodActions: [],
       targetLevels,
       weightedProfit: 0,
       projectedResources: { ...input.resources },
@@ -327,6 +401,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     mode: 'auto',
     actions,
     technologyActions,
+    methodActions,
     targetLevels,
     weightedProfit,
     projectedResources: workingResources,

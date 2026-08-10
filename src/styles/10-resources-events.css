@@ -95,6 +95,8 @@
 .facility-era-section {
   display: grid;
   gap: .55rem;
+  container-type: inline-size;
+  container-name: facility-era;
 }
 .facility-era-section > header {
   display: flex;
@@ -118,16 +120,17 @@
   position: relative;
   display: grid;
   width: 100%;
-  grid-template-columns: minmax(96px, .72fr) minmax(0, 1.15fr) minmax(150px, .9fr);
-  gap: .65rem;
+  min-width: 0;
+  grid-template-columns: minmax(80px, .72fr) minmax(0, 1.15fr) minmax(130px, .9fr);
+  gap: .55rem;
   align-items: stretch;
   min-height: 108px;
   border: 1px solid oklch(76% .018 250);
   border-radius: 6px;
-  padding: .7rem;
+  padding: .62rem;
   background: oklch(99% .006 85);
   text-align: left;
-  overflow: visible;
+  overflow: hidden;
   box-shadow: 0 4px 12px oklch(30% .03 250 / .06), 0 1px 3px oklch(30% .03 250 / .04);
 }
 .facility-ledger-list .ledger-card:hover {
@@ -291,7 +294,7 @@
 }
 
 .ledger-action-block {
-  grid-template-rows: auto 1fr 1fr;
+  grid-template-rows: auto auto auto;
   justify-items: stretch;
   align-items: stretch;
   gap: .38rem;
@@ -307,7 +310,7 @@
 }
 .ledger-stat-label {
   color: var(--ui-muted);
-  font-size: 10px;
+  font-size: var(--font-label);
   font-weight: 700;
   white-space: nowrap;
 }

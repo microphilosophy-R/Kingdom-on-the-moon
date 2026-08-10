@@ -14,6 +14,7 @@ import {
 import { FacilityNetRow } from '../resources'
 import { SectionHeading } from '../layout'
 import { throughputClass } from '../../utils/game'
+import type { ReactNode } from 'react'
 import { facilityEra, facilityEraSections, specialFacilityViews } from '../../data/eraSections'
 import type { ProductionMethodId, Resources } from '../../economy'
 import type { FacilityOrderMode, Region, RegionId } from '../../types/game'
@@ -35,6 +36,7 @@ export interface FacilityListProps {
   onSelect: (id: RegionId) => void
   onUpgrade: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'expand' | 'expand-continuous'>) => void
   onMethod: (id: RegionId, methodId: ProductionMethodId) => void
+  children?: ReactNode
 }
 
 export function FacilityList({
@@ -54,10 +56,11 @@ export function FacilityList({
   onSelect,
   onUpgrade,
   onMethod,
+  children,
 }: FacilityListProps) {
   return (
     <section className="facility-ledger">
-      <SectionHeading eyebrow="主要设施" title="建筑名录" description="D/R/S/K/L 进入专属系统页。" />
+      <SectionHeading eyebrow="主要设施" title="建筑名录" description="D/R/S/K/L 进入专属系统页。">{children}</SectionHeading>
       <div className="facility-era-list">
         {facilityEraSections.map(section => {
           const sectionRegions = regions.filter(region => facilityEra[region.id] === section.id)

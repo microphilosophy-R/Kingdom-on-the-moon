@@ -128,11 +128,21 @@ export type TechnologyAutomationAction = {
   projectedResources: Resources
 }
 
+export type MethodAutomationAction = {
+  facilityId: FacilityId
+  fromMethodId: ProductionMethodId
+  toMethodId: ProductionMethodId
+  score: number
+  weightedGain: number
+  projectedResources: Resources
+}
+
 export type AutomationPlan = {
   mode: 'auto' | 'manual'
   reason?: string
   actions: AutomationAction[]
   technologyActions: TechnologyAutomationAction[]
+  methodActions: MethodAutomationAction[]
   targetLevels: Record<FacilityId, number>
   weightedProfit: number
   projectedResources: Resources
