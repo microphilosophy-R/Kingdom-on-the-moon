@@ -1,4 +1,4 @@
-import { defaultReserveFloors, resourceMeta, resourceOrder, resourceWeights, weightedValue, applyBundle, canAfford } from './resources'
+import { defaultReserveFloors, emptyResources, resourceMeta, resourceOrder, resourceWeights, weightedValue, applyBundle, canAfford } from './resources'
 import { hasTech } from './technologies'
 import type { AutoTrade, FacilityState, ResourceKey, Resources, StarportTradeOffer } from './types'
 const emptyTradeDelta = (): Resources => ({
@@ -148,34 +148,54 @@ export const currencyDebtInterestRate = 0.003
 export const emergencyCreditDebtLimit = -240
 export const emergencyCreditBatchLimit = 12
 
-export const calculateCurrencyDebtInterest = (resources: Resources) =>
-  resources.currency < 0 ? Math.max(0.05, Math.abs(resources.currency) * currencyDebtInterestRate) : 0
-
-/** 物质资源跌破零后的紧急补采惩罚率（每日，按加权价值比例扣货币）。 */
-export const materialDeficitPenaltyRate = 0.001
-
-/** 可产生赤字的物质资源（非货币/电力/人口/知识）。负值时按加权价值的 penaltyRate 每日扣货币。 */
-const materialDeficitResourceKeys: ResourceKey[] = [
-  'water', 'oxygen', 'biomass', 'regolith', 'alloy', 'luxury',
-]
+/** 物质资源债务上限 —— 资源不得跌破此值。触及后全设施产出等比衰减。 */
+export const resourceDebtLimits: Partial<Resources> = {
+  water: -1000,
+  oxygen: -1000,
+  biomass: -1000,
+  regolith: -3000,
+  alloy: -3000,
+  luxury: -500,
+}
 
 /**
- * 计算物质赤字惩罚 —— 当资源降为负值时，模拟"紧急高价补采"带来的货币消耗。
- * 惩罚 = Σ abs(resource[key]) * penaltyRate * weights[key]，向上取整为货币扣除。
- * 不设上限，使 optimizer 在赤字加深时持续感知递增代价。
+ * 约束日净产出：当任意资源会因当日消耗超出弹性债务上限时，
+ * 等比缩放全部设施的净产出，衰减从 100%（恰在上限）到 2%（深度超限）。
+ * 返回约束后的净产出和衰减系数（1 = 无约束）。
  */
-export function calculateMaterialDeficitPenalty(
-  resources: Resources,
-  weights: Resources = resourceWeights,
-): Partial<Resources> {
-  let totalCharge = 0
-  materialDeficitResourceKeys.forEach(key => {
-    if (resources[key] < 0) {
-      totalCharge += Math.abs(resources[key]) * materialDeficitPenaltyRate * weights[key]
-    }
+export function constrainDailyNet(
+  bank: Resources,
+  dailyNet: Resources,
+  debtLimits: Partial<Resources> = resourceDebtLimits,
+): { constrainedNet: Resources; throttleFactor: number } {
+  let throttleFactor = 1
+
+  resourceOrder.forEach(key => {
+    const limit = debtLimits[key]
+    if (limit === undefined) return
+    const net = dailyNet[key] ?? 0
+    if (net >= 0) return
+    const projected = (bank[key] ?? 0) + net
+    if (projected >= limit) return
+    // 弹性区间：上限下方 10% 作为缓冲区
+    const elasticity = Math.abs(limit) * 0.1
+    const softLimit = limit - elasticity
+    const factor = Math.max(0.02, Math.min(1, ((bank[key] ?? 0) - softLimit) / (limit - softLimit)))
+    throttleFactor = Math.min(throttleFactor, factor)
   })
-  return totalCharge > 0 ? { currency: -Math.ceil(totalCharge) } : {}
+
+  if (throttleFactor >= 1) return { constrainedNet: dailyNet, throttleFactor: 1 }
+
+  const constrainedNet = emptyResources()
+  resourceOrder.forEach(key => {
+    constrainedNet[key] = (dailyNet[key] ?? 0) * throttleFactor
+  })
+
+  return { constrainedNet, throttleFactor }
 }
+
+export const calculateCurrencyDebtInterest = (resources: Resources) =>
+  resources.currency < 0 ? Math.max(0.05, Math.abs(resources.currency) * currencyDebtInterestRate) : 0
 
 export const estimateTradePremium = (trade: AutoTrade, weights: Resources = resourceWeights) =>
   Math.max(0, weightedValue(trade.input, weights) - weightedValue(trade.output, weights)) +
@@ -220,11 +240,26 @@ export function estimateResourceDeficitPremium(
     return sum + (starportOnline ? estimateResourceImportPremium(key, shortage, resources, techs, weights) : shortage * weights[key] * 4)
   }, 0)
 
-  // 物质赤字惩罚：负资源按每日紧急补采费 ×30 天折算，使 optimizer 感知累积代价
-  const materialPenalty = calculateMaterialDeficitPenalty(resources, weights)
-  const materialPenaltyCharge = materialPenalty.currency ? Math.abs(materialPenalty.currency ?? 0) * 30 : 0
+  // 硬债务约束惩罚：资源逼近债务上限时指数级飙升，强制 optimizer 避让
+  let hardConstraintPenalty = 0
+  resourceOrder.forEach(key => {
+    const limit = resourceDebtLimits[key]
+    if (limit === undefined) return
+    if ((resources[key] ?? 0) < limit) {
+      // 已跌破上限 → 按缺口深度 × 权重 × 100 倍惩罚
+      const breachDepth = limit - (resources[key] ?? 0)
+      hardConstraintPenalty += Math.abs(breachDepth) * weights[key] * 100
+    } else {
+      // 在上限之上 → 检查是否在危险区间内
+      const headroom = (resources[key] ?? 0) - limit
+      const dangerZone = Math.abs(limit) * 0.5
+      if (headroom < dangerZone) {
+        hardConstraintPenalty += weights[key] * dangerZone / Math.max(1, headroom) * 120
+      }
+    }
+  })
 
-  return basePremium + materialPenaltyCharge
+  return basePremium + hardConstraintPenalty
 }
 
 export function planAutoTradesForDeficits(

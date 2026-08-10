@@ -4,8 +4,9 @@ import { describe, expect, it } from 'vitest'
 import {
   applyBundle,
   buildFacilityModifiers,
-  calculateMaterialDeficitPenalty,
+  calculateCurrencyDebtInterest,
   canAfford,
+  constrainDailyNet,
   defaultReserveFloors,
   defaultStartingTechs,
   facilityEconomySpecs,
@@ -19,10 +20,9 @@ import {
   projectFacilityCost,
   projectPopulationSystem,
   planAutoTradesForDeficits,
-  calculateCurrencyDebtInterest,
+  resourceDebtLimits,
   settleDailyResources,
   resourceOrder,
-  resourceWeights,
   selectProductionMethod,
   technologyCatalog,
   type FacilityId,
@@ -33,7 +33,7 @@ import {
   type Resources,
   type TechnologyId,
 } from '../src/economy'
-import { crownStewardOptimizer } from '../src/optimizers'
+import { autoCorrectStaffing, crownStewardOptimizer } from '../src/optimizers'
 
 type ConstructionProject = {
   startedDay: number
@@ -270,13 +270,23 @@ function simulateToDay1000(): SimulationResult {
       techs,
       pressureDays: populationPressureDays,
     })
-    const dailyNet = mergeResources(productionNet, autoTradePlan.delta, { currency: -currencyDebtInterest }, populationProjection.net)
-    resources = settleDailyResources(resources, dailyNet)
+    const rawDailyNet = mergeResources(productionNet, autoTradePlan.delta, { currency: -currencyDebtInterest }, populationProjection.net)
 
-    // 物质赤字惩罚：负资源每日扣货币，模拟紧急高价补采
-    const deficitPenalty = calculateMaterialDeficitPenalty(resources, resourceWeights)
-    if (deficitPenalty.currency) {
-      resources = applyBundle(resources, deficitPenalty)
+    // L6 吞吐率修正：物资稀缺时等比衰减全设施产出，防止日结深度恶化
+    const constraintResult = constrainDailyNet(resources, rawDailyNet, resourceDebtLimits)
+    resources = settleDailyResources(resources, constraintResult.constrainedNet)
+    const dailyNet = constraintResult.constrainedNet
+
+    // L1 人力重分配：资源已跌破债务上限时，撤走最大消费者的人力并重分
+    const correction = autoCorrectStaffing(
+      resources,
+      facilityOrder.map(id => ({ id, level: levels[id] })),
+      staffing,
+      techs,
+      productionMethods,
+    )
+    if (correction.releasedWorkers > 0) {
+      Object.assign(staffing, correction.adjustedStaffing)
     }
     populationPressureDays = populationProjection.nextPressureDays
 

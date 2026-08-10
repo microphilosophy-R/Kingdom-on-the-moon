@@ -1,4 +1,5 @@
 import {
+  autoCorrectStaffing,
   facilityOrder,
   planFacilityAutomation,
   type AutomationPlan,
@@ -6,6 +7,8 @@ import {
   type PlanInput,
   type Resources,
 } from './economy'
+
+export { autoCorrectStaffing }
 
 export type OptimizerId = 'crown-steward'
 
