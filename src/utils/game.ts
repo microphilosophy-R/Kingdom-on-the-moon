@@ -51,6 +51,10 @@ export const summarizeOptimizerDirections = (plan: AutomationPlan, population: P
   const ranked = [
     ...plan.actions.map(action => ({ score: action.score, text: directionForFacility(action.id) })),
     ...plan.technologyActions.map(action => ({ score: action.score, text: directionForTechnology(technologyCatalog[action.techId]?.category) })),
+    ...plan.methodActions.map(action => ({
+      score: action.score,
+      text: `切换${facilityEconomySpecs[action.facilityId].name}生产方式，改用更适配当前局势的配方。`,
+    })),
   ].sort((a, b) => b.score - a.score)
   const suggestions: string[] = []
   for (const item of ranked) {

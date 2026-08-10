@@ -210,7 +210,7 @@ export const resourceWeights: Resources = {
   biomass: 3.0,
   regolith: 1.0,
   alloy: 5.0,
-  quantumCore: 15.0,
+  quantumCore: 120.0,
   currency: 1.0,
   population: 1200.0,
   knowledge: 3.0,

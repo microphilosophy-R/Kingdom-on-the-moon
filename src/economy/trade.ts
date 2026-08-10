@@ -151,6 +151,32 @@ export const emergencyCreditBatchLimit = 12
 export const calculateCurrencyDebtInterest = (resources: Resources) =>
   resources.currency < 0 ? Math.max(0.05, Math.abs(resources.currency) * currencyDebtInterestRate) : 0
 
+/** 物质资源跌破零后的紧急补采惩罚率（每日，按加权价值比例扣货币）。 */
+export const materialDeficitPenaltyRate = 0.001
+
+/** 可产生赤字的物质资源（非货币/电力/人口/知识）。负值时按加权价值的 penaltyRate 每日扣货币。 */
+const materialDeficitResourceKeys: ResourceKey[] = [
+  'water', 'oxygen', 'biomass', 'regolith', 'alloy', 'luxury',
+]
+
+/**
+ * 计算物质赤字惩罚 —— 当资源降为负值时，模拟"紧急高价补采"带来的货币消耗。
+ * 惩罚 = Σ abs(resource[key]) * penaltyRate * weights[key]，向上取整为货币扣除。
+ * 不设上限，使 optimizer 在赤字加深时持续感知递增代价。
+ */
+export function calculateMaterialDeficitPenalty(
+  resources: Resources,
+  weights: Resources = resourceWeights,
+): Partial<Resources> {
+  let totalCharge = 0
+  materialDeficitResourceKeys.forEach(key => {
+    if (resources[key] < 0) {
+      totalCharge += Math.abs(resources[key]) * materialDeficitPenaltyRate * weights[key]
+    }
+  })
+  return totalCharge > 0 ? { currency: -Math.ceil(totalCharge) } : {}
+}
+
 export const estimateTradePremium = (trade: AutoTrade, weights: Resources = resourceWeights) =>
   Math.max(0, weightedValue(trade.input, weights) - weightedValue(trade.output, weights)) +
   calculateCurrencyDebtInterest(applyBundle(emptyTradeDelta(), trade.input, -1))
@@ -184,7 +210,7 @@ export function estimateResourceDeficitPremium(
   weights: Resources = resourceWeights,
 ) {
   const starportOnline = hasOperationalStarport(facilities, techs)
-  return resourceOrder.reduce((sum, key) => {
+  const basePremium = resourceOrder.reduce((sum, key) => {
     const target = targets[key] ?? 0
     const shortage = Math.max(0, target - resources[key])
     if (shortage <= 0) return sum
@@ -193,6 +219,12 @@ export function estimateResourceDeficitPremium(
     if (!resourceMeta[key].storable || !resourceMeta[key].tradable) return sum + shortage * weights[key] * 2
     return sum + (starportOnline ? estimateResourceImportPremium(key, shortage, resources, techs, weights) : shortage * weights[key] * 4)
   }, 0)
+
+  // 物质赤字惩罚：负资源按每日紧急补采费 ×30 天折算，使 optimizer 感知累积代价
+  const materialPenalty = calculateMaterialDeficitPenalty(resources, weights)
+  const materialPenaltyCharge = materialPenalty.currency ? Math.abs(materialPenalty.currency ?? 0) * 30 : 0
+
+  return basePremium + materialPenaltyCharge
 }
 
 export function planAutoTradesForDeficits(

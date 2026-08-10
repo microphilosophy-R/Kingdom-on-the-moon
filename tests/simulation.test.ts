@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import {
   applyBundle,
   buildFacilityModifiers,
+  calculateMaterialDeficitPenalty,
   canAfford,
   defaultReserveFloors,
   defaultStartingTechs,
@@ -21,6 +22,7 @@ import {
   calculateCurrencyDebtInterest,
   settleDailyResources,
   resourceOrder,
+  resourceWeights,
   selectProductionMethod,
   technologyCatalog,
   type FacilityId,
@@ -142,7 +144,7 @@ function simulateToDay1000(): SimulationResult {
   let activeResearch = firstResearchableTechnology()
   let populationPressureDays = 0
   const policy: PopulationPolicy = 'ration'
-  const autoTradeProtectionEnabled = false
+  const autoTradeProtectionEnabled = true
   const autoTradeEnabled: Partial<Record<ResourceKey, boolean>> = {}
   const snapshots: Snapshot[] = []
   const cumulative = {
@@ -171,8 +173,8 @@ function simulateToDay1000(): SimulationResult {
         water: preliminary.lifeSupportCost.water ?? 0,
         oxygen: preliminary.lifeSupportCost.oxygen ?? 0,
         biomass: preliminary.lifeSupportCost.biomass ?? 0,
-        regolith: 0,
-        alloy: 0,
+        regolith: defaultReserveFloors.regolith,
+        alloy: defaultReserveFloors.alloy,
         quantumCore: 0,
         luxury: 0,
       },
@@ -247,8 +249,8 @@ function simulateToDay1000(): SimulationResult {
       water: preliminaryPopulationProjection.lifeSupportCost.water ?? 0,
       oxygen: preliminaryPopulationProjection.lifeSupportCost.oxygen ?? 0,
       biomass: preliminaryPopulationProjection.lifeSupportCost.biomass ?? 0,
-      regolith: 0,
-      alloy: 0,
+      regolith: defaultReserveFloors.regolith,
+      alloy: defaultReserveFloors.alloy,
       quantumCore: 0,
       luxury: 0,
     }
@@ -270,6 +272,12 @@ function simulateToDay1000(): SimulationResult {
     })
     const dailyNet = mergeResources(productionNet, autoTradePlan.delta, { currency: -currencyDebtInterest }, populationProjection.net)
     resources = settleDailyResources(resources, dailyNet)
+
+    // 物质赤字惩罚：负资源每日扣货币，模拟紧急高价补采
+    const deficitPenalty = calculateMaterialDeficitPenalty(resources, resourceWeights)
+    if (deficitPenalty.currency) {
+      resources = applyBundle(resources, deficitPenalty)
+    }
     populationPressureDays = populationProjection.nextPressureDays
 
     Object.entries(construction).forEach(([id, project]) => {
@@ -321,6 +329,9 @@ function simulateToDay1000(): SimulationResult {
       capitalHorizonYears: 360,
     })
     const startedIds = new Set<FacilityId>()
+    plan.methodActions.forEach(action => {
+      productionMethods[action.facilityId] = action.toMethodId
+    })
     plan.technologyActions.forEach(action => {
       if (!canAfford(resources, action.cost)) return
       resources = applyBundle(resources, action.cost, -1)
@@ -390,7 +401,7 @@ function simulateToDay1000(): SimulationResult {
     final.population.total >= 500
       ? `Without random events, final population is ${final.population.total}/${final.population.capacity}, meeting the 500 target.`
       : `Without random events, final population is ${final.population.total}/${final.population.capacity}, below the 500 target.`,
-    `Built facilities: ${builtFacilities.join(', ')}. Opening S exists; deficit auto-purchase protection is off, while planned starport trades remain available to the optimizer.`,
+    `Built facilities: ${builtFacilities.join(', ')}. Auto-purchase protection is on; starport buys alloy/regolith on credit when below reserve floors.`,
     final.cumulative.started === 0
       ? 'The optimizer started no construction; early costs or tradable materials still need adjustment.'
       : `The optimizer started ${final.cumulative.started} projects and completed ${final.cumulative.completed}.`,
@@ -409,7 +420,7 @@ function simulateToDay1000(): SimulationResult {
       '使用默认初始资源、默认科技、默认配给基线。',
       '不触发随机访客事件，不手动切换生产方式。',
       `每天运行 ${crownStewardOptimizer.name} 优化器；每座建筑有独立施工状态。`,
-      '关闭自动购入保护，赤字不再由星海交易港每日兜底采购。',
+      '开启自动购入保护，生命维持与建设物资（含合金/月壤）低于储备底线时由星港信贷采购。',
       '每 50 御日记录一次结构化快照。',
     ],
     snapshots,
