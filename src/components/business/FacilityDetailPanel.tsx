@@ -21,7 +21,7 @@ import { FacilityOrderGlyph } from './FacilityOrderGlyph'
 import { displayCopy } from '../../utils/format'
 import { orderLabel } from '../../utils/game'
 import { scaleResourceBundle } from '../../utils/trade'
-import buildingKing from '../../assets/building-king.png'
+import { getFacilityArt } from '../../assets/facilityArt'
 import type { AutomationPlan, PopulationProjection, ProductionMethodId, Resources } from '../../economy'
 import type { Role } from '../../events'
 import type {
@@ -165,7 +165,7 @@ export function FacilityDetailPanel({
 
       <div className="detail-top-row">
         <div className="detail-v2-art" aria-label={`${selectedRegion.name}建筑主视觉`}>
-          <img src={buildingKing} alt={selectedRegion.name} />
+          <img src={getFacilityArt(selectedRegion.id)} alt={selectedRegion.name} />
         </div>
         <section className="detail-command-column">
           <article className="construction-card expand">

@@ -1,7 +1,7 @@
 import { getFacilityWorkCapacity, getHousingCapacity, isFixedFacility, isHousingFacility } from '../../economy'
 import { displayCopy } from '../../utils/format'
 import type { SpecialFacilityViewModel } from '../../types/game'
-import buildingKing from '../../assets/building-king.png'
+import { getFacilityArt } from '../../assets/facilityArt'
 import { ResourceBundle } from '../resources'
 
 export interface SpecialFacilityPanelProps {
@@ -31,7 +31,7 @@ export function SpecialFacilityPanel({ facility, tone, children }: SpecialFacili
     <section className={`special-facility-panel ${tone}`}>
       <div className="special-panel-head special-building-head">
         <div className="building-art-slot special-art-slot" aria-label={`${facility.region.name}建筑图片占位`}>
-          <img src={buildingKing} alt={facility.region.name} />
+          <img src={getFacilityArt(facility.region.id)} alt={facility.region.name} />
         </div>
         <div><span className="eyebrow">特殊建筑 · 这是什么</span><h2>{facility.region.name}</h2><p>{facility.region.subtitle}</p><p className="special-building-note">{displayCopy(facility.region.note)}</p></div>
       </div>

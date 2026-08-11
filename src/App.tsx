@@ -97,7 +97,6 @@ import { facilityEra, facilityEraSections, facilityOrderIndex, researchableTechI
 import { visitorPortraits } from './data/visitorPortraits'
 import { PlanetScene, planetTextures } from './PlanetScene'
 import charChenlin from './assets/char-chenlin.jpg'
-import buildingKing from './assets/building-king.png'
 import type { AppView, ConstructionProject, FacilityOrderMode, GameSaveState, Icon, ReignReport, ReignReportBaseline, Region, RegionId, StaffingPriority } from './types/game'
 
 type FacilityEra = 'early' | 'mid' | 'late'
