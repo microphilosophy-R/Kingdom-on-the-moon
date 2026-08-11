@@ -14,10 +14,10 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 10,
     reserveFloor: { power: 14 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
-    note: '月面第一座能源设施。太渊的金光被光伏阵列截获，转化为维持殖民地的最低电力。陈林看着仪表盘上的数字，想起署里报告里写的"展示存在"。',
+    note: '月面首座能源设施。光伏阵列截获太渊光能并转化为殖民地基础电力，为早期生命维持体系提供最低限度电力保障。',
     productionMethods: [
-      { id: 'ME1-1', name: '光伏发电', input: {}, output: { power: 6 }, note: '无资源输入，截获太渊金光输出电力。月面上唯一不需要还债的东西。' },
-      { id: 'ME1-2', name: '纳米光催化发电', input: { water: 0.6 }, output: { power: 6, oxygen: 1.2 }, unlockedBy: 'TE1-1', note: 'TE1-1 解锁后，以水资源催化光反应，额外产出氧气。像在石头上逼出一口气。' },
+      { id: 'ME1-1', name: '光伏发电', input: {}, output: { power: 6 }, note: '无资源输入。光伏阵列截获太渊光能并输出电力，属无输入生产方式。' },
+      { id: 'ME1-2', name: '纳米光催化发电', input: { water: 0.6 }, output: { power: 6, oxygen: 1.2 }, unlockedBy: 'TE1-1', note: 'TE1-1 解锁后启用。以水资源作为光催化反应介质，输出电力的同时额外产出氧气。' },
     ],
   },
   E2: {
@@ -34,9 +34,9 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 9,
     reserveFloor: { power: 16, regolith: 10 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
-    note: 'He3 聚变发电需要消耗月壤。陈林在审批扩建时曾自言自语："挖脚下的土来点火，这算不算在烧自己的船。"',
+    note: '采用 He3 聚变发电，以月壤为燃料来源，为中期工业体系提供电力支持。',
     productionMethods: [
-      { id: 'ME2-1', name: 'He3 聚变发电', input: { regolith: 1.4 }, output: { power: 8 }, note: '消耗月壤，点燃聚变，输出电力。月壤烧一格少一格。' },
+      { id: 'ME2-1', name: 'He3 聚变发电', input: { regolith: 1.4 }, output: { power: 8 }, note: '消耗月壤并输出电力。月壤为本生产方式唯一燃料输入。' },
     ],
   },
   E3: {
@@ -53,9 +53,9 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 8,
     reserveFloor: { power: 12, quantumCore: 1 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
-    note: '由外星科技解锁的禁忌能源。以微型黑洞压缩物质获取能量，不消耗资源。陈林第一次看到它运转时，想起封君律——有些东西不需要还债，但代价在别处。',
+    note: '由外星科技解锁的能源设施。通过微型黑洞压缩物质获取能量，不消耗常规库存资源。',
     productionMethods: [
-      { id: 'ME3-1', name: '微型黑洞压缩', input: {}, output: { power: 10 }, unlockedBy: 'TE3-0', note: 'TE3-0 解锁。微型黑洞压缩物质输出电力，不消耗库存资源。欧里说这是轨道鲸一族的送嫁之物。' },
+      { id: 'ME3-1', name: '微型黑洞压缩', input: {}, output: { power: 10 }, unlockedBy: 'TE3-0', note: 'TE3-0 解锁后启用。通过微型黑洞压缩物质输出电力，不消耗常规库存资源。' },
     ],
   },
   C1: {
@@ -72,9 +72,9 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 8,
     reserveFloor: { power: 10 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
-    note: '本地月面开采设施。静海是月面上一片平坦的灰色尘壤盆地，陈林给它起的名——他需要一个看起来像地名的东西写进述职报告。',
+    note: '本地月面采掘设施。静海采掘署位于月面尘壤盆地，承担前期水与月壤资源采掘任务。',
     productionMethods: [
-      { id: 'MC1-1', name: '静海月面采掘', input: { power: 1 }, output: { water: 1.6, regolith: 3.9 }, note: '静海表示在本地月面开采。消耗电力，从尘壤中榨出水和月壤。' },
+      { id: 'MC1-1', name: '静海月面采掘', input: { power: 1 }, output: { water: 1.6, regolith: 3.9 }, note: '本地月面开采。消耗电力，产出水与月壤。' },
     ],
   },
   C2: {
@@ -91,10 +91,10 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 8,
     reserveFloor: { power: 10, water: 6, oxygen: 6, biomass: 4 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
-    note: '小行星带远征采掘设施。西海不在月面上，是太渊引力阱内一条富矿碎屑带。远征队伍每往返一次，陈林就要在轮换名册上多签一个名字。',
+    note: '小行星带远征采掘设施。西海采掘署负责太渊引力阱内小行星带资源的远征采掘，为中期水、月壤与合金资源的主要来源。',
     productionMethods: [
-      { id: 'MC2-1', name: '西海小行星带采掘', input: { power: 1.4, water: 0.3, oxygen: 0.4, biomass: 0.2 }, output: { water: 1.2, regolith: 3.1, alloy: 1.2 }, note: '西海表示在小行星带开采。额外消耗水、氧气和生物质维持远征队，产出水、月壤与合金。' },
-      { id: 'MC2-2', name: '生态行星资源采集', input: { power: 1.4 }, output: { water: 1.2, regolith: 3.1, alloy: 1.2 }, unlockedBy: 'TC2-2', note: 'TC2-2 外星科技解锁。阿缇娅的坐标核指向一颗活着的生态行星，远征队不再需要携带生命维持补给。' },
+      { id: 'MC2-1', name: '西海小行星带采掘', input: { power: 1.4, water: 0.3, oxygen: 0.4, biomass: 0.2 }, output: { water: 1.2, regolith: 3.1, alloy: 1.2 }, note: '小行星带开采。远征采掘需额外消耗水、氧气和生物质以维持补给，产出水、月壤与合金。' },
+      { id: 'MC2-2', name: '生态行星资源采集', input: { power: 1.4 }, output: { water: 1.2, regolith: 3.1, alloy: 1.2 }, unlockedBy: 'TC2-2', note: 'TC2-2 外星科技解锁后启用。经坐标导航确认宜居生态行星，远征采掘不再消耗生命维持补给。' },
     ],
   },
   B: {
@@ -111,10 +111,10 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 10,
     reserveFloor: { water: 10, oxygen: 12, biomass: 8 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
-    note: '月面上唯一像活物的东西。水培生态球在灰冷的地表上发出微弱的绿光，陈林有时会在夜里去看它，假装月面还有春天。',
+    note: '生命维持设施。水培生态球承担氧气与生物质供给任务，为殖民地生命维持体系的重要组成部分。',
     productionMethods: [
-      { id: 'MB-1', name: '水培生态循环', input: { water: 0.8 }, output: { oxygen: 2.6, biomass: 1.8 }, note: '消耗水，在球体内培育藻膜，产出氧气与生物质。水是这颗卫星上最贵的奢侈品。' },
-      { id: 'MB-2', name: '无水栽培循环', input: { regolith: 0.6 }, output: { oxygen: 2.6, biomass: 1.8 }, unlockedBy: 'TB-2', note: 'TB-2 解锁。梅露的孢囊教会了生态球吃月壤而不是水——以略低价值的代价换一口气。' },
+      { id: 'MB-1', name: '水培生态循环', input: { water: 0.8 }, output: { oxygen: 2.6, biomass: 1.8 }, note: '消耗水并培育藻膜，产出氧气与生物质。水为本生产方式唯一输入资源。' },
+      { id: 'MB-2', name: '无水栽培循环', input: { regolith: 0.6 }, output: { oxygen: 2.6, biomass: 1.8 }, unlockedBy: 'TB-2', note: 'TB-2 解锁后启用。以低价值月壤消耗替代水资源消耗，降低生命维持体系对水的依赖。' },
     ],
   },
   F: {
@@ -131,10 +131,10 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 8,
     reserveFloor: { power: 10, regolith: 10 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
-    note: '月壤进去，合金出来。天工精炼署是月面唯一像工厂的东西，陈林路过时总能闻到一股灼烧月壤的焦味。',
+    note: '工业精炼设施。天工精炼署以电力与月壤为投入，产出合金与少量氧气，为中期工业体系的核心环节。',
     productionMethods: [
-      { id: 'MF-1', name: '天工精炼', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 2.2, oxygen: 0.4 }, note: '消耗电力与月壤，精炼产出合金与少量氧气。月壤烧出来的合金，带着一股灰味的纯。' },
-      { id: 'MF-2', name: '重原子炼金', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 2.2, oxygen: 0.4, currency: 1.0 }, unlockedBy: 'TF-1', note: 'TF-1 外星科技解锁。塔罗的炼金注释让精炼炉学会了从月壤里榨出星海货币——不是策略切换，是额外的馈赠。' },
+      { id: 'MF-1', name: '天工精炼', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 2.2, oxygen: 0.4 }, note: '消耗电力与月壤，精炼产出合金与少量氧气。' },
+      { id: 'MF-2', name: '重原子炼金', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 2.2, oxygen: 0.4, currency: 1.0 }, unlockedBy: 'TF-1', note: 'TF-1 外星科技解锁后启用。在默认精炼产出基础上额外产出星海货币，属附加产出而非策略切换。' },
     ],
   },
   P: {
@@ -151,10 +151,10 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 7,
     reserveFloor: { water: 10, biomass: 8, regolith: 8 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
-    note: '阶梯式河谷培育床。陈林给它取了一个地球上某个河谷的名字，同事问他为什么，他说随便取的。没人追问。',
+    note: '生态培育设施。伊犁河谷采用阶梯式培育床，以月壤和水为投入，产出生物质与氧气。',
     productionMethods: [
       { id: 'MP-1', name: '河谷生态培育', input: { regolith: 1, water: 0.6 }, output: { biomass: 1.8, oxygen: 1.2 }, note: '默认生产方式。消耗月壤和水，在阶梯上培育生态，产出生物质与氧气。' },
-      { id: 'MP-2', name: '合金作物', input: { regolith: 1, water: 0.6 }, output: { biomass: 1.0, oxygen: 0.8, alloy: 0.4 }, unlockedBy: 'TP-1', note: 'TP-1 外星科技解锁。合金作物产出较少生物质和氧气，但额外产出合金——在河谷里长出金属，像一颗种子记住了矿脉。' },
+      { id: 'MP-2', name: '合金作物', input: { regolith: 1, water: 0.6 }, output: { biomass: 1.0, oxygen: 0.8, alloy: 0.4 }, unlockedBy: 'TP-1', note: 'TP-1 外星科技解锁后启用。产出较少生物质与氧气，并额外产出合金。' },
     ],
   },
   R: {
@@ -204,9 +204,9 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
       { id: 'MS-1', name: '贸易结算', input: {}, output: {}, note: '不产生固定日净值。双向贸易由市场与自动购买规则处理。' },
     ],
     phaseNotes: [
-      { name: '双向贸易', note: '已解锁的星港贸易品类均可双向处理。买进来的是活路，卖出去的是面子。' },
-      { name: '手动补充', note: '可以手动补充已开放贸易品类。陈林偶尔会亲自补一单，算是行使王权。' },
-      { name: '自动购买', note: '星海货币赤字时暂停，恢复盈余后继续。没钱就不买，这是月面上唯一讲道理的规矩。' },
+      { name: '双向贸易', note: '已解锁的星港贸易品类均可双向处理，交易结算由星海交易港统一执行。' },
+      { name: '手动补充', note: '可对已开放的贸易品类进行手动补充，以调整库存结构。' },
+      { name: '自动购买', note: '星海货币出现赤字时自动购买暂停，恢复盈余后继续执行，以控制债务风险。' },
     ],
   },
   K: {
@@ -218,18 +218,19 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     unlockYear: 0,
     requiredTech: 'TK-0',
     maxLevel: 15,
+    minLevel: 1,
     baseUpgradeCost: { regolith: 3, alloy: 2 },
     yieldGrowth: 0.08,
     priority: 10,
     reserveFloor: { population: 10 },
     interfaceDuty: '展示人口、税收与上一轮王月执行报告。',
-    note: '月面王城是陈林的龙椅所在。它同时是人口建筑、税收来源和王月报告归档处。陈林大部分时间坐在这里，不是因为他想，是因为封君律不让他站起来。',
+    note: '殖民政权中枢。月面王城承担人口安置、税收征收与王月报告归档职能，为前期人口建筑。',
     productionMethods: [
       { id: 'MK-1', name: '王城安置与税收', input: { water: 0.4, oxygen: 0.3, biomass: 0.3 }, output: { population: 1.2, currency: 0.8 }, note: '前期人口容量建筑。居民生命维持消耗水、氧气和生物质；人口增长与税收由全局人口系统结算。' },
     ],
     phaseNotes: [
-      { name: '人口', note: '月面王城是前期人口建筑。住进来的人都知道王上走不了，但他们自己半年后可以走。' },
-      { name: '税收', note: '通过征税获得铸币权，星海货币与人口成正比。陈林收的不是税，是签字的代价。' },
+      { name: '人口', note: '月面王城为前期人口建筑，承担殖民人口安置职能。' },
+      { name: '税收', note: '通过征税行使铸币权，星海货币产出与人口规模成正比。' },
       { name: '王月报告', note: '每 50 御日归档一次阶段报告，汇总人口、GDP、资源产消与三项方向性建议。' },
     ],
   },
@@ -271,7 +272,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 5,
     reserveFloor: { biomass: 6 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
-    note: '中期人口建筑。翡翠宫是月面上最不实用的东西——它消耗更多资源，但产出艺术奢侈品。陈林批准建造时，述职报告里写的是"文化软实力"，心里想的是"有朝一日能卖给罗莎"。',
+    note: '中期人口建筑。翡翠宫单位人口资源消耗较高，相应产出艺术奢侈品，可用于贸易或满足特定外星文明需求。',
     productionMethods: [
       { id: 'MH-1', name: '宫廷居住与供养', input: { water: 0.5, oxygen: 0.4, biomass: 0.5 }, output: { population: 1, luxury: 0.9 }, note: '中期人口容量建筑。宫廷居民消耗更高，但会按居住人口产出艺术奢侈品。' },
     ],
@@ -290,7 +291,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 6,
     reserveFloor: { population: 10 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
-    note: '后期人口建筑。新月府的生态居民包单位消耗更低，但需要月穹生态环完成后才能解锁。陈林在图纸上的批注是："先让月面能呼吸，再让人住得像人。"',
+    note: '后期人口建筑。新月府采用生态居民包，单位人口资源消耗更低；需在月穹生态环完成后解锁。',
     productionMethods: [
       { id: 'MM-1', name: '新月府生态居住', input: { water: 0.2, oxygen: 0.2, biomass: 0.3 }, output: { population: 1.2 }, note: '后期人口容量建筑。生态居民生命维持消耗更低，人口增长由全局人口系统结算。' },
     ],
@@ -309,14 +310,16 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 16,
     reserveFloor: { power: 14, alloy: 12, quantumCore: 2, currency: 6 },
     interfaceDuty: '展示御座号项目进度、三阶段物资供应、人力供应与胜利条件。',
-    note: '胜利目标建筑。冠冕星舰坞账面上是"垦殖成果展示项目"，实际上是御座号的建造地。陈林每天都会来看龙骨进度——不是出于责任感，是出于想回家。',
+    note: '胜利目标建筑。冠冕星舰坞承担御座号远洋星舰建造项目，按阶段完成舰体装配，为殖民胜利目标。',
     productionMethods: [
-      { id: 'MD-1', name: '远洋星舰建造', input: { power: 45, water: 5, oxygen: 18, biomass: 16, regolith: 12, alloy: 20 }, output: {}, note: '项目型生产方式。按日消耗电力、合金、氧气和深空补给材料，不产出普通库存资源。实际胜利投入分为三阶段，由星舰界面展示。' },
+      { id: 'MD-1', name: '龙骨与生命舱', input: { power: 16, oxygen: 18, alloy: 7 }, output: {}, note: '第一阶段：投入合金、氧气和电力，完成星舰基础结构与维生舱段。' },
+      { id: 'MD-2', name: '远航壳层与循环农场', input: { power: 18, alloy: 6, regolith: 12, biomass: 8 }, output: {}, unlockedBy: 'TD-1', note: '第二阶段：投入合金、电力、月壤和生物质，完成远航壳层与生态循环系统装配。' },
+      { id: 'MD-3', name: '王座核心与深空储备', input: { power: 11, alloy: 7, water: 5, biomass: 8, quantumCore: 0.2 }, output: {}, unlockedBy: 'TD-2', note: '第三阶段：投入量子计算核心、电力、合金、水和生物质，完成御座号核心系统与深空储备装配。' },
     ],
     phaseNotes: [
-      { name: '第一阶段：龙骨与生命舱', note: '投入合金、氧气和电力。龙骨对准太渊方向，像一根想要刺穿天穹的刺。' },
-      { name: '第二阶段：远航壳层与循环农场', note: '投入合金、电力、月壤和生物质。远航壳层让御座号能撑过深空，循环农场让乘客能活着撑过去。' },
-      { name: '第三阶段：王座核心与深空储备', note: '投入量子计算核心、电力、合金、水和生物质。王座核心是御座号的心脏——陈林给它取了这个名字，因为他终于要离开一把龙椅，登上另一把。' },
+      { name: '第一阶段：龙骨与生命舱', note: '投入合金、氧气和电力，完成星舰基础结构与维生舱段。' },
+      { name: '第二阶段：远航壳层与循环农场', note: '投入合金、电力、月壤和生物质，完成远航壳层与生态循环系统装配。' },
+      { name: '第三阶段：王座核心与深空储备', note: '投入量子计算核心、电力、合金、水和生物质，完成御座号核心系统与深空储备装配。' },
     ],
   },
 }

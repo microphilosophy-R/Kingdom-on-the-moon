@@ -74,6 +74,7 @@ export type FacilityEconomySpec = {
   unlockYear: number
   requiredTech?: TechnologyId
   maxLevel: number
+  minLevel?: number
   baseUpgradeCost: Partial<Resources>
   yieldGrowth: number
   priority: number

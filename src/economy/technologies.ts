@@ -48,7 +48,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'construction',
     era: 'early',
     unlocksFacility: 'E1',
-    note: '解锁 E1 日冕能源署建造。初始默认具备——署里至少给了他一块光伏板。',
+    note: '解锁 E1 日冕能源署建造权限；初始默认具备。该署为月面基础电力来源，负责截获太渊光能并转化为殖民地基础电力供给。',
   },
   'TE1-1': {
     id: 'TE1-1',
@@ -57,7 +57,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'production-method',
     era: 'early',
     unlocks: 'ME1-2',
-    note: '解锁 E1 可选生产方式 ME1-2。萨瓦的逆燃晶体让光伏阵列学会了吃水，额外产出氧气。',
+    note: '解锁 E1 可选生产方式 ME1-2（纳米光催化发电）。该生产方式以水资源作为光催化反应介质，在输出电力的同时额外产出氧气。',
   },
   'TE1-2': {
     id: 'TE1-2',
@@ -65,7 +65,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'E1',
     category: 'facility-efficiency',
     era: 'early',
-    note: 'E1 日冕能源署电力输出 +5%，水消耗 +5%。把光伏阵列的角度校准到太渊的光路——多产一点电，多喝一口水。',
+    note: 'E1 日冕能源署电力输出 +5%，水消耗 +5%。经光伏阵列角度校准，发电效率提升的同时水资源消耗同步增加。',
   },
   'TE2-0': {
     id: 'TE2-0',
@@ -74,7 +74,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'construction',
     era: 'mid',
     unlocksFacility: 'E2',
-    note: '解锁 E2 月冕能源署建造。月壤烧出来的电，暖和不起来。',
+    note: '解锁 E2 月冕能源署建造权限。该署采用 He3 聚变发电，以月壤为燃料来源，为中期工业体系提供电力支持。',
   },
   'TE3-0': {
     id: 'TE3-0',
@@ -85,7 +85,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     alien: true,
     unlocksFacility: 'E3',
     unlocks: 'ME3-1',
-    note: '外星科技。解锁 E3 归元装置建造与 ME3-1。欧里的约束箴言把微型黑洞系在掌心——不消耗资源，代价在别处。',
+    note: '外星科技。解锁 E3 归元装置建造及生产方式 ME3-1。该装置通过微型黑洞压缩物质获取能量，不消耗常规库存资源，相关约束技术由外星文明提供。',
   },
   'TC1-0': {
     id: 'TC1-0',
@@ -94,7 +94,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'construction',
     era: 'early',
     unlocksFacility: 'C1',
-    note: '解锁 C1 静海采掘署建造。初始默认具备——陈林给它取了"静海"这个名字，因为述职报告需要一个地名。',
+    note: '解锁 C1 静海采掘署建造权限；初始默认具备。该署承担本地月面采掘任务，为前期水与月壤资源的主要来源。',
   },
   'TC1-1': {
     id: 'TC1-1',
@@ -102,7 +102,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'C1',
     category: 'facility-efficiency',
     era: 'early',
-    note: 'C1 静海采掘署月壤输出 +5%，电力消耗 +5%。钻头阵列排得更密，月面少了一块皮，电表也转得更急。',
+    note: 'C1 静海采掘署月壤输出 +5%，电力消耗 +5%。经钻头阵列加密布置，采掘效率提升，相应增加电力消耗。',
   },
   'TC2-0': {
     id: 'TC2-0',
@@ -111,7 +111,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'construction',
     era: 'mid',
     unlocksFacility: 'C2',
-    note: '解锁 C2 西海采掘署建造。西海是太渊引力阱内的碎屑带，陈林签远征令时在想：这名字比"碎屑带"好听。',
+    note: '解锁 C2 西海采掘署建造权限。该署负责太渊引力阱内小行星带资源的远征采掘，为中期水、月壤与合金资源的主要来源。',
   },
   'TC2-1': {
     id: 'TC2-1',
@@ -119,7 +119,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'C2',
     category: 'facility-efficiency',
     era: 'mid',
-    note: 'C2 西海采掘署合金输出 +5%，氧气消耗 +5%。锚定索让远征队挖得更深，但人也喘得更急。',
+    note: 'C2 西海采掘署合金输出 +5%，氧气消耗 +5%。经小行星锚定索技术部署，采掘深度提升，相应增加生命维持补给消耗。',
   },
   'TC2-2': {
     id: 'TC2-2',
@@ -129,7 +129,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     era: 'mid',
     alien: true,
     unlocks: 'MC2-2',
-    note: '外星科技，中期。阿缇娅的坐标核指向一颗活着的生态行星。解锁 MC2-2，远征不再消耗生命维持补给。',
+    note: '外星科技，中期。解锁生产方式 MC2-2（生态行星资源采集）。经坐标导航系统确认宜居生态行星后，远征采掘不再消耗生命维持补给。',
   },
   'TB-0': {
     id: 'TB-0',
@@ -138,7 +138,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'construction',
     era: 'early',
     unlocksFacility: 'B',
-    note: '解锁 B 水培生态球建造。月面上唯一像活物的设施。',
+    note: '解锁 B 水培生态球建造权限。该设施承担氧气与生物质供给任务，为殖民地生命维持体系的重要组成部分。',
   },
   'TB-1': {
     id: 'TB-1',
@@ -146,7 +146,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'B',
     category: 'facility-efficiency',
     era: 'early',
-    note: 'B 水培生态球生物质输出 +5%，水消耗 +5%。藻膜闭环更密，长得更快，也喝得更急。',
+    note: 'B 水培生态球生物质输出 +5%，水消耗 +5%。经闭环藻膜培养体系优化，生物质产出提升，相应增加水资源消耗。',
   },
   'TB-2': {
     id: 'TB-2',
@@ -155,7 +155,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'production-method',
     era: 'early',
     unlocks: 'MB-2',
-    note: '早期非开局科技。梅露的干燥孢囊教会生态球吃月壤而非水——以略低价值的代价换一口气。',
+    note: '早期非开局科技。解锁生产方式 MB-2（无水栽培循环）。该技术以低价值月壤消耗替代水资源消耗，降低生命维持体系对水的依赖。',
   },
   'TF-0': {
     id: 'TF-0',
@@ -174,7 +174,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     era: 'mid',
     alien: true,
     unlocks: 'MF-2',
-    note: '外星科技，中期。塔罗的矿脉图上有一段炼金注释，让精炼炉从月壤里榨出星海货币。',
+    note: '外星科技，中期。解锁生产方式 MF-2（重原子炼金）。该生产方式在默认精炼产出基础上额外产出星海货币，属附加产出而非策略切换。',
   },
   'TP-0': {
     id: 'TP-0',
@@ -183,7 +183,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'construction',
     era: 'mid',
     unlocksFacility: 'P',
-    note: '解锁 P 伊犁河谷建造。陈林取了一个地球河谷的名字，没人追问。',
+    note: '解锁 P 伊犁河谷建造权限。该设施承担生态培育任务，为生物质与氧气资源的重要来源。',
   },
   'TP-1': {
     id: 'TP-1',
@@ -193,7 +193,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     era: 'mid',
     alien: true,
     unlocks: 'MP-2',
-    note: '外星科技，中期。合金作物在河谷里长出金属，像一颗种子记住了矿脉。',
+    note: '外星科技，中期。解锁生产方式 MP-2（合金作物）。该生产方式产出较少生物质与氧气，并额外产出合金。',
   },
   'TR-0': {
     id: 'TR-0',
@@ -202,7 +202,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'construction',
     era: 'mid',
     unlocksFacility: 'R',
-    note: '解锁 R 月穹生态环建造。月面最庞大的工程——把没有空气的石头改成能呼吸的地方。',
+    note: '解锁 R 月穹生态环建造权限。该工程按阶段实施气候改造、大气改造与生态改造，旨在将月面改造为适宜居住的生态区域。',
   },
   'TS-0': {
     id: 'TS-0',
@@ -220,7 +220,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'construction',
     era: 'early',
     unlocksFacility: 'K',
-    note: '解锁 K 月面王城建造。初始默认具备——龙椅已经在了，不需要再建。',
+    note: '解锁 K 月面王城建造权限；初始默认具备。该城为殖民政权中枢，承担人口安置、税收征收与政策签发职能。',
   },
   'TL-0': {
     id: 'TL-0',
@@ -229,7 +229,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'construction',
     era: 'early',
     unlocksFacility: 'L',
-    note: '解锁 L 问天研究实验室建造。月面上唯一能让人觉得"在进步"的地方。',
+    note: '解锁 L 问天研究实验室建造权限。该实验室为殖民科技体系的唯一载体，承担科技研究与知识产出职能。',
   },
   'TL-1': {
     id: 'TL-1',
@@ -238,7 +238,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'production-method',
     era: 'late',
     unlocks: 'ML-2',
-    note: '解锁 ML-2 原子阵列光刻。让实验室从产出知识变成产出量子计算核心——御座号最缺的那块骨头。',
+    note: '解锁生产方式 ML-2（原子阵列光刻）。该生产方式以电力、水、氧气及合金为投入，产出知识与量子计算核心，为深空舰船核心部件提供制造能力。',
   },
   'TL-2': {
     id: 'TL-2',
@@ -246,7 +246,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'L',
     category: 'facility-efficiency',
     era: 'mid',
-    note: 'L 研究实验室电力投入 +25%，知识产出 +35%。把盈余电力灌进仪器，让它问得更快。',
+    note: 'L 问天研究实验室电力投入 +25%，知识产出 +35%。经研究吞吐量调度优化，将盈余电力转化为研究产出，提升科研效率。',
   },
   'TL-3': {
     id: 'TL-3',
@@ -254,7 +254,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'L',
     category: 'facility-efficiency',
     era: 'late',
-    note: 'L 研究实验室电力投入 +50%，知识产出 +70%。与 TL-2 叠加，后期高速研究。仪器开始发烫。',
+    note: 'L 问天研究实验室电力投入 +50%，知识产出 +70%。该科技与 TL-2 叠加生效，适用于后期高速研究阶段。',
   },
   'TH-0': {
     id: 'TH-0',
@@ -272,7 +272,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'construction',
     era: 'late',
     unlocksFacility: 'M',
-    note: '解锁 M 新月府建造。该科技应在月穹生态环完成后取得——先让月面能呼吸，再让人住得像人。',
+    note: '解锁 M 新月府建造权限。该科技应在月穹生态环完成后取得。新月府以较低单位消耗承担后期人口安置职能。',
   },
   'TD-0': {
     id: 'TD-0',
@@ -289,7 +289,17 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'D',
     category: 'facility-efficiency',
     era: 'late',
-    note: 'D 冠冕星舰坞项目推进效率 +5%。总装排程更紧凑，龙骨长得更快。陈林来看的次数也更频繁。',
+    unlocks: 'MD-2',
+    note: 'D 冠冕星舰坞项目推进效率 +5%，解锁第二阶段生产方式（远航壳层与循环农场）。经总装排程优化，项目推进效率提升。',
+  },
+  'TD-2': {
+    id: 'TD-2',
+    name: '王座核心启动',
+    scope: 'D',
+    category: 'facility-efficiency',
+    era: 'late',
+    unlocks: 'MD-3',
+    note: '解锁 D 冠冕星舰坞第三阶段生产方式（王座核心与深空储备）。王座核心投入运行，完成御座号核心系统装配。',
   },
   'TS-1': {
     id: 'TS-1',
@@ -298,7 +308,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'trade',
     era: 'mid',
     alien: true,
-    note: '外星科技。尼克斯的名册带来星际劳工双向贸易权限。人不只是住进来，也可以双向贸易出去。',
+    note: '外星科技。经星际劳工名册登记，解锁人口 / 劳工双向贸易权限，可处理其他星域人力资源的双向贸易。',
   },
   'TS-2': {
     id: 'TS-2',
@@ -307,7 +317,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'trade',
     era: 'mid',
     alien: true,
-    note: '外星科技。伊芙的回声接入带来知识双向贸易权限。知识可以在星海中流通，像声波一样双向贸易。',
+    note: '外星科技。经知识传输协议接入，解锁知识双向贸易权限，知识可经由星海交易港流通。',
   },
   'TS-3': {
     id: 'TS-3',
@@ -316,7 +326,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     category: 'trade',
     era: 'mid',
     alien: true,
-    note: '外星科技。罗莎的香料账册打开玫瑰星球航线，艺术奢侈品可以双向贸易。',
+    note: '外星科技。经玫瑰星球航线开通，解锁艺术奢侈品双向贸易权限。',
   },
   'TG-1': {
     id: 'TG-1',
@@ -324,7 +334,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'G',
     category: 'global',
     era: 'mid',
-    note: '全局生产吞吐 +1%（输入与输出同步 +1%）；建筑扩大/缩小时间 -5%。天工软件让机器更勤快一点——进得多，出得多。',
+    note: '全局生产吞吐 +1%（输入与输出同步 +1%）；建筑扩大/缩小时间 -5%。经工业软件体系集成，生产流程吞吐效率提升。',
   },
   'TG-2': {
     id: 'TG-2',
@@ -332,7 +342,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'G',
     category: 'global',
     era: 'mid',
-    note: '所有建筑电力消耗 -5%。微波散热让月面上的热量少浪费一点——月面本来就够冷了。',
+    note: '所有建筑电力消耗 -5%。经空间微波散热技术应用，设施热管理效率提升，相应降低电力消耗。',
   },
   'TG-3': {
     id: 'TG-3',
@@ -340,7 +350,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'G',
     category: 'global',
     era: 'mid',
-    note: '所有建筑扩大成本 -5%；扩大/缩小时间 -10%。预制件让扩建像搭积木，但搭的还是月面上的积木。',
+    note: '所有建筑扩大成本 -5%；扩大/缩小时间 -10%。经通用建筑预制件标准化，设施扩容成本与工期同步缩减。',
   },
   'TG-4': {
     id: 'TG-4',
@@ -348,7 +358,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     scope: 'G',
     category: 'global',
     era: 'mid',
-    note: '交易手续费 -5%；自动购买溢价 -5%。会计协议让星海交易港少收一点过路费。',
+    note: '交易手续费 -5%；自动购买溢价 -5%。经星海会计协议结算优化，交易成本相应降低。',
   },
 }
 
@@ -382,6 +392,7 @@ const technologyPrerequisites: Partial<Record<TechnologyId, TechnologyId[]>> = {
   'TM-0': ['TR-0', 'TH-0'],
   'TD-0': ['TF-1', 'TL-1', 'TS-0'],
   'TD-1': ['TD-0', 'TG-3'],
+  'TD-2': ['TD-1'],
   'TE3-0': ['TE2-0', 'TF-1', 'TL-3'],
 }
 

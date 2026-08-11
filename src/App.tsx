@@ -69,34 +69,36 @@ import {
 } from './components/resources'
 import { LetterActions, Modal, SectionHeading, TabNav } from './components/layout'
 import {
-  EcologyRing,
   FacilityList,
   FacilityOrderGlyph,
   InfoToggle,
-  Palace,
   PlanetFacilities,
   ReignReportModal,
-  ResearchLab,
   SettingsPanel,
-  Shipyard,
   SpecialFacilityPanel,
-  Starport,
   StartGate,
   TechnologyCard,
   TechnologyImagePlaceholder,
   TechnologyTags,
   Visitors,
 } from './components/business'
+import {
+  EcologyPhaseBlock,
+  PalaceReportBlock,
+  ResearchTreeBlock,
+  ShipProgressBlock,
+  TradeBoardBlock,
+} from './components/business/SpecialBlocks'
 import { displayCopy, fmt, fmtAmount, fmtCompactAmount, fmtSignedCompactAmount, formatDay } from './utils/format'
 import { hasResearchPrerequisites, orderLabel, summarizeOptimizerDirections, techLabel, technologyCategoryLabel, throughputClass } from './utils/game'
 import { scaleResourceBundle } from './utils/trade'
 import { regionLayout } from './data/regionLayout'
-import { facilityEra, facilityEraSections, facilityOrderIndex, researchableTechIds, specialFacilityViews } from './data/eraSections'
+import { facilityEra, facilityEraSections, facilityOrderIndex, researchableTechIds } from './data/eraSections'
 import { visitorPortraits } from './data/visitorPortraits'
 import { PlanetScene, planetTextures } from './PlanetScene'
 import charChenlin from './assets/char-chenlin.jpg'
 import buildingKing from './assets/building-king.png'
-import type { AppView, ConstructionProject, FacilityOrderMode, GameSaveState, Icon, ReignReport, ReignReportBaseline, Region, RegionId, SpecialFacilityViewModel, StaffingPriority } from './types/game'
+import type { AppView, ConstructionProject, FacilityOrderMode, GameSaveState, Icon, ReignReport, ReignReportBaseline, Region, RegionId, StaffingPriority } from './types/game'
 
 type FacilityEra = 'early' | 'mid' | 'late'
 type TechnologyEra = 'early' | 'mid' | 'late'
@@ -204,6 +206,10 @@ const navItems: { id: AppView; label: string; icon: Icon; color: string }[] = [
   { id: 'ship', label: '星舰', icon: Rocket, color: 'oklch(50% .12 330)' },
   { id: 'visitors', label: '异客', icon: Sparkles, color: 'oklch(60% .11 85)' },
 ]
+
+const specialTabFacility: Record<string, AppView> = {
+  K: 'palace', L: 'research', R: 'ecology', S: 'starport', D: 'ship',
+}
 
 const canPay = canAfford
 const apply = applyBundle
@@ -445,23 +451,11 @@ function App() {
   ), [activeOptimizerId, resources, regions, optimizerInput])
   const shipProgress = Math.min(100, Math.round(shipLevel * 14 + (hasTech(techs, 'TD-1') ? 6 : 0) + Math.min(24, weightedShipReadiness(resources))))
   const score = Math.round(shipProgress * 8 + regions.reduce((sum, region) => sum + region.level * 12, 0) + roster.length * 25 + resources.knowledge * 2)
-  const specialFacility = (id: RegionId): SpecialFacilityViewModel => {
-    const region = regions.find(item => item.id === id)!
-    const assignedPopulation = Math.min(getFacilityWorkCapacity(id, region.level), staffing[id] ?? 0)
-    const modifier = facilityModifiers[id] ?? { outputMultiplier: 1, upkeepMultiplier: 1 }
-    const selectedMethod = selectProductionMethod(facilityEconomySpecs[id].productionMethods, techs, productionMethods[id])
-    return {
-      region,
-      assignedPopulation,
-      net: isHousingFacility(id)
-        ? populationProjection.facilityNet[id] ?? {}
-        : projectFacilityNet(facilityEconomySpecs[id], assignedPopulation, modifier, techs, selectedMethod.id, region.level),
-      modifier,
-      throughput: getFacilityWorkCapacity(id, region.level) ? assignedPopulation / getFacilityWorkCapacity(id, region.level) * (modifier.outputMultiplier ?? 1) : 0,
-      methodName: selectedMethod.name,
-    }
-  }
-  const palaceFacility = specialFacility('K')
+  const activeStage = (() => {
+    const methodId = productionMethods['D'] ?? 'MD-1'
+    return parseInt(methodId.replace('MD-', ''), 10) || 1
+  })()
+  const activeTabId: AppView = view === 'visitors' ? 'visitors' : view === 'facilities' ? (specialTabFacility[selected] ?? 'facilities') : 'facilities'
 
   useEffect(() => {
     window.localStorage.setItem(musicVolumeKey, String(musicVolume))
@@ -864,13 +858,6 @@ function App() {
 
   const selectFacility = (id: RegionId) => {
     setSelected(id)
-    const specialView = specialFacilityViews[id]
-    if (specialView) {
-      setView(specialView)
-      setPlanetDocked(true)
-      setDetailOpen(false)
-      return
-    }
     setView('facilities')
     setPlanetDocked(true)
     setDetailOpen(true)
@@ -984,13 +971,6 @@ function App() {
     if (visitor) advanceEncounter(visitor, true)
   }
 
-  const inspectFacility = (id: RegionId) => {
-    setSelected(id)
-    setView('facilities')
-    setPlanetDocked(true)
-    setDetailOpen(true)
-  }
-
   const executeTrade = (name: string, input: Partial<Resources>, output: Partial<Resources>) => {
     if (!canExecuteStarportTrade(resources, input)) {
       writeLog(`${formatDay(day)}：${name}未能成交，库存不足。`)
@@ -1090,12 +1070,13 @@ function App() {
     </Modal>}
 
     <section className="page-content">
-      {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={(regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId }))} onAssignment={(visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))} />}
-      {view === 'palace' && <Palace facility={palaceFacility} day={day} lastReignReport={lastReignReport} onOpenReport={(report) => setActiveReignReport(report)} />}
-      {view === 'research' && <ResearchLab facility={specialFacility('L')} techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} researchThroughput={researchThroughput} knowledgeStock={resources.knowledge} productionMethods={productionMethods} facilityModifiers={facilityModifiers} onResearch={setActiveResearch} onMethod={(regionId, methodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId }))} onBack={() => inspectFacility('L')} />}
-      {view === 'ecology' && <EcologyRing facility={specialFacility('R')} techs={techs} productionMethods={productionMethods} facilityModifiers={facilityModifiers} onMethod={(regionId, methodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId }))} onBack={() => inspectFacility('R')} />}
-      {view === 'starport' && <Starport facility={specialFacility('S')} resources={resources} populationProjection={populationProjection} techs={techs} autoTradeProtectionEnabled={autoTradeProtectionEnabled} autoTradeEnabled={autoTradeEnabled} productionMethods={productionMethods} facilityModifiers={facilityModifiers} onProtection={setAutoTradeProtectionEnabled} onTrade={executeTrade} onAutoTrade={(key, enabled) => setAutoTradeEnabled(previous => ({ ...previous, [key]: enabled }))} onMethod={(regionId, methodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId }))} onBack={() => inspectFacility('S')} />}
-      {view === 'ship' && <Shipyard facility={specialFacility('D')} shipProgress={shipProgress} score={score} techs={techs} productionMethods={productionMethods} facilityModifiers={facilityModifiers} onMethod={(regionId, methodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId }))} onBack={() => inspectFacility('D')} />}
+      {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={(regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId }))} onAssignment={(visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))}>
+        {selected === 'K' && <PalaceReportBlock day={day} lastReignReport={lastReignReport} onOpenReport={setActiveReignReport} />}
+        {selected === 'L' && <ResearchTreeBlock techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={setActiveResearch} />}
+        {selected === 'R' && <EcologyPhaseBlock phaseNotes={selectedRegion.phaseNotes} />}
+        {selected === 'S' && <TradeBoardBlock resources={resources} populationProjection={populationProjection} techs={techs} autoTradeProtectionEnabled={autoTradeProtectionEnabled} autoTradeEnabled={autoTradeEnabled} onProtection={setAutoTradeProtectionEnabled} onTrade={executeTrade} onAutoTrade={(key, enabled) => setAutoTradeEnabled(previous => ({ ...previous, [key]: enabled }))} />}
+        {selected === 'D' && <ShipProgressBlock shipProgress={shipProgress} shipProjectStages={shipProjectStages} activeStage={activeStage} />}
+      </PlanetFacilities>}
       {view === 'visitors' && <Visitors roster={roster} assigned={assigned} regions={regions} visitor={visitor} onSelect={selectFacility} onAssignment={(regionId, visitorId) => setAssigned(previous => ({ ...previous, [regionId]: visitorId }))} />}
     </section>
 
@@ -1106,7 +1087,14 @@ function App() {
         <div className="scoreline gdp-line"><span>GDP</span><strong>{gdp.toFixed(1)}</strong><small>星海货币/日</small></div>
         <div className="scoreline"><span>国祚评分</span><strong>{score}</strong><small>星舰进度权重最高</small></div>
       </div>
-      <TabNav items={navItems} activeId={view} onSelect={setView} />
+      <TabNav items={navItems} activeId={activeTabId} onSelect={(id) => {
+        if (id === 'facilities' || id === 'visitors') { setView(id); return }
+        if (id === 'palace') { selectFacility('K'); return }
+        if (id === 'research') { selectFacility('L'); return }
+        if (id === 'ecology') { selectFacility('R'); return }
+        if (id === 'starport') { selectFacility('S'); return }
+        if (id === 'ship') { selectFacility('D'); return }
+      }} />
       <div className="footer-row footer-row-right">
         <div className="time-dock" aria-label="时间控制">
           <button className="time-control-btn" onClick={() => setSpeed(speed === 'normal' ? 'fast' : 'normal')} aria-label="切换时间速度"><Gauge size={15} /><span>{speed === 'normal' ? '正常' : '加速'}</span></button>

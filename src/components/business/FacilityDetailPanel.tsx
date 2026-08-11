@@ -1,4 +1,5 @@
 import { ChevronLeft } from 'lucide-react'
+import type { ReactNode } from 'react'
 import {
   canBuildFacility,
   facilityEconomySpecs,
@@ -14,13 +15,12 @@ import {
   selectProductionMethod,
   technologyCatalog,
 } from '../../economy'
-import { ResourceDeltaRows, CostResourceList, ConstructionDaysPill, FlowArrowSvg, FacilityNetRow } from '../resources'
+import { ResourceDeltaRows, CostResourceList, ConstructionDaysPill, FlowArrowSvg } from '../resources'
 import { ProgressLine } from '../ui'
 import { FacilityOrderGlyph } from './FacilityOrderGlyph'
 import { displayCopy } from '../../utils/format'
 import { orderLabel } from '../../utils/game'
 import { scaleResourceBundle } from '../../utils/trade'
-import { specialFacilityViews } from '../../data/eraSections'
 import buildingKing from '../../assets/building-king.png'
 import type { AutomationPlan, PopulationProjection, ProductionMethodId, Resources } from '../../economy'
 import type { Role } from '../../events'
@@ -62,6 +62,7 @@ export interface FacilityDetailPanelProps {
   onPriority: (id: RegionId, priority: StaffingPriority) => void
   onMethod: (id: RegionId, methodId: ProductionMethodId) => void
   onAssignment: (visitorId: string | undefined) => void
+  children?: ReactNode
 }
 
 export function FacilityDetailPanel({
@@ -81,6 +82,7 @@ export function FacilityDetailPanel({
   onUpgrade,
   onShrink,
   onMethod,
+  children,
 }: FacilityDetailPanelProps) {
   const selectedSpec = facilityEconomySpecs[selectedRegion.id]
   const selectedFixed = isFixedFacility(selectedRegion.id)
@@ -92,12 +94,11 @@ export function FacilityDetailPanel({
   const staffRate = workCapacity > 0 ? assignedPopulation / workCapacity : housingCapacity > 0 || selectedFixed ? 1 : 0
   const selectedModifier = facilityModifiers[selectedRegion.id] ?? { outputMultiplier: 1, upkeepMultiplier: 1 }
   const selectedFlow = projectFacilityFlow(selectedSpec, assignedPopulation, selectedModifier, techs, selectedMethod.id, selectedRegion.level)
-  const selectedNet = isHousingFacility(selectedRegion.id) ? populationProjection.facilityNet[selectedRegion.id] ?? {} : selectedFlow.net
   const selectedBuildable = canBuildFacility(selectedSpec, year, techs)
   const selectedRequiredTech = selectedSpec.requiredTech ? technologyCatalog[selectedSpec.requiredTech] : undefined
   const currentOrder = facilityOrders[selectedRegion.id] ?? 'hold'
   const throughput = staffRate * (selectedModifier.outputMultiplier ?? 1)
-  const isSpecialDetail = Boolean(specialFacilityViews[selectedRegion.id])
+  const shrinkFloor = selectedSpec.minLevel ?? 0
   const affordExpansion = canAfford(resources, selectedCost)
   const availableMethodIds = selectedSpec.productionMethods.filter(method => hasTech(techs, method.unlockedBy) && method.autoSelect !== false).map(method => method.id)
   const baseExpansionCost = projectFacilityCost(selectedSpec, selectedRegion.level, [])
@@ -124,7 +125,7 @@ export function FacilityDetailPanel({
     ? '固定建筑'
     : activeConstruction
       ? activeConstruction.mode === 'expand' ? '扩建中' : '缩减中'
-      : selectedRegion.level <= 0
+      : selectedRegion.level <= shrinkFloor
         ? '已最低'
         : ''
   const expandDisabled = Boolean(expandDisabledReason)
@@ -152,7 +153,7 @@ export function FacilityDetailPanel({
   const throughputText = selectedFixed ? '在线' : isHousingFacility(selectedRegion.id) ? '容量' : `${Math.round(throughput * 100)}%`
 
   return (
-    <aside className={`inspector facility-detail-v2 ${isSpecialDetail ? 'special-detail' : 'standard-detail'}`}>
+    <aside className="inspector facility-detail-v2 standard-detail">
       <header className="detail-v2-header">
         <button className="back-button" onClick={onBack}><ChevronLeft size={16} />建筑名录</button>
         <div className="detail-v2-title">
@@ -175,8 +176,7 @@ export function FacilityDetailPanel({
               <button className={currentOrder === 'expand-continuous' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand-continuous')} disabled={expandDisabled}><FacilityOrderGlyph mode="expand-continuous" />{withDisabledReason('持续扩建', expandDisabledReason)}</button>
             </div>
             <ProgressLine value={expandProgress} label={activeConstruction?.mode === 'expand' ? `扩建 ${expandProgress}%` : currentOrder === 'expand-continuous' ? '持续扩建已记录' : '等待扩建命令'} />
-          </article>
-          <article className="construction-card shrink">
+            <hr className="construction-divider" />
             <h3>缩减</h3>
             <div className="construction-resources"><span>回收资源</span><CostResourceList bundle={shrinkRefund} baseBundle={baseShrinkRefund} empty="无可回收" /><ConstructionDaysPill days={constructionDays} /></div>
             <div className="construction-actions">
@@ -184,6 +184,13 @@ export function FacilityDetailPanel({
               <button className={currentOrder === 'shrink-continuous' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink-continuous')} disabled={shrinkDisabled}><FacilityOrderGlyph mode="shrink-continuous" />{withDisabledReason('持续缩减', shrinkDisabledReason)}</button>
             </div>
             <ProgressLine value={shrinkProgress} label={activeConstruction?.mode === 'shrink' ? `缩减 ${shrinkProgress}%` : currentOrder === 'shrink-continuous' ? '持续缩减已记录' : '等待缩减命令'} />
+          </article>
+          <article className="construction-card building-desc-card">
+            <h3>建筑描述</h3>
+            <div className="building-desc-card-body">
+              <span className="eyebrow">{selectedRegion.subtitle}</span>
+              <p>{displayCopy(selectedRegion.note)}</p>
+            </div>
           </article>
         </section>
       </div>
@@ -232,11 +239,7 @@ export function FacilityDetailPanel({
         </article>
       </section>
 
-      <section className="detail-description-row">
-        <div><span className="eyebrow">建筑描述</span><h3>{selectedRegion.subtitle}</h3></div>
-        <p>{displayCopy(selectedRegion.note)}</p>
-        <FacilityNetRow net={selectedNet} />
-      </section>
+      {children}
     </aside>
   )
 }

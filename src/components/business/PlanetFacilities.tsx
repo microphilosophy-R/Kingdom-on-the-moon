@@ -1,4 +1,5 @@
 import { ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { PlanetScene, planetTextures } from '../../PlanetScene'
 import { PortraitSlot } from '../ui'
 import { FacilityList } from './FacilityList'
@@ -52,6 +53,7 @@ export interface PlanetFacilitiesProps {
   onPriority: (id: RegionId, priority: StaffingPriority) => void
   onMethod: (id: RegionId, methodId: ProductionMethodId) => void
   onAssignment: (visitorId: string | undefined) => void
+  children?: ReactNode
 }
 
 export function PlanetFacilities({
@@ -91,6 +93,7 @@ export function PlanetFacilities({
   onPriority,
   onMethod,
   onAssignment,
+  children,
 }: PlanetFacilitiesProps) {
   if (!docked) {
     return (
@@ -173,7 +176,7 @@ export function PlanetFacilities({
           onPriority={onPriority}
           onMethod={onMethod}
           onAssignment={onAssignment}
-        />
+        >{children}</FacilityDetailPanel>
       ) : (
         <FacilityList
           regions={regions}
