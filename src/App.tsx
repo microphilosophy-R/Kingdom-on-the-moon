@@ -97,8 +97,8 @@ import { regionLayout } from './data/regionLayout'
 import { facilityEra, facilityEraSections, facilityOrderIndex, researchableTechIds } from './data/eraSections'
 import { visitorPortraits } from './data/visitorPortraits'
 import { PlanetScene, planetTextures } from './PlanetScene'
-import charChenlin from './assets/char-chenlin.jpg'
-import type { AppView, ConstructionProject, FacilityOrderMode, GameSaveState, Icon, ReignReport, ReignReportBaseline, Region, RegionId, StaffingPriority } from './types/game'
+import charChenlin from './assets/char-00.jpg'
+import type { AppView, ConstructionProject, FacilityOrderMode, GameSaveState, Icon, ReignReport, ReignReportBaseline, Region, RegionId, SaveSlotMeta, StaffingPriority } from './types/game'
 
 type FacilityEra = 'early' | 'mid' | 'late'
 type TechnologyEra = 'early' | 'mid' | 'late'
@@ -214,8 +214,32 @@ const specialTabFacility: Record<string, AppView> = {
 const canPay = canAfford
 const apply = applyBundle
 const musicSource = '/audio/Gravity_s_Edge.mp3'
-const saveKey = 'lunar-crown-save-v4'
+const saveKey = (slotIndex: number) => `lunar-crown-save-v4-${slotIndex}`
+const saveMetaKey = (slotIndex: number) => `lunar-crown-save-meta-${slotIndex}`
+const maxSaveSlots = 6
 const musicVolumeKey = 'lunar-crown-music-volume'
+
+const readSaveSlotMeta = (slotIndex: number): SaveSlotMeta | null => {
+  try {
+    const raw = window.localStorage.getItem(saveMetaKey(slotIndex))
+    if (!raw) return null
+    return JSON.parse(raw) as SaveSlotMeta
+  } catch {
+    return null
+  }
+}
+
+const readAllSaveSlotMetas = (): (SaveSlotMeta | null)[] =>
+  Array.from({ length: maxSaveSlots }, (_, i) => readSaveSlotMeta(i))
+
+const writeSaveSlotMeta = (slotIndex: number, meta: SaveSlotMeta) => {
+  window.localStorage.setItem(saveMetaKey(slotIndex), JSON.stringify(meta))
+}
+
+const formatSaveSlotDay = (day: number) => {
+  const monthNumber = Math.max(1, Math.ceil(day / gameCalendar.reignMonthDays))
+  return `第 ${monthNumber} 个${gameCalendar.monthName}·御日 ${day}`
+}
 const allResourceKeys = resourceGroups.flatMap(group => group.keys)
 const weightedShipReadiness = (resources: Resources) => {
   const ratios = shipProjectStages.flatMap(stage =>
@@ -327,8 +351,11 @@ function App() {
   const [log, setLog] = useState<string[]>(['御日 001：月面行宫已就位，御座号的第一根龙骨等待铸造。'])
   const [pendingMonthlyReport, setPendingMonthlyReport] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [startSettingsOpen, setStartSettingsOpen] = useState(false)
   const [musicVolume, setMusicVolume] = useState(loadStoredMusicVolume)
-  const [saveStatus, setSaveStatus] = useState('本机单槽存档')
+  const [saveStatus, setSaveStatus] = useState('本机多槽存档')
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [saveSlotMetas, setSaveSlotMetas] = useState<(SaveSlotMeta | null)[]>(() => readAllSaveSlotMetas())
 
   const selectedRegion = regions.find(region => region.id === selected)!
   const selectedCost = projectFacilityCost(facilityEconomySpecs[selectedRegion.id], selectedRegion.level, techs)
@@ -472,6 +499,12 @@ function App() {
     })
   }, [gameStarted, musicVolume])
 
+  useEffect(() => {
+    if (!toastMessage) return
+    const timer = window.setTimeout(() => setToastMessage(null), 2800)
+    return () => window.clearTimeout(timer)
+  }, [toastMessage])
+
   const writeLog = (line: string) => setLog(previous => [line, ...previous].slice(0, 5))
 
   const createReignReport = (
@@ -606,27 +639,52 @@ function App() {
     setGameStarted(true)
   }
 
-  const saveGame = () => {
+  const saveGame = (slotIndex: number, slotName?: string) => {
     const snapshot = currentSave()
-    window.localStorage.setItem(saveKey, JSON.stringify(snapshot))
-    setSaveStatus(`已存档：${formatDay(snapshot.day)}`)
+    try {
+      window.localStorage.setItem(saveKey(slotIndex), JSON.stringify(snapshot))
+      const meta: SaveSlotMeta = {
+        name: slotName ?? `存档 ${slotIndex + 1}`,
+        day: snapshot.day,
+        score,
+        savedAt: new Date().toISOString(),
+      }
+      writeSaveSlotMeta(slotIndex, meta)
+      setSaveSlotMetas(readAllSaveSlotMetas())
+      setToastMessage(`已存档至槽位 ${slotIndex + 1}：${meta.name}`)
+      setSaveStatus(`已存档：${formatSaveSlotDay(meta.day)}`)
+    } catch {
+      setToastMessage('存档失败：浏览器存储异常')
+    }
   }
 
-  const loadGame = () => {
-    const rawSave = window.localStorage.getItem(saveKey)
-    if (!rawSave) {
-      setSaveStatus('没有可读取的本机存档')
-      return
-    }
+  const loadGame = (slotIndex: number) => {
     try {
+      const rawSave = window.localStorage.getItem(saveKey(slotIndex))
+      if (!rawSave) {
+        setToastMessage(`槽位 ${slotIndex + 1} 为空，没有可读取的存档`)
+        return
+      }
       const parsed = JSON.parse(rawSave) as GameSaveState
-      if ((parsed.version !== 4 && parsed.version !== 5 && parsed.version !== 6) || !parsed.resources || !parsed.regionLevels || !parsed.construction || !parsed.reignReportBaseline) throw new Error('invalid save')
+      if (![4, 5, 6].includes(parsed.version) || !parsed.resources || !parsed.regionLevels || !parsed.construction || !parsed.reignReportBaseline) throw new Error('invalid save')
       applySave(parsed)
       setSettingsOpen(false)
-      setSaveStatus(`已读档：${formatDay(parsed.day)}`)
+      setStartSettingsOpen(false)
+      const meta = readSaveSlotMeta(slotIndex)
+      setToastMessage(`已读取槽位 ${slotIndex + 1}：${meta?.name ?? `存档 ${slotIndex + 1}`}`)
+      setSaveStatus(`已读档：${formatSaveSlotDay(parsed.day)}`)
     } catch {
-      setSaveStatus('存档格式无法读取')
+      setToastMessage('读档失败：存档格式损坏')
     }
+  }
+
+  const renameSaveSlot = (slotIndex: number, newName: string) => {
+    const meta = readSaveSlotMeta(slotIndex)
+    if (!meta) return
+    const updated: SaveSlotMeta = { ...meta, name: newName }
+    writeSaveSlotMeta(slotIndex, updated)
+    setSaveSlotMetas(readAllSaveSlotMetas())
+    setToastMessage(`槽位 ${slotIndex + 1} 已重命名为「${newName}」`)
   }
 
   const exitGame = () => {
@@ -1032,10 +1090,34 @@ function App() {
   }
 
   if (!gameStarted) {
-    return <StartGate planetTexture={planetTexture} onStart={startGame} />
+    return (
+      <>
+        <StartGate
+          planetTexture={planetTexture}
+          onStart={startGame}
+          onSettings={() => setStartSettingsOpen(true)}
+        />
+        {startSettingsOpen && (
+          <SettingsPanel
+            volume={musicVolume}
+            saveSlotMetas={saveSlotMetas}
+            autoTradeProtectionEnabled={autoTradeProtectionEnabled}
+            onAutoTradeProtection={setAutoTradeProtectionEnabled}
+            onVolume={setMusicVolume}
+            onContinue={() => setStartSettingsOpen(false)}
+            onSave={saveGame}
+            onLoad={loadGame}
+            onRename={renameSaveSlot}
+            onExit={() => setStartSettingsOpen(false)}
+          />
+        )}
+        {toastMessage && <div className="save-toast" role="status" aria-live="polite">{toastMessage}</div>}
+      </>
+    )
   }
 
   return <main className="app-shell">
+    {toastMessage && <div className="save-toast" role="status" aria-live="polite">{toastMessage}</div>}
     <header className="site-header">
       <div className="brand-block">
         <div className="brand-seal"><Crown size={23} /></div>
@@ -1120,7 +1202,20 @@ function App() {
       {view === 'visitors' && <Visitors roster={roster} assigned={assigned} regions={regions} visitor={visitor} onSelect={selectFacility} onAssignment={(regionId, visitorId) => setAssigned(previous => ({ ...previous, [regionId]: visitorId }))} />}
     </section>
 
-    {settingsOpen && <SettingsPanel volume={musicVolume} saveStatus={saveStatus} autoTradeProtectionEnabled={autoTradeProtectionEnabled} onAutoTradeProtection={setAutoTradeProtectionEnabled} onVolume={setMusicVolume} onContinue={() => setSettingsOpen(false)} onSave={saveGame} onLoad={loadGame} onExit={exitGame} />}
+    {settingsOpen && (
+      <SettingsPanel
+        volume={musicVolume}
+        saveSlotMetas={saveSlotMetas}
+        autoTradeProtectionEnabled={autoTradeProtectionEnabled}
+        onAutoTradeProtection={setAutoTradeProtectionEnabled}
+        onVolume={setMusicVolume}
+        onContinue={() => setSettingsOpen(false)}
+        onSave={saveGame}
+        onLoad={loadGame}
+        onRename={renameSaveSlot}
+        onExit={exitGame}
+      />
+    )}
 
     <footer className="command-deck bottom-tabs">
       <div className="footer-row footer-row-left">

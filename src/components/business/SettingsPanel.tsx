@@ -1,32 +1,60 @@
-import { ArrowLeftRight, FolderOpen, LogOut, Play, Save, Volume2, X } from 'lucide-react'
-import { Button, IconButton } from '../ui'
+import { Check, FolderOpen, LogOut, Pencil, Play, Save, Volume2, X } from 'lucide-react'
+import { useState } from 'react'
+import { IconButton } from '../ui'
+import type { SaveSlotMeta } from '../../types/game'
 
 export interface SettingsPanelProps {
   volume: number
-  saveStatus: string
+  saveSlotMetas: (SaveSlotMeta | null)[]
   autoTradeProtectionEnabled: boolean
   onAutoTradeProtection: (enabled: boolean) => void
   onVolume: (volume: number) => void
   onContinue: () => void
-  onSave: () => void
-  onLoad: () => void
+  onSave: (slotIndex: number, name?: string) => void
+  onLoad: (slotIndex: number) => void
+  onRename: (slotIndex: number, name: string) => void
   onExit: () => void
+}
+
+const formatSlotTime = (iso: string) => {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 export function SettingsPanel({
   volume,
-  saveStatus,
+  saveSlotMetas,
   autoTradeProtectionEnabled,
   onAutoTradeProtection,
   onVolume,
   onContinue,
   onSave,
   onLoad,
+  onRename,
   onExit,
 }: SettingsPanelProps) {
+  const [editingSlot, setEditingSlot] = useState<number | null>(null)
+  const [editName, setEditName] = useState('')
+
+  const startRename = (slotIndex: number, currentName: string) => {
+    setEditingSlot(slotIndex)
+    setEditName(currentName)
+  }
+
+  const confirmRename = () => {
+    if (editingSlot === null) return
+    const trimmed = editName.trim()
+    if (trimmed) {
+      onRename(editingSlot, trimmed)
+    }
+    setEditingSlot(null)
+    setEditName('')
+  }
+
   return (
     <div className="settings-scrim" role="presentation" onPointerDown={onContinue}>
-      <aside className="settings-panel" role="dialog" aria-modal="true" aria-label="游戏设置" onPointerDown={event => event.stopPropagation()}>
+      <aside className="settings-panel settings-panel-wide" role="dialog" aria-modal="true" aria-label="游戏设置" onPointerDown={event => event.stopPropagation()}>
         <header>
           <div><span className="eyebrow">系统</span><h2>设置</h2></div>
           <IconButton label="关闭设置" onClick={onContinue}><X size={16} /></IconButton>
@@ -39,7 +67,7 @@ export function SettingsPanel({
 
         <section className="settings-section">
           <label className="settings-toggle">
-            <span><ArrowLeftRight size={16} />自动购入保护</span>
+            <span><Volume2 size={16} />自动购入保护</span>
             <input type="checkbox" checked={autoTradeProtectionEnabled} onChange={event => onAutoTradeProtection(event.target.checked)} />
             <i aria-hidden="true" />
           </label>
@@ -47,16 +75,61 @@ export function SettingsPanel({
         </section>
 
         <section className="settings-section">
-          <div className="settings-section-title"><Save size={16} /><span>存档读档</span></div>
-          <div className="settings-actions">
-            <button onClick={onSave}><Save size={15} />存档</button>
-            <button onClick={onLoad}><FolderOpen size={15} />读档</button>
+          <div className="settings-section-title"><Save size={16} /><span>存档管理（{saveSlotMetas.filter(Boolean).length}/{saveSlotMetas.length}）</span></div>
+          <div className="save-slots-grid">
+            {saveSlotMetas.map((meta, i) => (
+              <div key={i} className={`save-slot-card${meta ? ' occupied' : ''}`}>
+                {meta ? (
+                  editingSlot === i ? (
+                    <div className="save-slot-rename">
+                      <input
+                        type="text"
+                        className="save-slot-input"
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') confirmRename(); if (e.key === 'Escape') setEditingSlot(null) }}
+                        maxLength={20}
+                        autoFocus
+                        aria-label="存档名称"
+                      />
+                      <button className="save-slot-rename-confirm" onClick={confirmRename} title="确认"><Check size={14} /></button>
+                    </div>
+                  ) : (
+                    <div className="save-slot-name-row">
+                      <span className="save-slot-name">{meta.name}</span>
+                      <button className="save-slot-rename-btn" onClick={() => startRename(i, meta.name)} title="重命名"><Pencil size={11} /></button>
+                    </div>
+                  )
+                ) : (
+                  <span className="save-slot-name save-slot-empty">空槽位 {i + 1}</span>
+                )}
+                {meta ? (
+                  <div className="save-slot-info">
+                    <span>御日 {meta.day} · 评分 {meta.score}</span>
+                    <small>{formatSlotTime(meta.savedAt)}</small>
+                  </div>
+                ) : (
+                  <div className="save-slot-info">
+                    <small>暂无存档</small>
+                  </div>
+                )}
+                <div className="save-slot-actions">
+                  {meta ? (
+                    <>
+                      <button onClick={() => onSave(i, meta.name)} title="覆盖存档"><Save size={12} />覆盖</button>
+                      <button className="save-slot-load" onClick={() => onLoad(i)} title="读取存档"><FolderOpen size={12} />读取</button>
+                    </>
+                  ) : (
+                    <button onClick={() => onSave(i)} title="新建存档"><Save size={12} />存档</button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-          <small>{saveStatus}</small>
         </section>
 
         <section className="settings-actions settings-main-actions">
-          <Button variant="primary" onClick={onContinue}><Play size={15} />继续游戏</Button>
+          <button className="primary-action" onClick={onContinue}><Play size={15} />继续游戏</button>
           <button onClick={onExit}><LogOut size={15} />退出游戏</button>
         </section>
       </aside>

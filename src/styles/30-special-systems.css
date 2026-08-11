@@ -126,22 +126,32 @@
   line-height: 1.75;
 }
 
-.start-facts {
+.start-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: .45rem;
+  align-items: center;
+  gap: .55rem;
 }
 
-.start-facts span {
+.settings-secondary-btn {
   display: inline-flex;
   align-items: center;
-  gap: .28rem;
+  gap: .35rem;
   border: 1px solid var(--ui-line);
   border-radius: 4px;
-  padding: .34rem .48rem;
+  padding: .7rem .9rem;
   background: var(--ui-raised);
   color: var(--ui-muted);
-  font-size: var(--font-label);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color .18s ease-out, border-color .18s ease-out, background .18s ease-out, box-shadow .18s ease-out;
+}
+
+.settings-secondary-btn:hover {
+  border-color: var(--ui-brass);
+  color: var(--ui-brass);
+  background: oklch(95% .036 78);
+  box-shadow: 0 4px 12px oklch(52% .105 76 / .15);
 }
 
 .app-shell {

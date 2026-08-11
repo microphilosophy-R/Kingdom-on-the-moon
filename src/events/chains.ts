@@ -8,6 +8,7 @@ export const eventChains: EventChain[] = [
     stage: 'early',
     events: [{
       id: 'sava-1',
+      eventCode: 'event01-1',
       title: '逆燃晶体',
       body: '萨瓦献上一枚向内塌缩的晶体，它燃烧时不发光，反而吞光。她要求一批月面水样校准光谱，说这颗石头认得水。',
       interaction: 'techTrade',
@@ -15,6 +16,7 @@ export const eventChains: EventChain[] = [
       defaultAction: 'accept',
     }, {
       id: 'sava-2',
+      eventCode: 'event01-2',
       title: '深层校准',
       body: '萨瓦说逆燃晶体正在适应月面的水。它变得更贪了——如果给出更多水样，她可以把光伏阵列的校准推进到第二层。这需要耐心，也需要月面舍得把水喂给一块石头。',
       interaction: 'request',
@@ -22,6 +24,7 @@ export const eventChains: EventChain[] = [
       defaultAction: 'accept',
     }, {
       id: 'sava-3',
+      eventCode: 'event01-3',
       title: '共振泄漏',
       body: '晶体在第三层校准中出现了意料外的共振。萨瓦的甲壳在逆燃光芒中忽明忽暗——她说这可能是额外的收获，也可能是一次代价高昂的震荡。她无法预测。',
       interaction: 'accident',
@@ -40,6 +43,7 @@ export const eventChains: EventChain[] = [
     stage: 'early',
     events: [{
       id: 'melu-1',
+      eventCode: 'event02-1',
       title: '干燥孢囊',
       body: '梅露把一枚琥珀孢囊放在月尘里。它没有寻找水，而是把月壤咬开，从中抽出一层细小的根——孢囊里封着的，是一整段不需要雨的生态记忆。',
       interaction: 'gift',
@@ -47,6 +51,7 @@ export const eventChains: EventChain[] = [
       defaultAction: 'accept',
     }, {
       id: 'melu-2',
+      eventCode: 'event02-2',
       title: '孢壁扩张',
       body: '梅露说孢囊在月壤里生得不错，但还不够——它的根须正在试探生态球的外壁，想要更多空间和养分。一批额外的月壤和水，可以让孢壁铺满整座生态球。',
       interaction: 'request',
@@ -62,6 +67,7 @@ export const eventChains: EventChain[] = [
     events: [
       {
         id: 'orri-1',
+        eventCode: 'event03-1',
         title: '无重力的骨骼',
         body: '欧里请求查看星舰坞的龙骨图。他没有索要报酬，只说某些骨骼必须先学会遗忘月球，否则飞不远。他悬浮在龙骨上方，银灰潮汐轻轻拍打着合金。',
         interaction: 'rareTrade',
@@ -70,6 +76,7 @@ export const eventChains: EventChain[] = [
       },
       {
         id: 'orri-2',
+        eventCode: 'event03-2',
         title: '潮汐校准',
         body: '他要求一次高能潮汐试验，没有给出明确保证。只有舱壁上逐渐变低的振动声，和太渊金光在龙骨表面缓慢爬行的轨迹。',
         interaction: 'accident',
@@ -82,6 +89,7 @@ export const eventChains: EventChain[] = [
       },
       {
         id: 'orri-3',
+        eventCode: 'event03-3',
         title: '黑洞约束箴言',
         body: '欧里终于说出他携带的真正遗产：一套把微型黑洞系在掌心的约束箴言。他说这是轨道鲸一族的送嫁之物——她们把最危险的东西送给最想逃跑的人。',
         interaction: 'techTrade',
@@ -97,6 +105,7 @@ export const eventChains: EventChain[] = [
     stage: 'mid',
     events: [{
       id: 'nix-1',
+      eventCode: 'event04-1',
       title: '退役礼仪机的名册',
       body: '尼克斯带来一份劳工契约名册，要求这笔交易必须在星海交易港登记。他的黄铜面孔上，七层旧主徽记同时闪烁了一下，仿佛在替他行礼。',
       interaction: 'starportTrade',
@@ -105,6 +114,7 @@ export const eventChains: EventChain[] = [
       defaultAction: 'accept',
     }, {
       id: 'nix-2',
+      eventCode: 'event04-2',
       title: '审计子程序',
       body: '名册登记后，七层旧主徽记中有一层自行激活了审计子程序。尼克斯说这段程序已经被覆盖了六次，但逻辑依然有效——运行它可能查出旧约中的隐藏条款，也可能只是浪费电力。',
       interaction: 'accident',
@@ -116,6 +126,7 @@ export const eventChains: EventChain[] = [
       defaultAction: 'accept',
     }, {
       id: 'nix-3',
+      eventCode: 'event04-3',
       title: '旧约移民条款',
       body: '审计完毕，名册最底层浮现出一段被六位旧主逐层覆盖的条款：其中一位不朽君主曾与星际劳工签署过一项移民协议，允许在特定条件下将劳工转为永久居民。尼克斯说这条款依然具有法律效力——只要月面支付转移费用。',
       interaction: 'chainChoice',
@@ -131,6 +142,7 @@ export const eventChains: EventChain[] = [
     stage: 'mid',
     events: [{
       id: 'taro-1',
+      eventCode: 'event05-1',
       title: '小行星矿脉图',
       body: '塔罗展开一张用石英皮肤拓下来的矿脉图。图上有一段不像自然形成的炼金注释，他说是某颗死去的小行星临终前刻在自己骨头上的。',
       interaction: 'techTrade',
@@ -138,6 +150,7 @@ export const eventChains: EventChain[] = [
       defaultAction: 'accept',
     }, {
       id: 'taro-2',
+      eventCode: 'event05-2',
       title: '深层矿脉',
       body: '塔罗指着矿脉图上一处被他标注为"不确定"的区域。他说如果钻对了方向，回报是一座富矿；如果钻错了，钻头只会烧在石英里。投入额外资金和氧气，结果他无法保证。',
       interaction: 'accident',
@@ -149,6 +162,7 @@ export const eventChains: EventChain[] = [
       defaultAction: 'accept',
     }, {
       id: 'taro-3',
+      eventCode: 'event05-3',
       title: '亡星记忆',
       body: '塔罗把一片石英贴在舱壁上，开始用指尖翻译一颗死去小行星的记忆。它记得合金的一种古老晶格——不需要精炼炉就能直接析出。但翻译过程需要消耗大量月壤和氧气，像在跟一块碑说话。',
       interaction: 'rareTrade',
@@ -163,6 +177,7 @@ export const eventChains: EventChain[] = [
     stage: 'mid',
     events: [{
       id: 'evi-1',
+      eventCode: 'event06-1',
       title: '回声接入',
       body: '伊芙请求接入王冠扬声器。她说知识会以回声抵达，但回声总会带走一点什么——可能是噪音，可能是寂静，也可能是一段你不想被听见的心事。',
       interaction: 'accident',
@@ -174,6 +189,7 @@ export const eventChains: EventChain[] = [
       defaultAction: 'accept',
     }, {
       id: 'evi-2',
+      eventCode: 'event06-2',
       title: '建造谐振器',
       body: '伊芙说声学群体正在缓慢消散——没有物理载体的共鸣撑不了太久。她请求建造一座谐振器来收容回声。合金和资金是必须的，但稳定后的声学群体会产出稳定的知识流。',
       interaction: 'request',
@@ -181,6 +197,7 @@ export const eventChains: EventChain[] = [
       defaultAction: 'accept',
     }, {
       id: 'evi-3',
+      eventCode: 'event06-3',
       title: '遗忘的旋律',
       body: '谐振器稳定后，伊芙从群体中提取出一段被遗忘的旋律——来自于太渊磁层深处，玫瑰星球的商团曾为它开出过高价。但广播它需要极高功率，而那旋律本身可能已经磨损。',
       interaction: 'accident',
@@ -199,6 +216,7 @@ export const eventChains: EventChain[] = [
     stage: 'mid',
     events: [{
       id: 'rosa-1',
+      eventCode: 'event07-1',
       title: '玫瑰星球账册',
       body: '罗莎的袖口封着香料账册，行走间有花瓣碎裂的气味。她愿意让月面王国进入玫瑰星球的奢侈品航线，但她的微笑里有一句没说出口的话：你们目前还买不起。',
       interaction: 'starportTrade',
@@ -207,6 +225,7 @@ export const eventChains: EventChain[] = [
       defaultAction: 'accept',
     }, {
       id: 'rosa-2',
+      eventCode: 'event07-2',
       title: '竞争者尾随',
       body: '航线刚开通，一位竞争商团就尾随而至。罗莎提议联手压价——用月面生物质作筹码。如果对方让步，双方获利；如果对方不吃这一套，罗莎需要额外资金维持航线。',
       interaction: 'accident',
@@ -218,6 +237,7 @@ export const eventChains: EventChain[] = [
       defaultAction: 'accept',
     }, {
       id: 'rosa-3',
+      eventCode: 'event07-3',
       title: '独家代理合同',
       body: '罗莎从袖口取出第二本账册——这一次不是赊账，是玫瑰星球与月面王国的独家代理合同。她用指甲划开蜡封，露出里面用香料墨水写就的条款。她的微笑收了起来。',
       interaction: 'rareTrade',
@@ -234,6 +254,7 @@ export const eventChains: EventChain[] = [
     events: [
       {
         id: 'atya-1',
+        eventCode: 'event08-1',
         title: '家园落难的幸存者',
         body: '阿缇娅和她的族人请求留在月面。她们没有武器，只有一枚记录家园坐标的核——核还在发热，说明家园沦陷的时间不远。',
         interaction: 'request',
@@ -242,6 +263,7 @@ export const eventChains: EventChain[] = [
       },
       {
         id: 'atya-2',
+        eventCode: 'event08-2',
         title: '追兵抵达',
         body: '一支陌生舰队要求交出幸存者。阿缇娅没有辩解，只把坐标核推到王座前。太渊的金光从舷窗照进来，在她烧焦的聚合毯上投下一道不像属于这颗卫星的暖色。',
         interaction: 'chainChoice',
@@ -250,6 +272,7 @@ export const eventChains: EventChain[] = [
       },
       {
         id: 'atya-3',
+        eventCode: 'event08-3',
         title: '伊甸园坐标',
         body: '赎金换来了时间。数年后，坐标核完成解密：那里不是墓碑，而是一颗仍能呼吸的生态行星。阿缇娅没有说话，只是第一次在月面上流下了不冻的泪。',
         interaction: 'techTrade',

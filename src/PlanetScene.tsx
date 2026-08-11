@@ -96,6 +96,16 @@ export function PlanetScene({ texture, compact = false, onActivate }: PlanetScen
       width = Math.max(1, rect.width)
       height = Math.max(1, rect.height)
       camera.aspect = width / height
+
+      // Ensure sphere (radius=1) always fits within the camera frustum.
+      // When aspect < 1 (narrow/portrait), the horizontal FOV shrinks and
+      // the sphere can overflow.  Push the camera back as needed.
+      const baseZ = compact ? 4.2 : 3.55
+      const halfFovVert = (42 * Math.PI) / 360
+      const minZByAspect = 1 / (Math.tan(halfFovVert) * Math.min(camera.aspect, 1))
+      const adjustedZ = Math.max(baseZ, minZByAspect)
+      camera.position.set(0, 0.18, adjustedZ)
+
       camera.updateProjectionMatrix()
       renderer.setSize(width, height, false)
     }

@@ -114,3 +114,10 @@ export type GameSaveState = {
   log: string[]
   pendingMonthlyReport: string | null
 }
+
+export type SaveSlotMeta = {
+  name: string
+  day: number
+  score: number
+  savedAt: string
+}

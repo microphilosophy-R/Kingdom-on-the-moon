@@ -75,8 +75,9 @@ UI 主字体：`Noto Sans SC`, `Microsoft YaHei UI`, `Segoe UI`, `system-ui`, `s
 
 | 分类 | 前缀 | 示例 |
 | --- | --- | --- |
-| 角色肖像 | `char-` | `char-chenlin.jpg`、`char-sava.jpg` |
-| 建筑图标 | `bldg-` | `bldg-e1-icon.png`、`bldg-d-yard.jpg` |
+| 角色肖像 | `char-` | `char-00.jpg`（陈林）、`char-01.png`–`char-08.png`（访客） |
+| 角色事件插画 | `event` | `event01-1.png` 等对应 eventRegistry |
+| 建筑图标 | `bldg-` | `bldg-e1.png`、`bldg-d.png` |
 | 场景背景 | `scene-` | `scene-moon-surface.jpg`、`scene-taiyuan-sky.jpg` |
 | UI 元素 | `ui-` | `ui-btn-brass.svg`、`ui-frame-parchment.svg` |
 | 资源图标 | `res-` | `res-water.svg`、`res-alloy.svg` |

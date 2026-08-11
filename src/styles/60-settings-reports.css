@@ -1101,6 +1101,210 @@
   color: oklch(98% .01 86);
 }
 
+/* ─── Wide settings panel ─── */
+.settings-panel-wide {
+  width: min(680px, 100%);
+}
+
+/* ─── Save slot cards ─── */
+.save-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
+}
+
+.save-slot-card {
+  display: grid;
+  gap: .5rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .65rem;
+  background: oklch(99% .005 85);
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.save-slot-card.occupied {
+  border-color: oklch(73% .04 76 / .45);
+  background: oklch(97% .025 80 / .55);
+}
+
+.save-slot-card:hover {
+  border-color: var(--ui-brass);
+  box-shadow: 0 4px 16px var(--ui-shadow);
+}
+
+.save-slot-name-row {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  min-width: 0;
+}
+
+.save-slot-name {
+  overflow: hidden;
+  color: var(--ui-ink-strong);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.save-slot-empty {
+  color: var(--ui-muted);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 400;
+}
+
+.save-slot-rename-btn {
+  display: grid;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ui-muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+
+.save-slot-rename-btn:hover {
+  border-color: var(--ui-line);
+  color: var(--ui-brass);
+}
+
+.save-slot-rename {
+  display: flex;
+  gap: .3rem;
+  align-items: center;
+}
+
+.save-slot-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--ui-brass);
+  border-radius: 4px;
+  padding: .28rem .42rem;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.save-slot-input:focus {
+  box-shadow: 0 0 0 2px oklch(63% .1 76 / .24);
+}
+
+.save-slot-rename-confirm {
+  display: grid;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--ui-brass);
+  border-radius: 4px;
+  background: var(--ui-brass);
+  color: oklch(98% .012 86);
+  cursor: pointer;
+}
+
+.save-slot-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  align-items: baseline;
+}
+
+.save-slot-info span {
+  color: var(--ui-brass-dark);
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
+
+.save-slot-info small {
+  color: var(--ui-muted);
+  font-size: 10px;
+}
+
+.save-slot-actions {
+  display: flex;
+  gap: .35rem;
+}
+
+.save-slot-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  padding: .32rem .48rem;
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: 10px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+}
+
+.save-slot-actions button:hover {
+  border-color: var(--ui-brass);
+  color: var(--ui-brass);
+  background: oklch(95% .036 78);
+}
+
+.save-slot-actions .save-slot-load {
+  border-color: var(--ui-brass-light);
+  color: var(--ui-brass);
+}
+
+.save-slot-actions .save-slot-load:hover {
+  background: var(--ui-brass);
+  color: oklch(98% .012 86);
+}
+
+/* ─── Save toast ─── */
+.save-toast {
+  position: fixed;
+  z-index: 20;
+  bottom: 1.6rem;
+  left: 50%;
+  max-width: min(480px, 92vw);
+  transform: translateX(-50%);
+  border: 1px solid var(--ui-brass);
+  border-radius: 6px;
+  padding: .62rem 1rem;
+  background: oklch(29% .042 250);
+  color: oklch(96% .018 84);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 10px 36px oklch(17% .028 252 / .38);
+  animation: saveToastIn .24s cubic-bezier(.22, 1, .36, 1) both;
+  pointer-events: none;
+}
+
+@keyframes saveToastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@media (max-width: 680px) {
+  .settings-panel-wide {
+    width: min(390px, 100%);
+  }
+  .save-slots-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .reign-report-scrim {
   position: fixed;
   inset: 0;

@@ -2,6 +2,7 @@ import type { Role } from './types'
 
 export const roles: Role[] = [
   {
+    charId: 'char-01',
     id: 'sava',
     name: '萨瓦·碎光',
     species: '折光甲壳人 / 来自太渊内侧第三轨道',
@@ -13,6 +14,7 @@ export const roles: Role[] = [
     quote: '“你们把恒星装进了贡箱，我可以让它少吃一点——但别指望它感恩。”',
   },
   {
+    charId: 'char-02',
     id: 'melu',
     name: '梅露·第九孢',
     species: '浮游菌落使节 / 来自太渊环带孢子云',
@@ -24,6 +26,7 @@ export const roles: Role[] = [
     quote: '“土壤记得每一位被埋葬的王。你们的还很年轻——年轻到仍然以为活着是理所当然。”',
   },
   {
+    charId: 'char-03',
     id: 'orri',
     name: '欧里·无重力',
     species: '轨道鲸后裔 / 来自太渊引力阱外缘',
@@ -35,6 +38,7 @@ export const roles: Role[] = [
     quote: '“星舰的骨骼不该只记得重力，也要记得离开它。你那位王，他的脚记得太牢了。”',
   },
   {
+    charId: 'char-04',
     id: 'nix',
     name: '尼克斯·二十七',
     species: '退役礼仪机 / 产地不明，太渊星域旧制式',
@@ -46,6 +50,7 @@ export const roles: Role[] = [
     quote: '“我曾侍奉过七位不朽君主，结果都差不多。你看上去比他们清醒，这未必是好事。”',
   },
   {
+    charId: 'char-05',
     id: 'taro',
     name: '塔罗·掘井者',
     species: '硅酸盐游牧民 / 来自太渊外环碎屑带',
@@ -57,6 +62,7 @@ export const roles: Role[] = [
     quote: '“月亮不是死的，只是它把话说得很慢。你们踩在上面，却从来没弯下耳朵听过。”',
   },
   {
+    charId: 'char-06',
     id: 'evi',
     name: '伊芙·回声',
     species: '声学群体 / 来自太渊磁层共振腔',
@@ -68,6 +74,7 @@ export const roles: Role[] = [
     quote: '“我听见你们把孤独叫作秩序，所以来收集一点。孤独是会回声的，你们知道吗？”',
   },
   {
+    charId: 'char-07',
     id: 'rosa',
     name: '罗莎·花冠',
     species: '玫瑰星球商团 / 来自太渊跃迁走廊另一端',
@@ -79,6 +86,7 @@ export const roles: Role[] = [
     quote: '“奢侈品不是多余之物。它们是文明愿意承认自己仍有余裕——你治下的月面，目前还没有这个余裕。”',
   },
   {
+    charId: 'char-08',
     id: 'atya',
     name: '阿缇娅·灰舟',
     species: '流亡栖居者 / 原籍伊甸星系，家园已沦陷',

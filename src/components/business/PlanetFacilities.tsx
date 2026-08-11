@@ -5,7 +5,7 @@ import { PortraitSlot } from '../ui'
 import { FacilityList } from './FacilityList'
 import { FacilityDetailPanel } from './FacilityDetailPanel'
 import { formatDay } from '../../utils/format'
-import charChenlin from '../../assets/char-chenlin.jpg'
+import charChenlin from '../../assets/char-00.jpg'
 import type { AutomationPlan, PopulationProjection, ProductionMethodId, Resources } from '../../economy'
 import type { Role } from '../../events'
 import type {

@@ -1,6 +1,8 @@
 import type { FacilityId, Resources } from '../economy'
 
 export type Role = {
+  /** 统一角色编号，如 "char-01"，对应 characterRegistry */
+  charId?: string
   id: string
   name: string
   species: string
@@ -18,6 +20,8 @@ export type EventDefaultAction = 'accept' | 'dismiss'
 
 export type EventStep = {
   id: string
+  /** 统一事件编号，如 "event01-2"，对应 eventRegistry */
+  eventCode?: string
   title: string
   body: string
   interaction: EventInteraction
