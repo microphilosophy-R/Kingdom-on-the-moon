@@ -153,10 +153,15 @@ export type StarportTradeOffer = {
   id: string
   unlockTech: TechnologyId
   name: string
+  resource: ResourceKey
   input: Partial<Resources>
   output: Partial<Resources>
+  baseValue: number
+  buyPremium: number
+  sellDiscount: number
   note: string
   automated?: boolean
+  canSell?: boolean
 }
 
 export type AutoTrade = {

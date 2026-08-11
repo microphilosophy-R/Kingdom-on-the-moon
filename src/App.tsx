@@ -35,6 +35,7 @@ import {
   settleDailyResources,
   planAutoTradesForDeficits,
   shipProjectStages,
+  starportTradeOffers,
   technologyCatalog,
   weightedValue,
   type AutomationPlan,
@@ -317,6 +318,7 @@ function App() {
   const [autoTradeProtectionEnabled, setAutoTradeProtectionEnabled] = useState(true)
   const [autoTradeEnabled, setAutoTradeEnabled] = useState<Partial<Record<ResourceKey, boolean>>>({})
   const [tradeSourcedResources, setTradeSourcedResources] = useState<Partial<Record<ResourceKey, boolean>>>({})
+  const [dailyManualTrades, setDailyManualTrades] = useState<Partial<Record<ResourceKey, { dir: 'buy' | 'sell'; qty: number }>>>({})
   const [lastAutomatedAction, setLastAutomatedAction] = useState<{ id: RegionId; day: number; mode: FacilityOrderMode } | null>(null)
   const policy = 'ration' as const
   const [reignReportBaseline, setReignReportBaseline] = useState<ReignReportBaseline>({ day: 1, resources: initialResources, gdp: 0 })
@@ -657,8 +659,26 @@ function App() {
     const nextDay = day + 1
     const isReportDay = nextDay % gameCalendar.reignMonthDays === 0
     const afterDailyNet = settleDailyResources(resources, dailyNet)
-    const completedProjects = Object.entries(construction).filter(([, project]) => project && project.completeDay <= nextDay) as [RegionId, ConstructionProject][]
     let finalResources = afterDailyNet
+    const manualTradeEntries = Object.entries(dailyManualTrades) as [ResourceKey, { dir: 'buy' | 'sell'; qty: number }][]
+    if (manualTradeEntries.length) {
+      const doDailyTrade = (r: Resources, key: ResourceKey, dir: 'buy' | 'sell', qty: number): Resources | null => {
+        const offer = starportTradeOffers.find(o => o.resource === key)
+        if (!offer) return null
+        const bp = offer.input.currency ?? 0
+        const sp = offer.baseValue * (1 - offer.sellDiscount)
+        const obp = offer.output[offer.resource] ?? 1
+        const input: Partial<Resources> = dir === 'buy' ? { currency: bp * qty } : { [key]: qty }
+        const output: Partial<Resources> = dir === 'buy' ? { [key]: qty * obp } : { currency: sp * qty }
+        if (!canExecuteStarportTrade(r, input)) return null
+        return apply(apply(r, input, -1), output)
+      }
+      manualTradeEntries.forEach(([key, trade]) => {
+        const result = doDailyTrade(finalResources, key, trade.dir, trade.qty)
+        if (result) finalResources = result
+      })
+    }
+    const completedProjects = Object.entries(construction).filter(([, project]) => project && project.completeDay <= nextDay) as [RegionId, ConstructionProject][]
     const startedActions: typeof automationPlan.actions = []
     const completedTechnologyActions: typeof automationPlan.technologyActions = []
 
@@ -983,6 +1003,27 @@ function App() {
     writeLog(`${formatDay(day)}：星海交易港完成「${name}」。`)
   }
 
+  const scheduleDailyTrade = (key: ResourceKey, dir: 'buy' | 'sell', qty: number, input: Partial<Resources>, output: Partial<Resources>) => {
+    if (!canExecuteStarportTrade(resources, input)) {
+      writeLog(`${formatDay(day)}：每日交易设置失败，库存不足。`)
+      return
+    }
+    setDailyManualTrades(previous => {
+      const next = { ...previous, [key]: { dir, qty } }
+      writeLog(`${formatDay(day)}：星海交易港锁定每日${dir === 'buy' ? '进口' : '出口'} ${resourceMeta[key].label} ×${qty}。`)
+      return next
+    })
+  }
+
+  const cancelDailyTrade = (key: ResourceKey) => {
+    setDailyManualTrades(previous => {
+      const next = { ...previous }
+      delete next[key]
+      writeLog(`${formatDay(day)}：星海交易港取消 ${resourceMeta[key].label} 的每日交易。`)
+      return next
+    })
+  }
+
   const startGame = () => {
     const openingBaseline = { day: 1, resources, gdp }
     const report = createReignReport(1, resources, regions, staffing, construction, populationProjection, dailyProduction, dailyConsumption, gdp, openingBaseline)
@@ -1073,7 +1114,7 @@ function App() {
         {selected === 'K' && <PalaceReportBlock day={day} lastReignReport={lastReignReport} onOpenReport={setActiveReignReport} />}
         {selected === 'L' && <ResearchTreeBlock techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={setActiveResearch} />}
         {selected === 'R' && <EcologyPhaseBlock phaseNotes={selectedRegion.phaseNotes} />}
-        {selected === 'S' && <TradeBoardBlock resources={resources} populationProjection={populationProjection} techs={techs} autoTradeProtectionEnabled={autoTradeProtectionEnabled} autoTradeEnabled={autoTradeEnabled} onProtection={setAutoTradeProtectionEnabled} onTrade={executeTrade} onAutoTrade={(key, enabled) => setAutoTradeEnabled(previous => ({ ...previous, [key]: enabled }))} />}
+        {selected === 'S' && <TradeBoardBlock resources={resources} populationProjection={populationProjection} techs={techs} autoTradeProtectionEnabled={autoTradeProtectionEnabled} autoTradeEnabled={autoTradeEnabled} dailyTrades={dailyManualTrades} onProtection={setAutoTradeProtectionEnabled} onTrade={executeTrade} onScheduleDailyTrade={scheduleDailyTrade} onCancelDailyTrade={cancelDailyTrade} onAutoTrade={(key, enabled) => setAutoTradeEnabled(previous => ({ ...previous, [key]: enabled }))} />}
         {selected === 'D' && <ShipProgressBlock shipProgress={shipProgress} shipProjectStages={shipProjectStages} activeStage={activeStage} />}
       </PlanetFacilities>}
       {view === 'visitors' && <Visitors roster={roster} assigned={assigned} regions={regions} visitor={visitor} onSelect={selectFacility} onAssignment={(regionId, visitorId) => setAssigned(previous => ({ ...previous, [regionId]: visitorId }))} />}

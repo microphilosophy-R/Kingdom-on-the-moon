@@ -84,7 +84,7 @@ describe('economy catalog', () => {
     expect(projectAnnualNet).toBe(projectDailyNet)
     expect(resourceWeights.regolith).toBe(1)
     expect(resourceWeights.alloy).toBe(5)
-    expect(resourceWeights.quantumCore).toBe(36)
+    expect(resourceWeights.quantumCore).toBe(120)
   })
 
   it('settles power as a non-storable daily balance', () => {
@@ -230,7 +230,7 @@ describe('economy catalog', () => {
       expect(stage.input.population).toBeUndefined()
     })
     expect(shipProjectTotalValue).toBeGreaterThan(0)
-    expect(facilityEconomySpecs.D.productionMethods[0].input).toEqual({ power: 45, water: 5, oxygen: 18, biomass: 16, regolith: 12, alloy: 20 })
+    expect(facilityEconomySpecs.D.productionMethods[0].input).toEqual({ power: 16, oxygen: 18, alloy: 7 })
     expect(facilityEconomySpecs.D.productionMethods[0].output).toEqual({})
   })
 
@@ -464,7 +464,7 @@ describe('population and construction scale', () => {
     const cost = { alloy: 12 }
     const facilities = facilityOrder.map(id => ({ id, level: id === 'S' ? 1 : 0 }))
     const tradePlan = planAutoTradesForCost(
-      { ...richResources, alloy: 8, regolith: 60, currency: 30 },
+      { ...richResources, alloy: 8, currency: 100 },
       cost,
       facilities,
       ['TS-0 Starport charter'],

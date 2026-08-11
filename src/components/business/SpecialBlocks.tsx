@@ -1,21 +1,27 @@
 import { useRef, useState, useEffect, type WheelEvent as ReactWheelEvent, type PointerEvent as ReactPointerEvent } from 'react'
-import { ArrowLeftRight, ArrowRight, BookOpen, Crown, FlaskConical, Rocket, Waves } from 'lucide-react'
+import { ArrowDown, ArrowLeftRight, ArrowRight, ArrowUp, ArrowUpToLine, BookOpen, Check, Crown, FlaskConical, Lock, Maximize2, Minus, Plus, Rocket, Trash2, Waves } from 'lucide-react'
 import {
   canExecuteStarportTrade,
+  currencyDebtInterestRate,
+  defaultReserveFloors,
+  emergencyCreditDebtLimit,
   gameCalendar,
   hasTech,
+  isDailyTradeResource,
   resourceMeta,
   resourceOrder,
+  resourceWeights,
   starportTradeOffers,
   technologyCatalog,
+  weightedValue,
 } from '../../economy'
-import type { PopulationProjection, ResourceKey, Resources, TechnologyId } from '../../economy'
+import type { PopulationProjection, ResourceKey, Resources, StarportTradeOffer, TechnologyId } from '../../economy'
 import { researchableTechIds, researchEraSections } from '../../data/eraSections'
 import type { ReignReport } from '../../types/game'
 import { displayCopy, fmt, fmtAmount, formatDay } from '../../utils/format'
 import { completedTechnologyIds, techLabel } from '../../utils/game'
-import { bundleHasValues, deficitTradeBatches, maxTradeBatchesFromSurplus, maxTradeBatchesWithDebt, scaleResourceBundle } from '../../utils/trade'
-import { ResourceBundle } from '../resources'
+import { scaleResourceBundle } from '../../utils/trade'
+import { ResourceAtom, ResourceBundle } from '../resources'
 import { SectionHeading } from '../layout'
 import { InfoToggle } from './InfoToggle'
 import { TechnologyCard } from './TechnologyCard'
@@ -257,14 +263,26 @@ export function ResearchTreeBlock({ techs, activeResearch, researchProgress, onR
 
 /* ===================== TradeBoardBlock ===================== */
 
+
+type TradeDirection = 'buy' | 'sell'
+
+const buyPrice = (offer: StarportTradeOffer) => (offer.input.currency ?? 0)
+const sellPrice = (offer: StarportTradeOffer) => offer.baseValue * (1 - offer.sellDiscount)
+const outputPerBatch = (offer: StarportTradeOffer) => (offer.output[offer.resource] ?? 1)
+
+const stepSizes = [1, 10, 100, 1000]
+
 export interface TradeBoardBlockProps {
   resources: Resources
   populationProjection: PopulationProjection
   techs: string[]
   autoTradeProtectionEnabled: boolean
   autoTradeEnabled: Partial<Record<ResourceKey, boolean>>
+  dailyTrades: Partial<Record<ResourceKey, { dir: 'buy' | 'sell'; qty: number }>>
   onProtection: (enabled: boolean) => void
   onTrade: (name: string, input: Partial<Resources>, output: Partial<Resources>) => void
+  onScheduleDailyTrade: (key: ResourceKey, dir: 'buy' | 'sell', qty: number, input: Partial<Resources>, output: Partial<Resources>) => void
+  onCancelDailyTrade: (key: ResourceKey) => void
   onAutoTrade: (key: ResourceKey, enabled: boolean) => void
 }
 
@@ -274,24 +292,45 @@ export function TradeBoardBlock({
   techs,
   autoTradeProtectionEnabled,
   autoTradeEnabled,
+  dailyTrades,
   onProtection,
   onTrade,
+  onScheduleDailyTrade,
+  onCancelDailyTrade,
   onAutoTrade,
 }: TradeBoardBlockProps) {
-  const [tradeBatches, setTradeBatches] = useState<Record<string, number>>({})
-  const [tradeSteps, setTradeSteps] = useState<Record<string, number>>({})
+  const [tradeQty, setTradeQty] = useState<Record<string, number>>({})
+  const [tradeDir, setTradeDir] = useState<Record<string, TradeDirection>>({})
+  const [tradeStep, setTradeStep] = useState<Record<string, number>>({})
 
-  const setOfferBatches = (offerId: string, value: number) =>
-    setTradeBatches(previous => ({ ...previous, [offerId]: Math.max(1, Math.min(9999, Math.floor(value) || 1)) }))
+  const getQty = (id: string) => tradeQty[id] ?? 0
+  const getDir = (id: string) => tradeDir[id] ?? 'buy'
+  const getStep = (id: string) => tradeStep[id] ?? 1
 
-  const setOfferStep = (offerId: string, value: number) =>
-    setTradeSteps(previous => ({ ...previous, [offerId]: value }))
+  const addQty = (id: string, delta: number) =>
+    setTradeQty(prev => ({ ...prev, [id]: Math.max(0, Math.min(9999, (prev[id] ?? 0) + delta)) }))
+
+  const setQty = (id: string, value: number) =>
+    setTradeQty(prev => ({ ...prev, [id]: Math.max(0, Math.min(9999, Math.floor(value))) }))
+
+  const toggleDir = (id: string) =>
+    setTradeDir(prev => ({ ...prev, [id]: prev[id] === 'sell' ? 'buy' : 'sell' }))
+
+  const clearTrade = (id: string) => {
+    setTradeQty(prev => ({ ...prev, [id]: 0 }))
+  }
+
+  const isProtected = (offer: StarportTradeOffer) =>
+    offer.automated && autoTradeProtectionEnabled && autoTradeEnabled[offer.resource] !== false
 
   return (
-    <section className="special-content-block trade-board-v2">
+    <section className="special-content-block trade-board-v4">
       <SectionHeading eyebrow="S 星海交易港" title="贸易清单">
         <InfoToggle title="贸易规则">
           <p>交易立即结算库存。自动保护只会补足赤字与安全线，不会替玩家出售自产盈余。</p>
+          <p style={{ marginTop: '.4rem' }}>信贷日利率 <b>{(currencyDebtInterestRate * 100).toFixed(1)}%</b>（货币为负时每日计息）。紧急信贷上限 <b>{emergencyCreditDebtLimit}</b> 货币。</p>
+          <p style={{ marginTop: '.4rem' }}><b>买入溢价 +5~12%、卖出折价 -5~12%。</b>星港价格始终差于本地生产，鼓励自力更生、防止套利。</p>
+          <p>受自动保护的商品无法手动买卖，保护关闭后方可操作。</p>
         </InfoToggle>
       </SectionHeading>
       <label className="trade-protection-toggle">
@@ -299,64 +338,206 @@ export function TradeBoardBlock({
         <input type="checkbox" checked={autoTradeProtectionEnabled} onChange={event => onProtection(event.target.checked)} />
         <i aria-hidden="true" />
       </label>
-      <div className="trade-offer-list-compact">
+      <div className="trade-offer-list-v4">
         {starportTradeOffers.map(offer => {
           const unlocked = hasTech(techs, offer.unlockTech)
-          const populationBlocked = offer.output.population && (populationProjection.availableCapacity < offer.output.population || populationProjection.lifeSupportRatio < 1)
-          const batches = tradeBatches[offer.id] ?? 1
-          const step = tradeSteps[offer.id] ?? 1
-          const scaledInput = scaleResourceBundle(offer.input, batches)
-          const scaledOutput = scaleResourceBundle(offer.output, batches)
-          const affordable = canExecuteStarportTrade(resources, scaledInput) && !populationBlocked
-          const protectedKey = resourceOrder.find(key => (offer.output[key] ?? 0) > 0 && offer.automated)
-          const protectionOn = protectedKey ? autoTradeProtectionEnabled && autoTradeEnabled[protectedKey] !== false : false
-          const surplusMax = maxTradeBatchesFromSurplus(resources, offer.input)
-          const deficitNeed = deficitTradeBatches(resources, offer.output)
-          const deficitMax = Math.min(maxTradeBatchesWithDebt(resources, offer.input), deficitNeed)
+          const popBlocked = offer.resource === 'population' && (populationProjection.availableCapacity < 1 || populationProjection.lifeSupportRatio < 1)
+          const dir = getDir(offer.id)
+          const qty = getQty(offer.id)
+          const step = getStep(offer.id)
+          const isBuy = dir === 'buy'
+          const canSell = offer.canSell !== false
+          const protectionOn = isProtected(offer)
+          const disabled = !unlocked || protectionOn || (popBlocked && isBuy)
+          const isDaily = isDailyTradeResource(offer.resource)
+          const activeDailyTrade = dailyTrades[offer.resource]
+
+          const bp = buyPrice(offer)
+          const sp = sellPrice(offer)
+          const input: Partial<Resources> = isBuy
+            ? { currency: bp * qty }
+            : { [offer.resource]: qty }
+          const output: Partial<Resources> = isBuy
+            ? { [offer.resource]: qty * outputPerBatch(offer) }
+            : { currency: sp * qty }
+
+          const canAfford = canExecuteStarportTrade(resources, input) && !(popBlocked && isBuy)
+
+          let surplusMax = 0
+          let deficitMax = 0
+          if (isBuy) {
+            const currencySurplus = Math.max(0, resources.currency - defaultReserveFloors.currency)
+            surplusMax = bp > 0 ? Math.floor(currencySurplus / bp) : 9999
+            const resourceShortage = Math.max(0, defaultReserveFloors[offer.resource] - resources[offer.resource])
+            deficitMax = Math.ceil(resourceShortage / outputPerBatch(offer))
+          } else {
+            surplusMax = Math.max(0, Math.floor((resources[offer.resource] - defaultReserveFloors[offer.resource]) / 1))
+          }
+
+          const premiumPct = isBuy ? offer.buyPremium * 100 : -(offer.sellDiscount * 100)
+
+          // Per-unit recipe for resource-delta-stack display
+          const recipeInput: Partial<Resources> = isBuy
+            ? { currency: bp }
+            : { [offer.resource]: 1 }
+          const recipeOutput: Partial<Resources> = isBuy
+            ? { [offer.resource]: outputPerBatch(offer) }
+            : { currency: sp }
+
+          const statusNote = !unlocked
+            ? `需要 ${technologyCatalog[offer.unlockTech].name}`
+            : popBlocked && isBuy
+              ? '住房或生命维持不足'
+              : protectionOn
+                ? '自动保护中'
+                : ''
+
           return (
-            <article key={offer.id} className={unlocked ? 'active' : 'locked'}>
-              <div className="trade-offer-info">
-                <span>{offer.unlockTech}</span>
+            <article key={offer.id} className={`trade-offer-v4 ${unlocked ? 'active' : 'locked'} ${protectionOn ? 'protected' : ''} ${disabled ? 'disabled' : ''}`}>
+              <header className="trade-v4-header">
                 <h3>{offer.name}</h3>
-                <small>
-                  {unlocked
-                    ? populationBlocked
-                      ? '住房或生命维持不足'
-                      : offer.note
-                    : `需要 ${technologyCatalog[offer.unlockTech].name}`}
-                </small>
-              </div>
-              <div className="trade-flow">
-                <ResourceBundle bundle={scaledInput} empty="无需投入" />
-                <ArrowRight size={15} />
-                <ResourceBundle bundle={scaledOutput} empty="无产出" />
-              </div>
-              <div className="trade-actions-compact">
-                <div className="trade-step-buttons">
-                  {[1, 10, 100, 1000].map(value => (
-                    <button key={value} type="button" className={step === value ? 'selected' : ''} onClick={() => setOfferStep(offer.id, value)} disabled={!unlocked}>
-                      x{value}
+                {activeDailyTrade && (
+                  <span className="daily-trade-badge" title={`每日${activeDailyTrade.dir === 'buy' ? '进口' : '出口'} ${activeDailyTrade.qty} 单位`}>
+                    <Lock size={10} />每日 {activeDailyTrade.qty}
+                  </span>
+                )}
+                {canSell && (
+                  <div className="trade-direction-toggle">
+                    <button type="button" className={`dir-btn buy ${isBuy ? 'active' : ''}`} onClick={() => setTradeDir(prev => ({ ...prev, [offer.id]: 'buy' }))} disabled={disabled}>
+                      <ArrowDown size={12} />进口
                     </button>
-                  ))}
-                </div>
-                <div className="trade-count-row">
-                  <button type="button" onClick={() => setOfferBatches(offer.id, batches - step)} disabled={!unlocked}>-</button>
-                  <strong>{batches}</strong>
-                  <button type="button" onClick={() => setOfferBatches(offer.id, batches + step)} disabled={!unlocked}>+</button>
-                </div>
-                <div className="trade-limit-buttons">
-                  <button type="button" onClick={() => setOfferBatches(offer.id, surplusMax)} disabled={!unlocked || !bundleHasValues(offer.input) || surplusMax <= 0}>全部盈余</button>
-                  <button type="button" onClick={() => setOfferBatches(offer.id, deficitMax)} disabled={!unlocked || !bundleHasValues(offer.output) || deficitMax <= 0}>全部亏损</button>
-                </div>
-                <div className="trade-exec-row">
-                  {protectedKey && protectedKey !== 'population' && (
-                    <button type="button" className={protectionOn ? 'selected' : ''} onClick={() => onAutoTrade(protectedKey, !protectionOn)} disabled={!unlocked || !autoTradeProtectionEnabled}>
-                      {protectionOn ? '保护中' : '保护关'}
+                    <button type="button" className={`dir-btn sell ${!isBuy ? 'active' : ''}`} onClick={() => setTradeDir(prev => ({ ...prev, [offer.id]: 'sell' }))} disabled={disabled}>
+                      <ArrowUp size={12} />出口
                     </button>
-                  )}
-                  <button className="primary-action" onClick={() => onTrade(`${offer.name} x${batches}`, scaledInput, scaledOutput)} disabled={!unlocked || !affordable}>
-                    {unlocked ? '采购' : '封存'}
-                  </button>
+                  </div>
+                )}
+                {statusNote && <small className="trade-v4-status">{statusNote}</small>}
+              </header>
+
+              <div className="trade-v4-grid">
+                {/* Col 1: Resource identity + premium */}
+                <div className="trade-v4-col trade-v4-identity">
+                  <div className="trade-v4-resource-info">
+                    <ResourceAtom
+                      resourceKey={offer.resource}
+                      value={resources[offer.resource] ?? 0}
+                      signed
+                    />
+                    <span className={`premium-badge ${isBuy ? 'buy' : 'sell'}`}>
+                      {isBuy ? '进口' : '出口'} {premiumPct >= 0 ? '+' : ''}{premiumPct.toFixed(0)}%
+                    </span>
+                    <span className="premium-detail">{offer.note}</span>
+                  </div>
+                </div>
+
+                {/* Col 2: Trade recipe */}
+                <div className="trade-v4-col trade-v4-recipe">
+                  <span className="trade-recipe-label">交易配方</span>
+                  <div className="resource-delta-stack">
+                    <div className="resource-delta-row consumption">
+                      <span aria-hidden="true">-</span>
+                      <ResourceBundle bundle={recipeInput} empty="—" signed={false} boxedEmpty />
+                    </div>
+                    <div className="resource-delta-row production">
+                      <span aria-hidden="true">+</span>
+                      <ResourceBundle bundle={recipeOutput} empty="—" signed={false} boxedEmpty />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Col 3: Quantity controls + execute */}
+                <div className="trade-v4-col trade-v4-quantity">
+                  <span className="trade-qty-label">数量</span>
+                  <div className="trade-qty-stepper">
+                    <button type="button" className="qty-adj" onClick={() => addQty(offer.id, -step)} disabled={disabled || qty <= 0}>
+                      <Minus size={14} />
+                    </button>
+                    <strong className="qty-value">{qty}</strong>
+                    <button type="button" className="qty-adj" onClick={() => addQty(offer.id, step)} disabled={disabled}>
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                  <div className="trade-qty-steps">
+                    {stepSizes.map(n => (
+                      <button
+                        key={n}
+                        type="button"
+                        className={`step-btn ${step === n ? 'active' : ''}`}
+                        onClick={() => setTradeStep(prev => ({ ...prev, [offer.id]: n }))}
+                        disabled={disabled}
+                      >
+                        {n >= 1000 ? `${n / 1000}K` : n}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="trade-qty-actions">
+                    <button type="button" className="action-icon-btn" onClick={() => setQty(offer.id, surplusMax)} disabled={disabled || surplusMax <= 0} title="最大">
+                      <Maximize2 size={13} />
+                    </button>
+                    {isBuy && (
+                      <button type="button" className="action-icon-btn" onClick={() => setQty(offer.id, deficitMax)} disabled={disabled || deficitMax <= 0} title="补足">
+                        <ArrowUpToLine size={13} />
+                      </button>
+                    )}
+                    <button type="button" className="action-icon-btn clear" onClick={() => clearTrade(offer.id)} disabled={disabled || qty <= 0} title="清空">
+                      <Trash2 size={13} />
+                    </button>
+                    {isDaily ? (
+                      activeDailyTrade ? (
+                        <button
+                          type="button"
+                          className="action-icon-btn cancel-daily"
+                          onClick={() => onCancelDailyTrade(offer.resource)}
+                          title="取消每日交易"
+                        >
+                          <Check size={13} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="action-icon-btn confirm"
+                          onClick={() => {
+                            const dirLabel = isBuy ? '进口' : '出口'
+                            onScheduleDailyTrade(offer.resource, dir, qty, input, output)
+                            clearTrade(offer.id)
+                          }}
+                          disabled={disabled || qty <= 0 || !canAfford}
+                          title="锁定每日交易"
+                        >
+                          <Check size={13} />
+                        </button>
+                      )
+                    ) : (
+                      <button
+                        type="button"
+                        className="action-icon-btn confirm"
+                        onClick={() => {
+                          const dirLabel = isBuy ? '进口' : '出口'
+                          onTrade(`${offer.name} ${dirLabel} ×${qty}`, input, output)
+                          clearTrade(offer.id)
+                        }}
+                        disabled={disabled || qty <= 0 || !canAfford}
+                        title="确认交易"
+                      >
+                        <Check size={13} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Col 4: Summary */}
+                <div className="trade-v4-col trade-v4-summary">
+                  <span className="trade-summary-label">总计</span>
+                  <div className="resource-delta-stack">
+                    <div className="resource-delta-row consumption">
+                      <span aria-hidden="true">-</span>
+                      <ResourceBundle bundle={input} empty="—" signed={false} boxedEmpty />
+                    </div>
+                    <div className="resource-delta-row production">
+                      <span aria-hidden="true">+</span>
+                      <ResourceBundle bundle={output} empty="—" signed={false} boxedEmpty />
+                    </div>
+                  </div>
                 </div>
               </div>
             </article>
