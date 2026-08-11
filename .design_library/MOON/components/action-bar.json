@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "2",
+  "slug": "action-bar",
+  "name": "ActionBar",
+  "category": "layout",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {
+      "candidate": "action-bar",
+      "evidence": "水平排列的操作按钮容器"
+    },
+    {
+      "candidate": "button-group",
+      "evidence": "多个按钮的横向组合"
+    },
+    {
+      "candidate": "toolbar",
+      "evidence": "固定位置的操作工具栏"
+    }
+  ],
+  "variantDimensions": [
+    {
+      "dimension": "align",
+      "values": [
+        "left",
+        "center",
+        "right",
+        "space-between"
+      ],
+      "notes": "操作区对齐方式"
+    }
+  ],
+  "representativeVariants": [
+    {
+      "name": "Default",
+      "whySelected": "底部操作区，按钮右对齐",
+      "traits": {
+        "align": "right"
+      },
+      "childrenDigest": "多个操作按钮"
+    },
+    {
+      "name": "Spread",
+      "whySelected": "两端对齐（取消左、确认右）",
+      "traits": {
+        "align": "space-between"
+      },
+      "childrenDigest": "操作按钮"
+    }
+  ],
+  "anatomy": [
+    "操作条容器",
+    "操作按钮"
+  ],
+  "structurePatterns": [
+    "水平弹性布局",
+    "间距由 spacing scale 控制",
+    "常用于底部固定或面板底部"
+  ],
+  "usageHints": {
+    "priorityHint": "secondary",
+    "usage": "用于对话框操作区、卡片底部、页面底部操作条"
+  },
+  "doNotInvent": [
+    "不要添加未请求的分隔线",
+    "不要假设固定定位或粘性布局"
+  ],
+  "unknowns": [],
+  "keyInsightSeed": "操作按钮栏，模拟飞船控制面板底部指令区"
+}

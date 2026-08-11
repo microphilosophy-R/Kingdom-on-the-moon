@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "2",
+  "slug": "panel",
+  "name": "Panel",
+  "category": "container",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {
+      "candidate": "panel",
+      "evidence": "通用内容承载容器面板"
+    },
+    {
+      "candidate": "surface",
+      "evidence": "在深色背景上抬升的内容层"
+    },
+    {
+      "candidate": "sheet",
+      "evidence": "模块化内容分组的轻量容器"
+    }
+  ],
+  "variantDimensions": [
+    {
+      "dimension": "variant",
+      "values": [
+        "surface",
+        "parchment",
+        "hero",
+        "raised"
+      ],
+      "notes": "不同视觉强调层级"
+    },
+    {
+      "dimension": "as",
+      "values": [
+        "div",
+        "section",
+        "aside",
+        "article"
+      ],
+      "notes": "语义化 HTML 标签"
+    }
+  ],
+  "representativeVariants": [
+    {
+      "name": "Surface",
+      "whySelected": "默认卡片式面板，用于常规内容分组",
+      "traits": {
+        "variant": "surface"
+      },
+      "childrenDigest": "任意子内容"
+    },
+    {
+      "name": "Parchment",
+      "whySelected": "羊皮纸渐变背景，用于叙事/文档类面板",
+      "traits": {
+        "variant": "parchment"
+      },
+      "childrenDigest": "任意子内容"
+    },
+    {
+      "name": "Hero",
+      "whySelected": "深色渐变背景，用于标题或重点区域",
+      "traits": {
+        "variant": "hero"
+      },
+      "childrenDigest": "任意子内容"
+    },
+    {
+      "name": "Raised",
+      "whySelected": "高亮抬升面板，用于关键操作区",
+      "traits": {
+        "variant": "raised"
+      },
+      "childrenDigest": "任意子内容"
+    }
+  ],
+  "anatomy": [
+    "面板容器",
+    "边框",
+    "阴影",
+    "内容插槽"
+  ],
+  "structurePatterns": [
+    "圆角边框容器",
+    "柔性布局内容区",
+    "variant 控制背景与阴影"
+  ],
+  "usageHints": {
+    "priorityHint": "secondary",
+    "usage": "用于设施详情、科技卡片、资源面板等通用内容容器"
+  },
+  "doNotInvent": [
+    "不要添加未请求的标题栏或页脚",
+    "不要假设内部布局结构"
+  ],
+  "unknowns": [],
+  "keyInsightSeed": "半透明面板配合细边框，模拟月面基地显示屏面板"
+}

@@ -11,6 +11,16 @@
       "keyInsightSeed": "使用星云渐变与发光边框营造科幻按钮感"
     },
     {
+      "slug": "icon-button",
+      "name": "IconButton",
+      "category": "action",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 3,
+      "priorityHint": "secondary",
+      "keyInsightSeed": "方形图标按钮，hover 时边框发光模拟飞船控制台按键"
+    },
+    {
       "slug": "card",
       "name": "Card",
       "category": "container",
@@ -19,6 +29,16 @@
       "variantCount": 3,
       "priorityHint": "secondary",
       "keyInsightSeed": "深色半透明面板配合细边框与星图纹理背景"
+    },
+    {
+      "slug": "panel",
+      "name": "Panel",
+      "category": "container",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 4,
+      "priorityHint": "secondary",
+      "keyInsightSeed": "半透明面板配合细边框，模拟月面基地显示屏面板"
     },
     {
       "slug": "input",
@@ -41,6 +61,16 @@
       "keyInsightSeed": "类似飞船 HUD 的横向/纵向导航，活动项带发光指示"
     },
     {
+      "slug": "tabs",
+      "name": "Tabs",
+      "category": "navigation",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 2,
+      "priorityHint": "primary",
+      "keyInsightSeed": "类似飞船 HUD 的底部标签栏，活动标签带发光指示和信号色"
+    },
+    {
       "slug": "modal",
       "name": "Modal",
       "category": "overlay",
@@ -59,6 +89,46 @@
       "variantCount": 4,
       "priorityHint": "secondary",
       "keyInsightSeed": "半透明胶囊标签，状态色模拟飞船指示灯"
+    },
+    {
+      "slug": "progress",
+      "name": "Progress",
+      "category": "data-display",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 3,
+      "priorityHint": "secondary",
+      "keyInsightSeed": "线性进度条，低值时变为信号橙色警告，模拟飞船状态指示器"
+    },
+    {
+      "slug": "avatar",
+      "name": "Avatar",
+      "category": "data-display",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 3,
+      "priorityHint": "secondary",
+      "keyInsightSeed": "角色肖像槽，带细边框和微光晕模拟全息投影效果"
+    },
+    {
+      "slug": "section-heading",
+      "name": "SectionHeading",
+      "category": "typography",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 2,
+      "priorityHint": "secondary",
+      "keyInsightSeed": "章节标题组件，眉题使用信号色吸引注意，模拟指挥面板章节标记"
+    },
+    {
+      "slug": "action-bar",
+      "name": "ActionBar",
+      "category": "layout",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 2,
+      "priorityHint": "secondary",
+      "keyInsightSeed": "操作按钮栏，模拟飞船控制面板底部指令区"
     }
   ]
 }

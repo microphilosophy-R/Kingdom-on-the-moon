@@ -13,7 +13,7 @@ A design system reconstruction of **MOON** — a Chinese-language, space-fiction
 ## What this design system covers
 
 - **Foundations** — color (nebula violet + signal orange), type (Orbitron / Noto Sans SC / JetBrains Mono), spacing, radius, shadow.
-- **Components** — 6 documented components: Button, Card, Input, Navigation, Modal, Tag.
+- **Components** — 13 documented components: Button, IconButton, Card, Panel, Input, Navigation, Tabs, Modal, Tag, Progress, Avatar, SectionHeading, ActionBar.
 - **Previews** — static HTML cards under `preview/`.
 
 ## CONTENT FUNDAMENTALS

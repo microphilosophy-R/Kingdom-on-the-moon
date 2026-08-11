@@ -2826,3 +2826,391 @@ small,
     font-size: var(--font-panel);
   }
 }
+
+/* ============================================================
+   Special building detail: FacilityDetailPanel layout variant
+   ============================================================ */
+
+/* Placeholder for building art when no image available */
+.detail-v2-art-placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  place-items: center;
+  align-content: center;
+  gap: .6rem;
+  border-radius: 7px;
+  background: oklch(96% .012 86);
+  color: oklch(55% .09 76);
+}
+.detail-v2-art-placeholder span {
+  color: oklch(42% .03 250);
+  font-family: var(--ui-mono);
+  font-size: var(--font-label);
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+/* Research stats in construction card */
+.research-stat-big {
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono) !important;
+  font-size: var(--font-data) !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+.research-rule-text {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--font-note);
+  line-height: 1.65;
+}
+
+/* Special content block: goes after recipe section */
+.special-content-block {
+  min-width: 0;
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  padding: .9rem;
+  background: var(--ui-raised);
+}
+
+/* ============================================================
+   Compact technology card (tech-card-compact)
+   ============================================================ */
+.tech-card-compact {
+  display: grid;
+  gap: .32rem;
+  width: 100%;
+  min-height: 0;
+  border: 1px dashed oklch(70% .024 250);
+  border-radius: 5px;
+  padding: .52rem .58rem;
+  background: oklch(99% .006 85);
+  text-align: left;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.tech-card-compact:hover:not(:disabled) {
+  border-color: oklch(52% .1 76);
+  background: oklch(96% .03 80);
+}
+.tech-card-compact.completed {
+  border-style: solid;
+  border-color: oklch(50% .1 76);
+  background: oklch(95% .032 80);
+}
+.tech-card-compact.researching {
+  border-style: solid;
+  border-width: 2px;
+  border-color: oklch(54% .11 76);
+  padding: calc(.52rem - 1px) calc(.58rem - 1px);
+  background: oklch(94% .04 78);
+  box-shadow: 0 6px 16px oklch(38% .04 250 / .14);
+}
+.tech-card-compact.locked {
+  background: oklch(94% .012 86);
+  opacity: .72;
+}
+
+.tech-card-compact-top {
+  display: flex;
+  gap: .42rem;
+  align-items: center;
+  min-width: 0;
+}
+.tech-card-compact-top svg {
+  flex: 0 0 auto;
+}
+.tech-card-compact-head {
+  min-width: 0;
+}
+.tech-card-compact-head h3 {
+  margin: 0;
+  color: oklch(28% .035 250);
+  font-size: var(--font-card);
+  line-height: 1.28;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tech-card-compact-head span {
+  display: inline-block;
+  margin-top: .08rem;
+  border: 1px solid oklch(68% .035 250);
+  border-radius: 999px;
+  padding: .12rem .32rem;
+  color: oklch(42% .028 250);
+  font-size: 9px;
+  line-height: 1;
+}
+
+.tech-card-compact-note {
+  margin: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  color: oklch(43% .026 250);
+  font-size: var(--font-note);
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.tech-card-compact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .28rem .45rem;
+  min-width: 0;
+}
+.tech-card-compact-meta small {
+  color: oklch(48% .023 250);
+  font-size: 9px;
+  line-height: 1.35;
+}
+.tech-card-compact-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: .18rem;
+  color: oklch(48% .085 76);
+  font-size: 10px;
+  font-weight: 700;
+}
+.tech-card-compact-status {
+  display: inline-flex;
+  align-items: center;
+  gap: .14rem;
+  margin-left: auto;
+  color: oklch(45% .024 250);
+  font-size: 9px;
+}
+
+.tech-progress-mini {
+  position: relative;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: oklch(91% .018 82);
+}
+.tech-progress-mini > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: oklch(65% .12 78 / .56);
+}
+
+/* ============================================================
+   Technology tree v2: zoomable + draggable
+   ============================================================ */
+.technology-workbench-v2 {
+  display: grid;
+  gap: .72rem;
+  min-width: 0;
+}
+
+.tech-tree-toolbar {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  border-bottom: 1px solid var(--ui-line);
+  padding-bottom: .62rem;
+}
+.tech-tree-toolbar h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin: 0;
+  color: var(--ui-ink-strong);
+  font-size: var(--font-card);
+}
+.tech-tree-scale {
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+.tech-tree-hint {
+  margin-left: auto;
+  color: var(--ui-muted);
+  font-size: 10px;
+}
+
+.technology-tree-viewport {
+  overflow: auto;
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  background: var(--ui-surface-2);
+  box-shadow: inset 18px 0 24px oklch(90% .018 84), inset -18px 0 24px oklch(90% .018 84);
+  max-height: min(620px, calc(100vh - 28rem));
+  min-height: 380px;
+  touch-action: none;
+}
+.technology-tree-viewport.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+.technology-tree-viewport.dragging .tech-card-compact {
+  cursor: grabbing;
+}
+.technology-tree-viewport::-webkit-scrollbar:horizontal {
+  height: 0;
+}
+
+.technology-tree-v2 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: .7rem;
+  padding: .7rem;
+  min-width: 820px;
+  align-items: start;
+}
+
+.tech-era-column-v2 {
+  display: grid;
+  align-content: start;
+  gap: .48rem;
+  min-width: 0;
+}
+.tech-era-column-v2 header {
+  border: 1px solid oklch(72% .02 250);
+  border-radius: 5px;
+  padding: .45rem .55rem;
+  background: oklch(95% .018 82);
+}
+.tech-era-column-v2 header span {
+  display: block;
+  color: oklch(29% .035 250);
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  font-size: 14px;
+  font-weight: 700;
+}
+.tech-era-column-v2 header small {
+  display: block;
+  margin-top: .1rem;
+  color: oklch(49% .024 250);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   Compact trade board (trade-board-v2)
+   ============================================================ */
+.trade-board-v2 {
+  display: grid;
+  gap: .62rem;
+}
+
+.trade-offer-list-compact {
+  display: grid;
+  gap: .48rem;
+}
+
+.trade-offer-list-compact article {
+  display: grid;
+  grid-template-columns: minmax(140px, .55fr) minmax(200px, .8fr) minmax(220px, auto);
+  gap: .55rem;
+  align-items: center;
+  border: 1px solid var(--ui-line);
+  border-radius: 5px;
+  padding: .58rem .65rem;
+  background: var(--ui-raised);
+}
+.trade-offer-list-compact article.active {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+}
+.trade-offer-list-compact article.locked {
+  opacity: .72;
+}
+
+.trade-offer-info span {
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono);
+  font-size: 9px;
+}
+.trade-offer-info h3 {
+  margin: .06rem 0;
+  font-size: var(--font-card);
+  line-height: 1.25;
+}
+.trade-offer-info small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: var(--font-note);
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.trade-actions-compact {
+  display: grid;
+  gap: .3rem;
+  min-width: 0;
+}
+
+.trade-exec-row {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  justify-content: flex-end;
+}
+.trade-exec-row button {
+  padding: .32rem .52rem;
+  font-size: 10px;
+}
+.trade-exec-row .primary-action {
+  padding: .4rem .62rem;
+}
+
+/* ============================================================
+   Responsive adjustments
+   ============================================================ */
+@media (max-width: 1100px) {
+  .technology-tree-viewport {
+    max-height: min(520px, calc(100vh - 26rem));
+    min-height: 340px;
+  }
+
+  .trade-offer-list-compact article {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .technology-tree-viewport {
+    max-height: min(460px, calc(100vh - 24rem));
+    min-height: 300px;
+  }
+
+  .technology-tree-v2 {
+    grid-template-columns: 1fr;
+    min-width: 0;
+  }
+
+  .tech-tree-toolbar {
+    gap: .35rem;
+  }
+}
+
+/* Shipyard progress bar */
+.ship-progress-number {
+  font-size: 32px !important;
+}
+.ship-progress-v2 {
+  position: relative;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: oklch(88% .018 82);
+  margin: .42rem 0 .7rem;
+}
+.ship-progress-v2 i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, oklch(54% .11 76), oklch(65% .13 78));
+  border-radius: 5px;
+  transition: width .3s ease;
+}

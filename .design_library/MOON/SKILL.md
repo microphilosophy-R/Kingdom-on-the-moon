@@ -16,7 +16,7 @@ If creating visual artifacts, copy assets out and create static HTML files. If w
 - `css.json` — structured token understanding source
 - `components/index.json` — component index + cross-component patterns
 - `components.css` — aggregated component CSS extracted from previews
-- `components/{slug}.json` — component contracts for button, card, input, modal, navigation, tag
+- `components/{slug}.json` — component contracts for button, icon-button, card, panel, input, modal, navigation, tabs, tag, progress, avatar, section-heading, action-bar
 - `preview/component-{slug}.html` — small HTML cards illustrating each component
 - `library-consumption.json` — recommended downstream read order
 
@@ -35,8 +35,15 @@ If creating visual artifacts, copy assets out and create static HTML files. If w
 | Slug | Name | Key Insight |
 |------|------|-------------|
 | button | Button | Primary actions use nebula fills with Orbitron labels; signal orange for high-attention CTAs. |
+| icon-button | IconButton | Square icon-only buttons with glow border on hover, simulating ship console keys. |
 | card | Card | Floats on shadow-1 over steel-50; radius-md and steel-200 hairline borders. |
+| panel | Panel | Semi-transparent bordered containers with four visual variants (surface/parchment/hero/raised). |
 | input | Input | 40px height with nebula focus ring and steel-200 borders; keep labels terse. |
-| modal | Modal | Overlay uses shadow-4 and radius-lg for clear separation from the page. |
 | navigation | Navigation | Steel-neutral bars with nebula active indicators and mono-logos. |
+| tabs | Tabs | Bottom tab bar with icon+label items; active tab glows in signal orange. |
+| modal | Modal | Overlay uses shadow-4 and radius-lg for clear separation from the page. |
 | tag | Tag | Radius-full pills for status chips; use caption size and minimal copy. |
+| progress | Progress | Linear progress bar with color-coded states (default/warning/critical). |
+| avatar | Avatar | Character portrait slot with fine border and holographic glow effect. |
+| section-heading | SectionHeading | Section header with eyebrow, title, description, and optional action slot. |
+| action-bar | ActionBar | Horizontal button bar with alignment variants for dialog footers and toolbars. |

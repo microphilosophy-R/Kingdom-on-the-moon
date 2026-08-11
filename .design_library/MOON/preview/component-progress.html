@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progress - MOON</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: var(--space-3); background: var(--color-background); font-family: var(--font-body); color: var(--color-foreground); }
+  .row { display: flex; gap: var(--space-2); align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; }
+  .label { width: 92px; font-size: var(--font-size-caption); color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; }
+  .rail { display: flex; flex-direction: column; gap: var(--space-2); flex: 1; }
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: var(--space-3) 0; }
+
+  /* @component-css-start */
+  .progress { display: flex; align-items: center; gap: var(--space-2); width: 100%; }
+  .progress-track { flex: 1; height: 8px; background: var(--muted); border-radius: var(--radius-full); overflow: hidden; }
+  .progress-bar { height: 100%; background: var(--primary); border-radius: var(--radius-full); transition: width .3s; }
+  .progress-label { font-size: var(--font-size-caption); color: var(--muted-foreground); white-space: nowrap; min-width: 48px; text-align: right; }
+  .progress-sm .progress-track { height: 4px; }
+  .progress-sm .progress-label { font-size: 11px; min-width: 36px; }
+  .progress-state-low .progress-bar { background: var(--color-warning); }
+  .progress-state-warning .progress-bar { background: var(--color-warning); }
+  .progress-state-critical .progress-bar { background: var(--color-error); }
+  /* @component-css-end */
+</style>
+</head>
+<body>
+  <div class="row">
+    <span class="label">默认</span>
+    <div class="rail">
+      <div class="progress">
+        <div class="progress-track">
+          <div class="progress-bar" style="width:68%"></div>
+        </div>
+        <span class="progress-label">68%</span>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <span class="label">低资源</span>
+    <div class="rail">
+      <div class="progress progress-state-low">
+        <div class="progress-track">
+          <div class="progress-bar" style="width:18%"></div>
+        </div>
+        <span class="progress-label">18%</span>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <span class="label">警告</span>
+    <div class="rail">
+      <div class="progress progress-state-warning">
+        <div class="progress-track">
+          <div class="progress-bar" style="width:42%"></div>
+        </div>
+        <span class="progress-label">42%</span>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <span class="label">严重</span>
+    <div class="rail">
+      <div class="progress progress-state-critical">
+        <div class="progress-track">
+          <div class="progress-bar" style="width:5%"></div>
+        </div>
+        <span class="progress-label">5%</span>
+      </div>
+    </div>
+  </div>
+  <hr class="divider">
+  <div class="row">
+    <span class="label">紧凑</span>
+    <div class="rail">
+      <div class="progress progress-sm">
+        <div class="progress-track">
+          <div class="progress-bar" style="width:72%"></div>
+        </div>
+        <span class="progress-label">72%</span>
+      </div>
+      <div class="progress progress-sm progress-state-low">
+        <div class="progress-track">
+          <div class="progress-bar" style="width:22%"></div>
+        </div>
+        <span class="progress-label">22%</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
