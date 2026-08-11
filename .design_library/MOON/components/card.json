@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "2",
+  "slug": "card",
+  "name": "Card",
+  "category": "container",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {
+      "candidate": "card",
+      "evidence": "承载相关信息的独立面板"
+    },
+    {
+      "candidate": "panel",
+      "evidence": "用于模块化内容分组的容器"
+    },
+    {
+      "candidate": "surface",
+      "evidence": "在太空深色背景上抬升的内容层"
+    }
+  ],
+  "variantDimensions": [
+    {
+      "dimension": "variant",
+      "values": [
+        "default",
+        "interactive",
+        "elevated"
+      ],
+      "notes": "静态或可点击"
+    },
+    {
+      "dimension": "state",
+      "values": [
+        "default",
+        "hover"
+      ],
+      "notes": "悬停抬升效果"
+    }
+  ],
+  "representativeVariants": [
+    {
+      "name": "Default",
+      "whySelected": "展示星球、任务、科技等基本信息",
+      "traits": {
+        "variant": "default"
+      },
+      "childrenDigest": "标题、元信息、内容段落、操作区"
+    },
+    {
+      "name": "Interactive",
+      "whySelected": "可作为选择或跳转的卡片",
+      "traits": {
+        "variant": "interactive"
+      },
+      "childrenDigest": "标题、元信息、内容段落、操作区"
+    },
+    {
+      "name": "Elevated",
+      "whySelected": "需要强调层级的悬浮卡片",
+      "traits": {
+        "variant": "elevated"
+      },
+      "childrenDigest": "标题、元信息、内容段落、操作区"
+    }
+  ],
+  "anatomy": [
+    "卡片容器",
+    "标题区",
+    "内容区",
+    "可选操作区",
+    "边框/光晕"
+  ],
+  "structurePatterns": [
+    "垂直堆叠",
+    "顶部标题 + 中部内容 + 底部操作",
+    "使用 shadow 表达层级"
+  ],
+  "usageHints": {
+    "priorityHint": "secondary",
+    "usage": "展示任务、星球、科技、船员等模块化信息"
+  },
+  "doNotInvent": [
+    "不要添加未请求的媒体区域",
+    "不要假设卡片必须可点击"
+  ],
+  "unknowns": [],
+  "keyInsightSeed": "深色半透明面板配合细边框与星图纹理背景"
+}

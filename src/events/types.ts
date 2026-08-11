@@ -14,6 +14,7 @@ export type Role = {
 
 export type EventEffect = { give: Partial<Resources>; take: Partial<Resources>; tech?: string }
 export type EventInteraction = 'techTrade' | 'starportTrade' | 'hire' | 'gift' | 'request' | 'accident' | 'rareTrade' | 'chainChoice'
+export type EventDefaultAction = 'accept' | 'dismiss'
 
 export type EventStep = {
   id: string
@@ -25,6 +26,8 @@ export type EventStep = {
   hireCost?: Partial<Resources>
   concealed?: boolean
   note?: string
+  /** 优化器自动处理时的默认行为：accept=接受交易, dismiss=礼送跳过 */
+  defaultAction?: EventDefaultAction
 }
 
 export type EventChain = {

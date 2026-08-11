@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "2",
+  "slug": "input",
+  "name": "Input",
+  "category": "form",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {
+      "candidate": "input",
+      "evidence": "接收用户文本输入的表单控件"
+    },
+    {
+      "candidate": "text-field",
+      "evidence": "单行文本编辑区域"
+    },
+    {
+      "candidate": "form-control",
+      "evidence": "表单数据录入的基础单元"
+    }
+  ],
+  "variantDimensions": [
+    {
+      "dimension": "size",
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "notes": "基于 --size-input-*"
+    },
+    {
+      "dimension": "state",
+      "values": [
+        "default",
+        "focus",
+        "error",
+        "disabled"
+      ],
+      "notes": "验证与交互状态"
+    }
+  ],
+  "representativeVariants": [
+    {
+      "name": "Default",
+      "whySelected": "常规数据录入",
+      "traits": {
+        "size": "md",
+        "state": "default"
+      },
+      "childrenDigest": "输入框 + 占位符"
+    },
+    {
+      "name": "Focus",
+      "whySelected": "聚焦时显示全息光晕边框",
+      "traits": {
+        "size": "md",
+        "state": "focus"
+      },
+      "childrenDigest": "输入框 + 占位符"
+    },
+    {
+      "name": "Error",
+      "whySelected": "输入验证失败状态",
+      "traits": {
+        "size": "md",
+        "state": "error"
+      },
+      "childrenDigest": "输入框 + 错误提示"
+    }
+  ],
+  "anatomy": [
+    "输入容器",
+    "占位符/值文本",
+    "聚焦光环",
+    "可选前缀/后缀"
+  ],
+  "structurePatterns": [
+    "水平内边距",
+    "底部边框或包围边框",
+    "状态色反馈"
+  ],
+  "usageHints": {
+    "priorityHint": "secondary",
+    "usage": "用于命名飞船、输入坐标、搜索星图等文本录入"
+  },
+  "doNotInvent": [
+    "不要添加未请求的密码可见性切换",
+    "不要假设自动完成行为"
+  ],
+  "unknowns": [],
+  "keyInsightSeed": "终端式输入框，聚焦时发出青色扫描光晕"
+}

@@ -1,0 +1,64 @@
+{
+  "components": [
+    {
+      "slug": "button",
+      "name": "Button",
+      "category": "action",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 4,
+      "priorityHint": "primary",
+      "keyInsightSeed": "使用星云渐变与发光边框营造科幻按钮感"
+    },
+    {
+      "slug": "card",
+      "name": "Card",
+      "category": "container",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 3,
+      "priorityHint": "secondary",
+      "keyInsightSeed": "深色半透明面板配合细边框与星图纹理背景"
+    },
+    {
+      "slug": "input",
+      "name": "Input",
+      "category": "form",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 3,
+      "priorityHint": "secondary",
+      "keyInsightSeed": "终端式输入框，聚焦时发出青色扫描光晕"
+    },
+    {
+      "slug": "navigation",
+      "name": "Navigation",
+      "category": "navigation",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 3,
+      "priorityHint": "primary",
+      "keyInsightSeed": "类似飞船 HUD 的横向/纵向导航，活动项带发光指示"
+    },
+    {
+      "slug": "modal",
+      "name": "Modal",
+      "category": "overlay",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 3,
+      "priorityHint": "secondary",
+      "keyInsightSeed": "深色遮罩配合高亮边框，模拟飞船警报面板"
+    },
+    {
+      "slug": "tag",
+      "name": "Tag",
+      "category": "data-display",
+      "sourceKind": "from-scratch",
+      "confidence": "medium",
+      "variantCount": 4,
+      "priorityHint": "secondary",
+      "keyInsightSeed": "半透明胶囊标签，状态色模拟飞船指示灯"
+    }
+  ]
+}

@@ -10,7 +10,7 @@ export interface FacilityNetRowProps {
 export function FacilityNetRow({ net, compact = false, empty = '暂无净产值' }: FacilityNetRowProps) {
   return (
     <div className={`building-net-row ${compact ? 'compact' : ''}`}>
-      <span>净产值</span>
+      <span>日净产值</span>
       <ResourceBundle bundle={net} empty={empty} />
     </div>
   )

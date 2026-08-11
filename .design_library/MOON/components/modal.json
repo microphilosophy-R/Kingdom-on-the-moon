@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "2",
+  "slug": "modal",
+  "name": "Modal",
+  "category": "overlay",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {
+      "candidate": "modal",
+      "evidence": "覆盖在当前内容上的对话框"
+    },
+    {
+      "candidate": "dialog",
+      "evidence": "需要用户注意或决策的浮层"
+    },
+    {
+      "candidate": "overlay",
+      "evidence": " dim 背景上的聚焦面板"
+    }
+  ],
+  "variantDimensions": [
+    {
+      "dimension": "size",
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "notes": "内容多少决定"
+    },
+    {
+      "dimension": "intent",
+      "values": [
+        "info",
+        "confirm",
+        "danger"
+      ],
+      "notes": "决策类型"
+    }
+  ],
+  "representativeVariants": [
+    {
+      "name": "Confirm",
+      "whySelected": "关键决策确认",
+      "traits": {
+        "size": "md",
+        "intent": "confirm"
+      },
+      "childrenDigest": "标题、说明、确认/取消按钮"
+    },
+    {
+      "name": "Info",
+      "whySelected": "事件与情报提示",
+      "traits": {
+        "size": "sm",
+        "intent": "info"
+      },
+      "childrenDigest": "标题、说明、关闭按钮"
+    },
+    {
+      "name": "Danger",
+      "whySelected": "不可逆操作警告",
+      "traits": {
+        "size": "md",
+        "intent": "danger"
+      },
+      "childrenDigest": "标题、警告文本、危险/取消按钮"
+    }
+  ],
+  "anatomy": [
+    "遮罩层",
+    "对话框容器",
+    "标题",
+    "内容区",
+    "操作区"
+  ],
+  "structurePatterns": [
+    "居中定位",
+    "垂直堆叠",
+    "操作区右对齐或居中"
+  ],
+  "usageHints": {
+    "priorityHint": "secondary",
+    "usage": "用于跃迁确认、弃船警告、任务详情弹窗"
+  },
+  "doNotInvent": [
+    "不要添加未请求的动画时长",
+    "不要假设可拖拽"
+  ],
+  "unknowns": [],
+  "keyInsightSeed": "深色遮罩配合高亮边框，模拟飞船警报面板"
+}

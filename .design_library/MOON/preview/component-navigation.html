@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navigation</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style>
+  /* Page scaffold — NOT extracted */
+  body { margin: 0; padding: var(--space-3); background: var(--color-surface); color: var(--color-foreground); font-family: var(--font-body); font-size: var(--font-size-body); }
+  .row { display: flex; gap: var(--space-2); align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; }
+  .row.full { margin-bottom: 0; }
+  .label { width: 92px; flex-shrink: 0; color: var(--muted-foreground); font-size: var(--font-size-caption); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .divider { width: 100%; border: none; border-top: 1px solid var(--border); margin: var(--space-3) 0; }
+  .icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .icon-sm { width: 16px; height: 16px; }
+  .icon-md { width: 20px; height: 20px; }
+  /* @component-css-start */
+  /* Component definitions — extracted to components.css by deterministic script */
+  .nav { list-style: none; margin: 0; padding: 0; display: flex; width: 100%; }
+  .nav-horizontal { flex-direction: row; align-items: center; gap: var(--space-1); background: var(--surface-container); padding: 0 var(--space-3); height: var(--size-button-lg); }
+  .nav-vertical { flex-direction: column; gap: var(--space-1); width: 100%; max-width: 240px; background: var(--surface-container); padding: var(--space-2); }
+  .nav-brand { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--color-primary); font-family: var(--font-heading); font-weight: var(--font-weight-h4); white-space: nowrap; text-decoration: none; margin-right: var(--space-4); flex-shrink: 0; transition: background .15s; }
+  .nav-brand:hover { background: var(--accent-hover); }
+  .nav-item { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); height: var(--size-button-md); min-width: var(--size-button-md); padding: 0 var(--space-3); color: var(--color-foreground); text-decoration: none; white-space: nowrap; transition: background .15s; flex-shrink: 0; }
+  .nav-item:hover { background: var(--accent-hover); }
+  .nav-item.active { background: var(--accent); color: var(--accent-foreground); }
+  .nav-vertical .nav-item { justify-content: flex-start; width: 100%; }
+  .nav-status { display: inline-flex; align-items: center; gap: var(--space-1); margin-left: auto; color: var(--muted-foreground); font-size: var(--font-size-caption); white-space: nowrap; }
+  /* @component-css-end */
+</style>
+</head>
+<body>
+<div class="row"><span class="label">顶部导航</span></div>
+<div class="row full">
+  <nav class="nav nav-horizontal" aria-label="主导航" data-evidence-sample="Horizontal">
+    <a class="nav-brand" href="#" aria-label="首页"><i data-lucide="home" class="icon icon-md"></i> MOON</a>
+    <a class="nav-item active" href="#" aria-current="page">星图</a>
+    <a class="nav-item" href="#">舰队</a>
+    <a class="nav-item" href="#">科研</a>
+    <a class="nav-item" href="#">殖民地</a>
+    <span class="nav-status"><i data-lucide="user" class="icon icon-sm"></i> 指挥官 001</span>
+  </nav>
+</div>
+<hr class="divider">
+<div class="row"><span class="label">侧边导航</span></div>
+<div class="row full">
+  <nav class="nav nav-vertical" aria-label="侧边星图菜单" data-evidence-sample="Vertical">
+    <a class="nav-item active" href="#" aria-current="page"><i data-lucide="home" class="icon icon-sm"></i> 星图</a>
+    <a class="nav-item" href="#"><i data-lucide="settings" class="icon icon-sm"></i> 舰队</a>
+    <a class="nav-item" href="#"><i data-lucide="bell" class="icon icon-sm"></i> 科研</a>
+    <a class="nav-item" href="#"><i data-lucide="user" class="icon icon-sm"></i> 殖民地</a>
+  </nav>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

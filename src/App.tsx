@@ -49,6 +49,7 @@ import {
 import {
   buildEncounter,
   getAvailableEventChains,
+  getCurrentGameEra,
   rolesById,
   type Encounter,
   type Role,
@@ -307,6 +308,7 @@ function App() {
   const [construction, setConstruction] = useState<Record<RegionId, ConstructionProject | null>>(initialConstruction)
   const [populationPressureDays, setPopulationPressureDays] = useState(0)
   const [activeOptimizerId, setActiveOptimizerId] = useState<OptimizerId | 'none'>('none')
+  const [autoEventsEnabled, setAutoEventsEnabled] = useState(false)
   const [autoTradeProtectionEnabled, setAutoTradeProtectionEnabled] = useState(true)
   const [autoTradeEnabled, setAutoTradeEnabled] = useState<Partial<Record<ResourceKey, boolean>>>({})
   const [tradeSourcedResources, setTradeSourcedResources] = useState<Partial<Record<ResourceKey, boolean>>>({})
@@ -433,7 +435,9 @@ function App() {
     productionMethods,
     year: day,
     capitalHorizonYears: 360,
-  }), [resources, regions, staffing, populationProjection, construction, facilityModifiers, techs, productionMethods, policy, day])
+    autoEventsEnabled,
+    chainProgress,
+  }), [resources, regions, staffing, populationProjection, construction, facilityModifiers, techs, productionMethods, policy, day, autoEventsEnabled, chainProgress])
   const automationPlan = useMemo<AutomationPlan>(() => (
     activeOptimizerId === 'none'
       ? createDisabledAutomationPlan(resources, regions.map(region => ({ id: region.id, level: region.level })))
@@ -551,6 +555,7 @@ function App() {
     construction,
     populationPressureDays,
     activeOptimizerId,
+    autoEventsEnabled,
     autoTradeProtectionEnabled,
     autoTradeEnabled,
     tradeSourcedResources,
@@ -593,6 +598,7 @@ function App() {
     setConstruction(save.construction)
     setPopulationPressureDays(save.populationPressureDays)
     setActiveOptimizerId(save.activeOptimizerId ?? 'none')
+    setAutoEventsEnabled(save.autoEventsEnabled ?? false)
     setAutoTradeProtectionEnabled(save.autoTradeProtectionEnabled ?? true)
     setAutoTradeEnabled(save.autoTradeEnabled ?? {})
     setTradeSourcedResources(save.tradeSourcedResources ?? {})
@@ -636,7 +642,9 @@ function App() {
   }
 
   const chooseVisitor = () => {
-    const available = getAvailableEventChains(chainProgress)
+    const facilityStates = regions.map(r => ({ id: r.id, level: r.level }))
+    const currentEra = getCurrentGameEra(facilityStates)
+    const available = getAvailableEventChains(chainProgress, currentEra)
     if (available.length) {
       const chain = available[Math.floor(Math.random() * available.length)]
       setVisitor(buildEncounter(chain, chainProgress[chain.id] ?? 0))

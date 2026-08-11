@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "2",
+  "slug": "button",
+  "name": "Button",
+  "category": "action",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {
+      "candidate": "button",
+      "evidence": "触发操作的矩形可点击控件"
+    },
+    {
+      "candidate": "action",
+      "evidence": "承载主要/次要行为的交互入口"
+    },
+    {
+      "candidate": "click-target",
+      "evidence": "鼠标与触控的主要触发区域"
+    }
+  ],
+  "variantDimensions": [
+    {
+      "dimension": "size",
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "notes": "基于 --size-button-*"
+    },
+    {
+      "dimension": "variant",
+      "values": [
+        "primary",
+        "secondary",
+        "ghost",
+        "outline"
+      ],
+      "notes": "强调层级"
+    },
+    {
+      "dimension": "state",
+      "values": [
+        "default",
+        "hover",
+        "active",
+        "disabled"
+      ],
+      "notes": "交互反馈"
+    }
+  ],
+  "representativeVariants": [
+    {
+      "name": "Primary",
+      "whySelected": "游戏主操作入口，强调探索行动",
+      "traits": {
+        "variant": "primary",
+        "size": "md"
+      },
+      "childrenDigest": "文本标签"
+    },
+    {
+      "name": "Secondary",
+      "whySelected": "次要决策与取消操作",
+      "traits": {
+        "variant": "secondary",
+        "size": "md"
+      },
+      "childrenDigest": "文本标签"
+    },
+    {
+      "name": "Ghost",
+      "whySelected": "工具栏与导航内的低强调操作",
+      "traits": {
+        "variant": "ghost",
+        "size": "md"
+      },
+      "childrenDigest": "文本标签"
+    },
+    {
+      "name": "Small",
+      "whySelected": "资源列表与紧凑卡片中的微操作",
+      "traits": {
+        "variant": "primary",
+        "size": "sm"
+      },
+      "childrenDigest": "文本标签"
+    }
+  ],
+  "anatomy": [
+    "容器",
+    "文本标签",
+    "可选前置/后置图标"
+  ],
+  "structurePatterns": [
+    "水平居中排列",
+    "内边距由 spacing scale 控制",
+    "圆角遵循 radius scale"
+  ],
+  "usageHints": {
+    "priorityHint": "primary",
+    "usage": "用于触发导航、提交、购买、确认等核心行为"
+  },
+  "doNotInvent": [
+    "不要添加未请求的图标变体",
+    "不要假设加载/成功动画"
+  ],
+  "unknowns": [],
+  "keyInsightSeed": "使用星云渐变与发光边框营造科幻按钮感"
+}

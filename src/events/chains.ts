@@ -12,12 +12,14 @@ export const eventChains: EventChain[] = [
       body: '萨瓦献上一枚向内塌缩的晶体，它燃烧时不发光，反而吞光。她要求一批月面水样校准光谱，说这颗石头认得水。',
       interaction: 'techTrade',
       offer: { give: { quantumCore: 1, knowledge: 12 }, take: { water: 10 }, tech: 'TE1-1 纳米光催化剂' },
+      defaultAction: 'accept',
     }, {
       id: 'sava-2',
       title: '深层校准',
       body: '萨瓦说逆燃晶体正在适应月面的水。它变得更贪了——如果给出更多水样，她可以把光伏阵列的校准推进到第二层。这需要耐心，也需要月面舍得把水喂给一块石头。',
       interaction: 'request',
       offer: { give: { knowledge: 8, oxygen: 15 }, take: { water: 8, regolith: 8 } },
+      defaultAction: 'accept',
     }, {
       id: 'sava-3',
       title: '共振泄漏',
@@ -28,6 +30,7 @@ export const eventChains: EventChain[] = [
         { give: { knowledge: 15, oxygen: 20 }, take: { water: 5, regolith: 6 } },
         { give: { knowledge: 3 }, take: { water: 12, regolith: 10 } },
       ],
+      defaultAction: 'accept',
     }],
   },
   {
@@ -41,12 +44,14 @@ export const eventChains: EventChain[] = [
       body: '梅露把一枚琥珀孢囊放在月尘里。它没有寻找水，而是把月壤咬开，从中抽出一层细小的根——孢囊里封着的，是一整段不需要雨的生态记忆。',
       interaction: 'gift',
       offer: { give: { oxygen: 15, biomass: 12 }, take: {}, tech: 'TB-2 无水栽培技术' },
+      defaultAction: 'accept',
     }, {
       id: 'melu-2',
       title: '孢壁扩张',
       body: '梅露说孢囊在月壤里生得不错，但还不够——它的根须正在试探生态球的外壁，想要更多空间和养分。一批额外的月壤和水，可以让孢壁铺满整座生态球。',
       interaction: 'request',
       offer: { give: { biomass: 18, oxygen: 15 }, take: { regolith: 20, water: 8 } },
+      defaultAction: 'accept',
     }],
   },
   {
@@ -61,6 +66,7 @@ export const eventChains: EventChain[] = [
         body: '欧里请求查看星舰坞的龙骨图。他没有索要报酬，只说某些骨骼必须先学会遗忘月球，否则飞不远。他悬浮在龙骨上方，银灰潮汐轻轻拍打着合金。',
         interaction: 'rareTrade',
         offer: { give: { alloy: 80, quantumCore: 2 }, take: { regolith: 60, currency: 16, oxygen: 30 } },
+        defaultAction: 'accept',
       },
       {
         id: 'orri-2',
@@ -72,6 +78,7 @@ export const eventChains: EventChain[] = [
           { give: { quantumCore: 2 }, take: { currency: 8, alloy: 15 } },
           { give: {}, take: { alloy: 60, currency: 12, quantumCore: 1 } },
         ],
+        defaultAction: 'dismiss',
       },
       {
         id: 'orri-3',
@@ -79,6 +86,7 @@ export const eventChains: EventChain[] = [
         body: '欧里终于说出他携带的真正遗产：一套把微型黑洞系在掌心的约束箴言。他说这是轨道鲸一族的送嫁之物——她们把最危险的东西送给最想逃跑的人。',
         interaction: 'techTrade',
         offer: { give: { quantumCore: 2 }, take: { alloy: 150, currency: 32, quantumCore: 5 }, tech: 'TE3-0 外星科技：微型黑洞约束' },
+        defaultAction: 'accept',
       },
     ],
   },
@@ -94,6 +102,7 @@ export const eventChains: EventChain[] = [
       interaction: 'starportTrade',
       offer: { give: { currency: 15 }, take: { alloy: 60, currency: 40 }, tech: 'TS-1 星际劳工' },
       note: '固定在星海交易港添加人口 / 劳工双向贸易权限。',
+      defaultAction: 'accept',
     }, {
       id: 'nix-2',
       title: '审计子程序',
@@ -104,6 +113,7 @@ export const eventChains: EventChain[] = [
         { give: { currency: 30, knowledge: 20 }, take: { currency: 8 } },
         { give: {}, take: { currency: 20, alloy: 15 } },
       ],
+      defaultAction: 'accept',
     }, {
       id: 'nix-3',
       title: '旧约移民条款',
@@ -111,6 +121,7 @@ export const eventChains: EventChain[] = [
       interaction: 'chainChoice',
       offer: { give: { population: 2 }, take: { currency: 30, biomass: 20 } },
       note: '将两名星际劳工正式转入月面居民名册。',
+      defaultAction: 'accept',
     }],
   },
   {
@@ -124,22 +135,25 @@ export const eventChains: EventChain[] = [
       body: '塔罗展开一张用石英皮肤拓下来的矿脉图。图上有一段不像自然形成的炼金注释，他说是某颗死去的小行星临终前刻在自己骨头上的。',
       interaction: 'techTrade',
       offer: { give: { regolith: 80, alloy: 20 }, take: { oxygen: 30, alloy: 10, knowledge: 15 }, tech: 'TF-1 重原子炼金术' },
+      defaultAction: 'accept',
     }, {
       id: 'taro-2',
       title: '深层矿脉',
-      body: '塔罗指着矿脉图上一处被他标注为"不确定"的区域。他说如果钻对了方向，回报是一座富矿；如果钻错了，钻头只会烧在石英里。投入额外的电力和氧气，结果他无法保证。',
+      body: '塔罗指着矿脉图上一处被他标注为"不确定"的区域。他说如果钻对了方向，回报是一座富矿；如果钻错了，钻头只会烧在石英里。投入额外资金和氧气，结果他无法保证。',
       interaction: 'accident',
       concealed: true,
       rolls: [
         { give: { regolith: 100, alloy: 15 }, take: { currency: 10, oxygen: 12 } },
         { give: { regolith: 30 }, take: { currency: 8, alloy: 10 } },
       ],
+      defaultAction: 'accept',
     }, {
       id: 'taro-3',
       title: '亡星记忆',
       body: '塔罗把一片石英贴在舱壁上，开始用指尖翻译一颗死去小行星的记忆。它记得合金的一种古老晶格——不需要精炼炉就能直接析出。但翻译过程需要消耗大量月壤和氧气，像在跟一块碑说话。',
       interaction: 'rareTrade',
       offer: { give: { alloy: 30, knowledge: 20 }, take: { regolith: 60, oxygen: 20 } },
+      defaultAction: 'accept',
     }],
   },
   {
@@ -157,12 +171,14 @@ export const eventChains: EventChain[] = [
         { give: { knowledge: 20 }, take: { currency: 41 }, tech: 'TS-2 知识传输协议' },
         { give: { knowledge: 10 }, take: { currency: 16, alloy: 15, knowledge: 10 }, tech: 'TS-2 知识传输协议' },
       ],
+      defaultAction: 'accept',
     }, {
       id: 'evi-2',
       title: '建造谐振器',
-      body: '伊芙说声学群体正在缓慢消散——没有物理载体的共鸣撑不了太久。她请求建造一座谐振器来收容回声。合金和电力是必须的，但稳定后的声学群体会产出稳定的知识流。',
+      body: '伊芙说声学群体正在缓慢消散——没有物理载体的共鸣撑不了太久。她请求建造一座谐振器来收容回声。合金和资金是必须的，但稳定后的声学群体会产出稳定的知识流。',
       interaction: 'request',
       offer: { give: { knowledge: 30 }, take: { alloy: 15, currency: 10 } },
+      defaultAction: 'accept',
     }, {
       id: 'evi-3',
       title: '遗忘的旋律',
@@ -173,6 +189,7 @@ export const eventChains: EventChain[] = [
         { give: { luxury: 15, currency: 30 }, take: { currency: 12, biomass: 12 } },
         { give: { luxury: 4 }, take: { currency: 14, knowledge: 10 } },
       ],
+      defaultAction: 'accept',
     }],
   },
   {
@@ -187,6 +204,7 @@ export const eventChains: EventChain[] = [
       interaction: 'starportTrade',
       offer: { give: { currency: 20 }, take: { biomass: 30, knowledge: 30, currency: 20 }, tech: 'TS-3 玫瑰星球' },
       note: '固定在星海交易港添加艺术奢侈品双向贸易权限。',
+      defaultAction: 'accept',
     }, {
       id: 'rosa-2',
       title: '竞争者尾随',
@@ -197,6 +215,7 @@ export const eventChains: EventChain[] = [
         { give: { currency: 40, luxury: 10 }, take: { currency: 20, biomass: 15 } },
         { give: { currency: 10 }, take: { currency: 25, alloy: 10 } },
       ],
+      defaultAction: 'accept',
     }, {
       id: 'rosa-3',
       title: '独家代理合同',
@@ -204,6 +223,7 @@ export const eventChains: EventChain[] = [
       interaction: 'rareTrade',
       offer: { give: { currency: 50, luxury: 18 }, take: { biomass: 25, alloy: 15, knowledge: 15 } },
       note: '签署后，月面将成为玫瑰星球在太渊星域的唯一供应商。',
+      defaultAction: 'accept',
     }],
   },
   {
@@ -218,6 +238,7 @@ export const eventChains: EventChain[] = [
         body: '阿缇娅和她的族人请求留在月面。她们没有武器，只有一枚记录家园坐标的核——核还在发热，说明家园沦陷的时间不远。',
         interaction: 'request',
         offer: { give: { population: 1 }, take: { oxygen: 8, biomass: 6 } },
+        defaultAction: 'accept',
       },
       {
         id: 'atya-2',
@@ -225,6 +246,7 @@ export const eventChains: EventChain[] = [
         body: '一支陌生舰队要求交出幸存者。阿缇娅没有辩解，只把坐标核推到王座前。太渊的金光从舷窗照进来，在她烧焦的聚合毯上投下一道不像属于这颗卫星的暖色。',
         interaction: 'chainChoice',
         offer: { give: {}, take: { currency: 40, alloy: 40, quantumCore: 1 } },
+        defaultAction: 'accept',
       },
       {
         id: 'atya-3',
@@ -232,6 +254,7 @@ export const eventChains: EventChain[] = [
         body: '赎金换来了时间。数年后，坐标核完成解密：那里不是墓碑，而是一颗仍能呼吸的生态行星。阿缇娅没有说话，只是第一次在月面上流下了不冻的泪。',
         interaction: 'techTrade',
         offer: { give: { water: 15, biomass: 15 }, take: { knowledge: 25 }, tech: 'TC2-2 发现伊甸园' },
+        defaultAction: 'accept',
       },
     ],
   },

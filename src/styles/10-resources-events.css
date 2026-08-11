@@ -322,21 +322,29 @@
 }
 .ledger-stat-value em {
   display: inline-flex;
-  min-width: 52px;
-  height: 24px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 .28rem;
-  border-radius: 4px;
-  background: oklch(95% .022 84 / .6);
-  color: oklch(50% .08 76);
+  align-items: baseline;
+  gap: .28rem;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  min-width: auto;
+  height: auto;
+  background: transparent;
+  color: oklch(31% .032 250);
   font-family: ui-monospace, monospace;
-  font-size: 11px;
+  font-size: 14px;
   font-style: normal;
-  font-weight: 700;
-  line-height: 1;
-  text-align: center;
-  text-overflow: ellipsis;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: left;
+}
+.ledger-stat-value em svg {
+  flex: 0 0 auto;
+  color: oklch(48% .08 76);
+  margin-top: .05rem;
+}
+.ledger-stat-value em strong {
+  font-weight: 800;
   white-space: nowrap;
 }
 .ledger-action-block .ledger-quick-upgrade,

@@ -1,4 +1,4 @@
-import { ArrowUpRight, ChevronDown, Info } from 'lucide-react'
+import { ArrowUpRight, ChevronDown, Info, Users } from 'lucide-react'
 import {
   canBuildFacility,
   facilityEconomySpecs,
@@ -96,12 +96,11 @@ export function FacilityList({
                         {worker && <i title={`${worker.name} 执勤`}>{worker.glyph}</i>}
                       </div>
                       <div className="ledger-block ledger-economy-block">
-                        <div className="ledger-stat-row"><span className="ledger-stat-label">{fixed ? '岗位' : housingCapacity ? '居住容量' : '岗位占用'}</span><span className="ledger-stat-value"><em>{populationText}</em></span></div>
+                        <div className="ledger-stat-row"><span className="ledger-stat-label">{fixed ? '岗位' : housingCapacity ? '居住容量' : '岗位占用'}</span><span className="ledger-stat-value"><em className="ledger-pop-count"><Users size={13} /><strong>{populationText}</strong></em></span></div>
                         <FacilityNetRow net={actualNet} compact empty="-" />
                       </div>
                       <div className="ledger-block ledger-action-block">
                         <label className="ledger-method-switch" onClick={event => event.stopPropagation()}>
-                          <span>生产方式</span>
                           <select value={method.id} onChange={event => onMethod(region.id, event.target.value as ProductionMethodId)} aria-label={`${region.name}生产方式`}>
                             {spec.productionMethods.map(candidate => {
                               const ready = hasTech(techs, candidate.unlockedBy) && candidate.autoSelect !== false

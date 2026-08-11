@@ -98,6 +98,7 @@ export type GameSaveState = {
   construction: Record<RegionId, ConstructionProject | null>
   populationPressureDays: number
   activeOptimizerId: OptimizerId | 'none'
+  autoEventsEnabled?: boolean
   autoTradeProtectionEnabled?: boolean
   autoTradeEnabled?: Partial<Record<ResourceKey, boolean>>
   tradeSourcedResources?: Partial<Record<ResourceKey, boolean>>

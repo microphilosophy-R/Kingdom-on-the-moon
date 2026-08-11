@@ -4,6 +4,7 @@ import { canAfford, applyBundle, defaultReserveFloors, emptyResources, resourceM
 import { canBuildFacility, canUseProductionMethod, estimateTechnologyValue, hasTech, hasTechnologyPrerequisites, selectProductionMethod, technologyCatalog } from './technologies'
 import { estimateResourceDeficitPremium, estimateTradePremium, planAutoTradesForCost, resourceDebtLimits } from './trade'
 import { projectFacilityCost, projectFacilityNet, projectTechnologyCost } from './production'
+import { eventChains, getCurrentGameEra } from '../events'
 import type { AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, MethodAutomationAction, PopulationProjection, ProductionMethod, ProductionMethodId, Resources, TechnologyAutomationAction, TechnologySpec } from './types'
 const mergeBundles = (...bundles: Partial<Resources>[]) => {
   const total = emptyResources()
@@ -104,6 +105,10 @@ export type PlanInput = {
   productionMethods?: Partial<Record<FacilityId, ProductionMethodId>>
   year?: number
   capitalHorizonYears?: number
+  /** 启用后优化器按 defaultAction 自动处理事件 */
+  autoEventsEnabled?: boolean
+  /** 事件链进度 */
+  chainProgress?: Record<string, number>
 }
 
 export function planFacilityAutomation(input: PlanInput): AutomationPlan {
@@ -132,6 +137,48 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   const actions: AutomationAction[] = []
   const technologyActions: TechnologyAutomationAction[] = []
   const methodActions: MethodAutomationAction[] = []
+
+  // 自动事件处理：按 defaultAction 模拟事件效果
+  if (input.autoEventsEnabled) {
+    const eraRank = { early: 1, mid: 2, late: 3 }
+    const maxEra = getCurrentGameEra(input.facilities)
+
+    const eventProgress = { ...(input.chainProgress ?? {}) }
+    // 处理每个有未完成步骤且属于当前时期的事件链
+    for (const chain of eventChains) {
+      const progress = eventProgress[chain.id] ?? 0
+      if (progress >= chain.events.length) continue
+      if (eraRank[chain.stage] > eraRank[maxEra]) continue
+
+      const step = chain.events[progress]
+      if (step.defaultAction !== 'accept') {
+        // 跳过（dismiss 将链标记为完成）
+        if (step.defaultAction === 'dismiss') eventProgress[chain.id] = chain.events.length
+        continue
+      }
+
+      const effect = step.offer ?? (step.rolls?.length ? step.rolls[0] : undefined)
+      if (!effect) continue
+
+      // 检查支付能力
+      if (!canAfford(workingResources, effect.take)) continue
+
+      workingResources = applyBundle(applyBundle(workingResources, effect.take, -1), effect.give)
+      if (effect.tech && !hasTech(workingTechs, effect.tech as any)) {
+        workingTechs = [...workingTechs, effect.tech]
+        technologyActions.push({
+          techId: effect.tech as any,
+          name: effect.tech,
+          score: 0,
+          weightedGain: 0,
+          weightedCost: 0,
+          cost: {},
+          projectedResources: { ...workingResources },
+        })
+      }
+      eventProgress[chain.id] = progress + 1
+    }
+  }
 
   const overstockTechnologyBonus = () => {
     const materialSurplus =

@@ -1,0 +1,199 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* @group-priority: primary, accent, success, info */
+:root {
+  /* primary */
+  --moon-brass-50: #fbf6f0; /* AI-generated */
+  --moon-brass-100: #f6e9d7; /* AI-generated */
+  --moon-brass-200: #e1d6c5; /* AI-generated */
+  --moon-brass-300: #c8b498; /* AI-generated */
+  --moon-brass-400: #a88653; /* AI-generated */
+  --moon-brass-500: #8a6834; /* @primary */ /* AI-generated */
+  --moon-brass-600: #835a0e; /* AI-generated */
+  --moon-brass-700: #68491b; /* AI-generated */
+  --moon-brass-800: #493314; /* AI-generated */
+  --moon-brass-900: #2c1f0e; /* AI-generated */
+  /* neutral */
+  --moon-steel-50: #f8f9fb; /* AI-generated */
+  --moon-steel-100: #f0f2f5; /* AI-generated */
+  --moon-steel-200: #dfe3e9; /* AI-generated */
+  --moon-steel-300: #c5cbd5; /* AI-generated */
+  --moon-steel-400: #9ea7b6; /* AI-generated */
+  --moon-steel-500: #7a8496; /* @primary */ /* AI-generated */
+  --moon-steel-600: #606878; /* AI-generated */
+  --moon-steel-700: #494f5e; /* AI-generated */
+  --moon-steel-800: #2f333f; /* AI-generated */
+  --moon-steel-900: #181a22; /* AI-generated */
+  /* accent */
+  --moon-signal-50: #fff7ed; /* AI-generated */
+  --moon-signal-100: #ffedd5; /* AI-generated */
+  --moon-signal-200: #fed7aa; /* AI-generated */
+  --moon-signal-300: #fdba74; /* AI-generated */
+  --moon-signal-400: #fb923c; /* AI-generated */
+  --moon-signal-500: #f97316; /* @primary */ /* AI-generated */
+  --moon-signal-600: #ea580c; /* AI-generated */
+  --moon-signal-700: #c2410c; /* AI-generated */
+  --moon-signal-800: #9a3412; /* AI-generated */
+  --moon-signal-900: #7c2d12; /* AI-generated */
+  /* success */
+  --moon-success-50: #ecfcf4; /* AI-generated */
+  --moon-success-100: #d3f8e3; /* AI-generated */
+  --moon-success-200: #abf0ca; /* AI-generated */
+  --moon-success-300: #77e2ad; /* AI-generated */
+  --moon-success-400: #43cc8d; /* AI-generated */
+  --moon-success-500: #1fb476; /* @primary */ /* AI-generated */
+  --moon-success-600: #11945f; /* AI-generated */
+  --moon-success-700: #0a764f; /* AI-generated */
+  --moon-success-800: #065d40; /* AI-generated */
+  --moon-success-900: #044d35; /* AI-generated */
+  /* warning */
+  --moon-warning-50: #fffbeb; /* AI-generated */
+  --moon-warning-100: #fef3c7; /* AI-generated */
+  --moon-warning-200: #fde68a; /* AI-generated */
+  --moon-warning-300: #fcd34d; /* AI-generated */
+  --moon-warning-400: #fbbf24; /* AI-generated */
+  --moon-warning-500: #f59e0b; /* @primary */ /* AI-generated */
+  --moon-warning-600: #d97706; /* AI-generated */
+  --moon-warning-700: #b45309; /* AI-generated */
+  --moon-warning-800: #92400e; /* AI-generated */
+  --moon-warning-900: #78350f; /* AI-generated */
+  /* error */
+  --moon-error-50: #fff1f2; /* AI-generated */
+  --moon-error-100: #ffe4e6; /* AI-generated */
+  --moon-error-200: #fecdd3; /* AI-generated */
+  --moon-error-300: #fda4af; /* AI-generated */
+  --moon-error-400: #fb7185; /* AI-generated */
+  --moon-error-500: #f43f5e; /* @primary */ /* AI-generated */
+  --moon-error-600: #e11d48; /* AI-generated */
+  --moon-error-700: #be123c; /* AI-generated */
+  --moon-error-800: #9f1239; /* AI-generated */
+  --moon-error-900: #881337; /* AI-generated */
+  /* info */
+  --moon-info-50: #f0f9ff; /* AI-generated */
+  --moon-info-100: #e0f2fe; /* AI-generated */
+  --moon-info-200: #bae6fd; /* AI-generated */
+  --moon-info-300: #7dd3fc; /* AI-generated */
+  --moon-info-400: #38bdf8; /* AI-generated */
+  --moon-info-500: #0ea5e9; /* @primary */ /* AI-generated */
+  --moon-info-600: #0284c7; /* AI-generated */
+  --moon-info-700: #0369a1; /* AI-generated */
+  --moon-info-800: #075985; /* AI-generated */
+  --moon-info-900: #0c4a6e; /* AI-generated */
+  /* semantic aliases */
+  --primary: var(--moon-brass-500);
+  --primary-foreground: #ffffff;
+  --secondary: var(--moon-steel-100);
+  --secondary-foreground: var(--moon-steel-900);
+  --accent: var(--moon-signal-500);
+  --accent-hover: var(--moon-signal-600);
+  --background: var(--moon-steel-50);
+  --foreground: var(--moon-steel-900);
+  --muted: var(--moon-steel-100);
+  --muted-foreground: var(--moon-steel-500);
+  --border: var(--moon-steel-200);
+  --ring: var(--moon-brass-500);
+  --surface: #ffffff;
+  --surface-container: var(--moon-steel-100);
+  --error: var(--moon-error-500);
+  --error-container: var(--moon-error-50);
+  --on-error: #ffffff;
+  /* portable aliases */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-border: var(--border);
+  --color-success: var(--moon-success-600);
+  --color-warning: var(--moon-warning-600);
+  --color-error: var(--moon-error-600);
+  --color-info: var(--moon-info-600);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+  --type-body-md: var(--font-size-body);
+  --type-caption-sm: var(--font-size-caption);
+  --font-display: 'Orbitron', sans-serif;
+  --font-heading: 'Orbitron', sans-serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-size-display: 56px;
+  --font-size-h1: 40px;
+  --font-size-h2: 32px;
+  --font-size-h3: 24px;
+  --font-size-h4: 20px;
+  --font-size-body: 16px;
+  --font-size-lead: 18px;
+  --font-size-caption: 12px;
+  --font-size-mono: 14px;
+  --font-weight-display: 700;
+  --font-weight-h1: 700;
+  --font-weight-h2: 600;
+  --font-weight-h3: 600;
+  --font-weight-h4: 600;
+  --font-weight-body: 400;
+  --font-weight-lead: 400;
+  --font-weight-caption: 400;
+  --font-weight-mono: 400;
+  --line-height-display: 1.1;
+  --line-height-h1: 1.2;
+  --line-height-h2: 1.25;
+  --line-height-h3: 1.3;
+  --line-height-h4: 1.4;
+  --line-height-body: 1.6;
+  --line-height-lead: 1.7;
+  --line-height-caption: 1.5;
+  --line-height-mono: 1.6;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --size-button-sm: 32px;
+  --size-button-md: 40px;
+  --size-button-lg: 48px;
+  --size-input-height: 40px;
+  --size-icon-sm: 16px;
+  --size-icon-md: 24px;
+  --size-icon-lg: 32px;
+  --shadow-1: 0 1px 2px rgba(24,26,34,.06), 0 1px 1px rgba(24,26,34,.04); /* Card */
+  --shadow-2: 0 4px 8px -2px rgba(24,26,34,.10); /* Card Hover */
+  --shadow-3: 0 8px 24px -8px rgba(24,26,34,.18); /* Float */
+  --shadow-4: 0 16px 40px -12px rgba(24,26,34,.24); /* Modal */
+  --shadow-5: 0 24px 60px -20px rgba(24,26,34,.30); /* Overlay */
+}
+.dark {
+  --primary: var(--moon-brass-400);
+  --primary-foreground: #ffffff;
+  --secondary: var(--moon-steel-800);
+  --secondary-foreground: var(--moon-steel-100);
+  --accent: var(--moon-signal-600);
+  --accent-hover: var(--moon-signal-500);
+  --background: var(--moon-steel-900);
+  --foreground: var(--moon-steel-50);
+  --muted: var(--moon-steel-800);
+  --muted-foreground: var(--moon-steel-400);
+  --border: var(--moon-steel-700);
+  --ring: var(--moon-brass-400);
+  --surface: var(--moon-steel-900);
+  --surface-container: var(--moon-steel-700);
+  --error: var(--moon-error-400);
+  --error-container: var(--moon-error-900);
+  --on-error: var(--moon-error-50);
+  --color-success: var(--moon-success-400);
+  --color-warning: var(--moon-warning-400);
+  --color-error: var(--moon-error-400);
+  --color-info: var(--moon-info-400);
+}
+.moon-display { font-family: var(--font-display); font-size: 3.5rem; font-weight: var(--font-weight-display); line-height: var(--line-height-display); letter-spacing: -0.02em; }
+.moon-h1 { font-family: var(--font-heading); font-size: 2.5rem; font-weight: var(--font-weight-h1); line-height: var(--line-height-h1); }
+.moon-h2 { font-family: var(--font-heading); font-size: 2rem; font-weight: var(--font-weight-h2); line-height: var(--line-height-h2); }
+.moon-h3 { font-family: var(--font-heading); font-size: 1.5rem; font-weight: var(--font-weight-h3); line-height: var(--line-height-h3); }
+.moon-h4 { font-family: var(--font-heading); font-size: 1.25rem; font-weight: var(--font-weight-h4); line-height: var(--line-height-h4); }
+.moon-body { font-family: var(--font-body); font-size: 1rem; font-weight: var(--font-weight-body); line-height: var(--line-height-body); }
+.moon-lead { font-family: var(--font-body); font-size: 1.125rem; font-weight: var(--font-weight-lead); line-height: var(--line-height-lead); }
+.moon-caption { font-family: var(--font-body); font-size: 0.75rem; font-weight: var(--font-weight-caption); line-height: var(--line-height-caption); }
+.moon-mono { font-family: var(--font-mono); font-size: 0.875rem; font-weight: var(--font-weight-mono); line-height: var(--line-height-mono); }

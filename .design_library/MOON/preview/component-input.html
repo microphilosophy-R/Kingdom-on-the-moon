@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MOON Input</title>
+  <link rel="stylesheet" href="../colors_and_type.css">
+  <style>
+    /* Page scaffold — NOT extracted */
+    body { margin: 0; padding: 12px; background: var(--color-surface); font-family: var(--font-body); font-size: var(--font-size-body); color: var(--color-foreground); }
+    .row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+    .label { width: 92px; flex-shrink: 0; font-size: var(--font-size-caption); color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+    /* @component-css-start */
+    /* Component definitions — extracted to components.css by deterministic script */
+    .input { display: inline-flex; align-items: center; gap: 8px; height: var(--size-input-height); padding: 0 var(--space-3); border: 1px solid var(--border); background: var(--color-surface); color: var(--color-foreground); font-family: var(--font-body); font-size: var(--font-size-body); line-height: var(--line-height-body); min-width: 120px; flex-shrink: 0; transition: border-color .15s; }
+    .input input { flex: 1; min-width: 0; border: none; background: transparent; color: inherit; font: inherit; outline: none; }
+    .input:hover { border-color: var(--color-primary); }
+    .input:focus-within { outline: 2px solid var(--ring); outline-offset: -1px; }
+    .input.error { border-color: var(--color-error); background: var(--error-container); }
+    .input.error:hover { border-color: var(--color-error); }
+    .input.disabled { opacity: .5; cursor: not-allowed; }
+    .input.disabled input { cursor: not-allowed; }
+    .input-sm { height: var(--size-button-sm); padding: 0 var(--space-2); font-size: var(--font-size-caption); }
+    .input-lg { height: var(--size-button-lg); padding: 0 var(--space-4); font-size: var(--font-size-lead); }
+    .affix { color: var(--muted-foreground); font-size: inherit; white-space: nowrap; }
+    .hint { font-size: var(--font-size-caption); color: var(--color-error); margin-left: 8px; white-space: nowrap; }
+    /* @component-css-end */
+  </style>
+</head>
+<body>
+  <div class="row"><span class="label">默认</span><span class="input"><input type="text" placeholder="输入飞船名称" aria-label="飞船名称"></span></div>
+  <div class="row"><span class="label">聚焦</span><span class="input"><input type="text" placeholder="输入飞船名称" aria-label="飞船名称" autofocus></span></div>
+  <div class="row"><span class="label">错误</span><span class="input error"><input type="text" value="NCC-1701" aria-label="飞船注册号" aria-invalid="true"></span><span class="hint">注册号格式错误</span></div>
+  <div class="row"><span class="label">禁用</span><span class="input disabled"><input type="text" value="星际坐标锁定" aria-label="星际坐标" disabled></span></div>
+  <hr class="divider">
+  <div class="row"><span class="label">前缀</span><span class="input"><span class="affix">NCC-</span><input type="text" placeholder="注册号" aria-label="飞船注册号"></span></div>
+  <div class="row"><span class="label">后缀</span><span class="input"><input type="text" placeholder="航程" aria-label="航程"><span class="affix">光年</span></span></div>
+  <div class="row"><span class="label">尺寸</span><span class="input input-sm"><input type="text" placeholder="短代码" aria-label="短代码"></span><span class="input"><input type="text" placeholder="标准输入" aria-label="标准输入"></span><span class="input input-lg"><input type="text" placeholder="长描述" aria-label="长描述"></span></div>
+</body>
+</html>

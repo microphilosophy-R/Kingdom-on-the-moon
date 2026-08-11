@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "2",
+  "slug": "tag",
+  "name": "Tag",
+  "category": "data-display",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {
+      "candidate": "tag",
+      "evidence": "小型标签化信息展示"
+    },
+    {
+      "candidate": "badge",
+      "evidence": "状态或分类标记"
+    },
+    {
+      "candidate": "chip",
+      "evidence": "可删除或可选中的紧凑项"
+    }
+  ],
+  "variantDimensions": [
+    {
+      "dimension": "variant",
+      "values": [
+        "default",
+        "status"
+      ],
+      "notes": "普通或状态色"
+    },
+    {
+      "dimension": "size",
+      "values": [
+        "sm",
+        "md"
+      ],
+      "notes": "列表或标题旁使用"
+    }
+  ],
+  "representativeVariants": [
+    {
+      "name": "Default",
+      "whySelected": "分类标签如资源类型",
+      "traits": {
+        "variant": "default",
+        "size": "md"
+      },
+      "childrenDigest": "文本标签"
+    },
+    {
+      "name": "Status Success",
+      "whySelected": "成功/完成状态",
+      "traits": {
+        "variant": "status",
+        "status": "success",
+        "size": "md"
+      },
+      "childrenDigest": "状态文本"
+    },
+    {
+      "name": "Status Warning",
+      "whySelected": "警告/注意状态",
+      "traits": {
+        "variant": "status",
+        "status": "warning",
+        "size": "md"
+      },
+      "childrenDigest": "状态文本"
+    },
+    {
+      "name": "Small",
+      "whySelected": "表格行内紧凑标记",
+      "traits": {
+        "variant": "default",
+        "size": "sm"
+      },
+      "childrenDigest": "文本标签"
+    }
+  ],
+  "anatomy": [
+    "标签容器",
+    "文本",
+    "可选删除图标"
+  ],
+  "structurePatterns": [
+    "内联显示",
+    "小圆角或 pill",
+    "状态色背景"
+  ],
+  "usageHints": {
+    "priorityHint": "secondary",
+    "usage": "标记任务类型、资源、船员职业、事件状态"
+  },
+  "doNotInvent": [
+    "不要添加未请求的可交互删除",
+    "不要假设必须带图标"
+  ],
+  "unknowns": [],
+  "keyInsightSeed": "半透明胶囊标签，状态色模拟飞船指示灯"
+}

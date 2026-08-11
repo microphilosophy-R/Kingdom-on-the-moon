@@ -110,8 +110,30 @@ export function PlanetFacilities({
 
   return (
     <div className={`planet-workbench ${detailOpen ? 'detail-mode' : ''} ${dockCollapsed ? 'dock-collapsed' : ''}`}>
+      {dockCollapsed && !detailOpen && (
+        <button
+          type="button"
+          className="dock-expand-toggle"
+          onClick={onToggleDockCollapse}
+          aria-label="展开左侧信息"
+          title="展开左侧信息"
+        >
+          <PanelLeftOpen size={14} />
+          <span>展开</span>
+        </button>
+      )}
       {!detailOpen && !dockCollapsed && (
         <section className="planet-dock">
+          <button
+            type="button"
+            className="dock-collapse-toggle"
+            onClick={onToggleDockCollapse}
+            aria-label="收起左侧信息"
+            title="收起左侧信息"
+          >
+            <PanelLeftClose size={14} />
+            <span>收起</span>
+          </button>
           <div className="docked-orbit"><PlanetScene texture={planetTexture} compact onActivate={() => onBack()} /></div>
           <div className="planet-dock-copy"><span className="eyebrow">殖民星球</span><h2>{planetTexture.name}</h2><p>{formatDay(year)}，国祚仍在设施、报告与星舰之间被重新分配。</p></div>
           <aside className="king-profile compact-player">
@@ -170,18 +192,7 @@ export function PlanetFacilities({
           onSelect={onSelect}
           onUpgrade={onUpgrade}
           onMethod={onMethod}
-        >
-          <button
-            type="button"
-            className="dock-collapse-toggle"
-            onClick={onToggleDockCollapse}
-            aria-label={dockCollapsed ? '展开左侧信息' : '收起左侧信息'}
-            title={dockCollapsed ? '展开左侧信息' : '收起左侧信息'}
-          >
-            {dockCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
-            <span>{dockCollapsed ? '展开' : '收起'}</span>
-          </button>
-        </FacilityList>
+        />
       )}
     </div>
   )
