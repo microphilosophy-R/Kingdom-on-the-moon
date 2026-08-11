@@ -65,3 +65,79 @@ export const summarizeOptimizerDirections = (plan: AutomationPlan, population: P
   if (suggestions.length < 3) suggestions.push('观察库存盈余，把长期过剩资源转化为建筑或研究进度。')
   return suggestions.slice(0, 3)
 }
+
+export interface PhaseGuidance {
+  title: string
+  description: string
+  goals: string[]
+}
+
+export const getPhaseGuidance = (day: number): PhaseGuidance | null => {
+  if (day <= 100) {
+    return {
+      title: '奠基阶段',
+      description: '月面殖民地刚刚起步，基础设施是一切发展的根基。',
+      goals: [
+        '启动水、氧气、电力三类基础资源的生产线',
+        '建造第一座居住设施，为人口增长提供空间',
+        '解锁至少一项初阶科技，打开后续研究通道',
+      ],
+    }
+  }
+  if (day <= 250) {
+    return {
+      title: '成形阶段',
+      description: '殖民地开始成形，产业链需要从基础资源向加工材料延伸。',
+      goals: [
+        '扩大合金与建材产能，支撑后续设施扩建',
+        '启动星海贸易港，用盈余资源交换稀缺物资',
+        '留意深空来讯中的异客，合适的角色可留任入职',
+      ],
+    }
+  }
+  if (day <= 450) {
+    return {
+      title: '攀登阶段',
+      description: '殖民地进入快速成长期，规模与复杂度同时上升。',
+      goals: [
+        '各设施等级均衡推进，避免单一设施畸高畸低',
+        '启动御座号星舰坞建设，为终局目标打下基础',
+        '解锁中阶科技与新的生产方式，提升资源转化效率',
+      ],
+    }
+  }
+  if (day <= 650) {
+    return {
+      title: '深耕阶段',
+      description: '千日试验已过半程，需要从粗放扩张转向精细经营。',
+      goals: [
+        '评估 GDP 增速与人口承载力是否匹配星舰需求',
+        '补齐科技树中的关键缺口，尤其是效率修正类科技',
+        '确保星舰三阶段物资储备稳步推进，避免后期追补',
+      ],
+    }
+  }
+  if (day <= 800) {
+    return {
+      title: '推进阶段',
+      description: '时间逐渐紧迫，需要收束力量聚焦核心目标。',
+      goals: [
+        '审视每期王月报告中的优化建议，逐一补齐短板',
+        '把控生命维持与工业产能的平衡，防止链式崩溃',
+        '逐步将贸易和建设重心向星舰材料倾斜',
+      ],
+    }
+  }
+  if (day <= 1000) {
+    return {
+      title: '决胜阶段',
+      description: '千日试验进入最后倒计时，御座号的命运将决定国祚。',
+      goals: [
+        '御座号星舰完成度是评分的最大权重，确保不低于 50%',
+        '所有扩建、科技、贸易以星舰进度为最高优先级',
+        '检查是否有遗漏的科技或设施可瞬间提升最终国祚评分',
+      ],
+    }
+  }
+  return null
+}

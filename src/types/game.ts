@@ -49,6 +49,7 @@ export type ReignReport = {
   gdpDelta: number
   resourceRows: Partial<Record<ResourceKey, { produced: number; consumed: number; net: number }>>
   suggestions: string[]
+  phaseGuidance: { title: string; description: string; goals: string[] } | null
 }
 
 export type ReignReportBaseline = {

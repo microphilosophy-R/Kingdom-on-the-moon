@@ -1,4 +1,4 @@
-import { Play, X } from 'lucide-react'
+import { Play, Target, X } from 'lucide-react'
 import { gameCalendar, resourceMeta, resourceOrder } from '../../economy'
 import { fmt, fmtAmount } from '../../utils/format'
 import type { ReignReport } from '../../types/game'
@@ -35,6 +35,16 @@ export function ReignReportModal({ report, onClose }: ReignReportModalProps) {
           <div><span>GDP</span><strong>{report.gdp.toFixed(1)}</strong><small className={report.gdpDelta < 0 ? 'negative' : ''}>{gdpDelta} 星海货币/日</small></div>
           <div><span>阶段长度</span><strong>{report.endDay - report.startDay + 1}</strong><small>御日，50 御日为一王月</small></div>
         </div>
+
+        {report.phaseGuidance && (
+          <div className="reign-phase-guidance">
+            <h3><Target size={15} />当前阶段目标：{report.phaseGuidance.title}</h3>
+            <p>{report.phaseGuidance.description}</p>
+            <ul>
+              {report.phaseGuidance.goals.map(goal => <li key={goal}>{goal}</li>)}
+            </ul>
+          </div>
+        )}
 
         <div className="reign-report-grid">
           <section>

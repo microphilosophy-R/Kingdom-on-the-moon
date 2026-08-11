@@ -1,0 +1,311 @@
+/* ============================================
+   80-tutorial-victory.css
+   新手引导浮层 & 胜利结算界面
+   ============================================ */
+
+/* ---- Tutorial Overlay ---- */
+
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: all;
+}
+
+.tutorial-scrim-block {
+  position: fixed;
+  z-index: 100;
+  background: oklch(14% .02 250 / .62);
+  pointer-events: none;
+}
+
+.tutorial-highlight {
+  position: fixed;
+  z-index: 101;
+  border: 2px solid oklch(55% .1 76 / .72);
+  border-radius: 10px;
+  box-shadow: 0 0 24px oklch(55% .1 76 / .18), inset 0 0 12px oklch(55% .1 76 / .06);
+  pointer-events: none;
+  animation: tutorial-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes tutorial-pulse {
+  0%, 100% { box-shadow: 0 0 24px oklch(55% .1 76 / .18), inset 0 0 12px oklch(55% .1 76 / .06); }
+  50% { box-shadow: 0 0 36px oklch(55% .1 76 / .28), inset 0 0 18px oklch(55% .1 76 / .1); }
+}
+
+.tutorial-tooltip {
+  position: fixed;
+  z-index: 102;
+  width: min(320px, calc(100vw - 2rem));
+  border: 1px solid oklch(62% .07 76);
+  border-radius: 8px;
+  padding: 1rem 1.1rem .9rem;
+  background: linear-gradient(180deg, oklch(98% .011 86), oklch(94% .012 86));
+  box-shadow: 0 18px 60px oklch(18% .03 250 / .38);
+}
+
+.tutorial-tooltip h3 {
+  margin: .25rem 0 .35rem;
+  color: oklch(28% .035 250);
+  font-size: 17px;
+}
+
+.tutorial-tooltip p {
+  margin: 0;
+  color: oklch(40% .03 250);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tutorial-step-badge {
+  display: inline-block;
+  border: 1px solid oklch(62% .07 76);
+  border-radius: 4px;
+  padding: .12rem .5rem;
+  color: oklch(45% .075 76);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+
+.tutorial-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+  margin-top: .85rem;
+}
+
+.tutorial-skip {
+  border: 1px solid oklch(75% .03 250);
+  border-radius: 6px;
+  padding: .45rem .75rem;
+  background: transparent;
+  color: oklch(42% .03 250);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+}
+.tutorial-skip:hover {
+  background: oklch(94% .02 250);
+}
+
+/* Arrow pointers */
+.tutorial-tooltip.arrow-top::before,
+.tutorial-tooltip.arrow-bottom::before,
+.tutorial-tooltip.arrow-left::before,
+.tutorial-tooltip.arrow-right::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+}
+
+.tutorial-tooltip.arrow-top::before {
+  top: -16px;
+  left: calc(50% - 8px);
+  border-bottom-color: oklch(62% .07 76);
+}
+
+.tutorial-tooltip.arrow-bottom::before {
+  bottom: -16px;
+  left: calc(50% - 8px);
+  border-top-color: oklch(62% .07 76);
+}
+
+.tutorial-tooltip.arrow-left::before {
+  left: -16px;
+  top: calc(50% - 8px);
+  border-right-color: oklch(62% .07 76);
+}
+
+.tutorial-tooltip.arrow-right::before {
+  right: -16px;
+  top: calc(50% - 8px);
+  border-left-color: oklch(62% .07 76);
+}
+
+/* ---- Victory Modal ---- */
+
+.victory-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: oklch(14% .025 250 / .72);
+  backdrop-filter: blur(12px);
+}
+
+.victory-modal {
+  width: min(560px, 100%);
+  max-height: min(90vh, 680px);
+  overflow-y: auto;
+  border: 1px solid oklch(58% .08 76 / .65);
+  border-radius: 10px;
+  padding: 1.6rem 1.8rem;
+  background: linear-gradient(180deg, oklch(24% .03 250), oklch(17% .02 250));
+  box-shadow: 0 32px 100px oklch(10% .02 250 / .6);
+  text-align: center;
+}
+
+.victory-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+}
+
+.victory-seal {
+  width: 56px;
+  height: 56px;
+  margin-bottom: .3rem;
+  border-color: oklch(58% .1 76);
+  color: oklch(55% .11 76);
+  transform: rotate(-5deg);
+  font-size: 0;
+}
+
+.victory-header .eyebrow {
+  color: oklch(65% .04 76);
+}
+
+.victory-header h1 {
+  color: oklch(85% .04 86);
+  font-size: 26px;
+  letter-spacing: .14em;
+}
+
+.victory-score-area {
+  margin: 1.3rem 0 1.5rem;
+}
+
+.victory-number {
+  display: block;
+  color: oklch(82% .07 76);
+  font-family: ui-monospace, monospace;
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.victory-rating {
+  display: inline-block;
+  margin-top: .45rem;
+  border: 1px solid oklch(58% .1 76 / .55);
+  border-radius: 6px;
+  padding: .25rem 1rem;
+  background: oklch(55% .1 76 / .12);
+  color: oklch(75% .08 76);
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  font-size: 19px;
+  letter-spacing: .1em;
+}
+
+.victory-flavor {
+  margin: .55rem 0 0;
+  color: oklch(62% .03 250);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.victory-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .7rem;
+  margin-bottom: 1.4rem;
+}
+
+.victory-dim {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+  border: 1px solid oklch(40% .025 250 / .5);
+  border-radius: 8px;
+  padding: .8rem .6rem;
+  background: oklch(22% .02 250 / .4);
+}
+
+.victory-dim svg {
+  color: oklch(62% .05 76);
+  margin-bottom: .15rem;
+}
+
+.victory-dim span {
+  color: oklch(62% .03 76);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+
+.victory-dim strong {
+  color: oklch(72% .04 250);
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.victory-dim b {
+  color: oklch(78% .06 76);
+  font-family: ui-monospace, monospace;
+  font-size: 20px;
+}
+
+.victory-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.victory-footer button {
+  min-width: 160px;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 680px) {
+  .tutorial-tooltip {
+    width: calc(100vw - 1.5rem);
+    left: .75rem !important;
+    top: auto !important;
+    bottom: .75rem;
+  }
+
+  .tutorial-tooltip::before {
+    display: none;
+  }
+
+  .tutorial-highlight {
+    border-width: 1.5px;
+  }
+
+  .victory-modal {
+    padding: 1.2rem 1rem;
+  }
+
+  .victory-number {
+    font-size: 40px;
+  }
+
+  .victory-breakdown {
+    grid-template-columns: 1fr;
+    gap: .5rem;
+  }
+
+  .victory-dim {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .4rem .8rem;
+    padding: .6rem .8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-highlight {
+    animation: none;
+  }
+}

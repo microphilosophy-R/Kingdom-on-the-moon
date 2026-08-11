@@ -1385,6 +1385,51 @@
   color: oklch(54% .12 25);
 }
 
+.reign-phase-guidance {
+  margin: 0 0 1rem;
+  border: 1px solid oklch(65% .08 76 / .5);
+  border-radius: 8px;
+  padding: .85rem 1rem;
+  background: linear-gradient(135deg, oklch(97% .018 76 / .5), oklch(99% .01 86 / .6));
+}
+
+.reign-phase-guidance h3 {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  margin: 0 0 .3rem;
+  color: oklch(42% .085 76);
+  font-size: 15px;
+}
+
+.reign-phase-guidance h3 svg {
+  flex-shrink: 0;
+}
+
+.reign-phase-guidance > p {
+  margin: 0 0 .45rem;
+  color: oklch(38% .03 250);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.reign-phase-guidance ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: .15rem;
+}
+
+.reign-phase-guidance li {
+  color: oklch(36% .035 250);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.reign-phase-guidance li::marker {
+  color: oklch(55% .09 76);
+}
+
 .reign-report-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(240px, .8fr);

@@ -81,6 +81,8 @@ import {
   TechnologyCard,
   TechnologyImagePlaceholder,
   TechnologyTags,
+  TutorialOverlay,
+  VictoryModal,
   Visitors,
 } from './components/business'
 import {
@@ -91,7 +93,7 @@ import {
   TradeBoardBlock,
 } from './components/business/SpecialBlocks'
 import { displayCopy, fmt, fmtAmount, fmtCompactAmount, fmtSignedCompactAmount, formatDay } from './utils/format'
-import { hasResearchPrerequisites, orderLabel, summarizeOptimizerDirections, techLabel, technologyCategoryLabel, throughputClass } from './utils/game'
+import { getPhaseGuidance, hasResearchPrerequisites, orderLabel, summarizeOptimizerDirections, techLabel, technologyCategoryLabel, throughputClass } from './utils/game'
 import { scaleResourceBundle } from './utils/trade'
 import { regionLayout } from './data/regionLayout'
 import { facilityEra, facilityEraSections, facilityOrderIndex, researchableTechIds } from './data/eraSections'
@@ -218,6 +220,7 @@ const saveKey = (slotIndex: number) => `lunar-crown-save-v4-${slotIndex}`
 const saveMetaKey = (slotIndex: number) => `lunar-crown-save-meta-${slotIndex}`
 const maxSaveSlots = 6
 const musicVolumeKey = 'lunar-crown-music-volume'
+const tutorialSeenKey = 'lunar-crown-tutorial-seen'
 
 const readSaveSlotMeta = (slotIndex: number): SaveSlotMeta | null => {
   try {
@@ -356,6 +359,8 @@ function App() {
   const [saveStatus, setSaveStatus] = useState('本机多槽存档')
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [saveSlotMetas, setSaveSlotMetas] = useState<(SaveSlotMeta | null)[]>(() => readAllSaveSlotMetas())
+  const [tutorialOpen, setTutorialOpen] = useState(false)
+  const [showVictory, setShowVictory] = useState(false)
 
   const selectedRegion = regions.find(region => region.id === selected)!
   const selectedCost = projectFacilityCost(facilityEconomySpecs[selectedRegion.id], selectedRegion.level, techs)
@@ -542,6 +547,7 @@ function App() {
       gdpDelta: isOpening ? 0 : reportGdp - baseline.gdp,
       resourceRows: summarizeResourceRows(reportProduction, reportConsumption),
       suggestions: summarizeOptimizerDirections(reportPlan, reportPopulation),
+      phaseGuidance: getPhaseGuidance(reportDay),
     }
   }
 
@@ -690,6 +696,7 @@ function App() {
   const exitGame = () => {
     setRunning(false)
     setSettingsOpen(false)
+    setShowVictory(false)
     setGameStarted(false)
     audioRef.current?.pause()
   }
@@ -922,7 +929,10 @@ function App() {
       setPendingMonthlyReport(null)
     }
     if (!isReportDay && !visitor && (nextDay % 80 === 0 || Math.random() < 0.025)) chooseVisitor()
-    if (nextDay === gameCalendar.finalDay) writeLog(`${formatDay(gameCalendar.finalDay)}：千日试验到期。御座号的完成度将成为此局国祚。`)
+    if (nextDay === gameCalendar.finalDay) {
+      writeLog(`${formatDay(gameCalendar.finalDay)}：千日试验到期。御座号的完成度将成为此局国祚。`)
+      setShowVictory(true)
+    }
   }
 
   useEffect(() => {
@@ -1087,6 +1097,8 @@ function App() {
     const report = createReignReport(1, resources, regions, staffing, construction, populationProjection, dailyProduction, dailyConsumption, gdp, openingBaseline)
     setGameStarted(true)
     publishReignReport(report, resources, gdp)
+    setShowVictory(false)
+    if (!window.localStorage.getItem(tutorialSeenKey)) setTutorialOpen(true)
   }
 
   if (!gameStarted) {
@@ -1112,6 +1124,37 @@ function App() {
           />
         )}
         {toastMessage && <div className="save-toast" role="status" aria-live="polite">{toastMessage}</div>}
+      </>
+    )
+  }
+
+  if (tutorialOpen) {
+    return (
+      <>
+        <main className="app-shell">
+          {toastMessage && <div className="save-toast" role="status" aria-live="polite">{toastMessage}</div>}
+          <header className="site-header">
+            <div className="brand-block">
+              <div className="brand-seal"><Crown size={23} /></div>
+              <div><p>月面主权局 · 1000御日试验</p><h1>月冠纪元</h1></div>
+            </div>
+          </header>
+          <TutorialOverlay onComplete={() => { window.localStorage.setItem(tutorialSeenKey, '1'); setTutorialOpen(false); }} />
+        </main>
+        {settingsOpen && (
+          <SettingsPanel
+            volume={musicVolume}
+            saveSlotMetas={saveSlotMetas}
+            autoTradeProtectionEnabled={autoTradeProtectionEnabled}
+            onAutoTradeProtection={setAutoTradeProtectionEnabled}
+            onVolume={setMusicVolume}
+            onContinue={() => setSettingsOpen(false)}
+            onSave={saveGame}
+            onLoad={loadGame}
+            onRename={renameSaveSlot}
+            onExit={exitGame}
+          />
+        )}
       </>
     )
   }
@@ -1165,6 +1208,18 @@ function App() {
     </div>
 
     {activeReignReport && <ReignReportModal report={activeReignReport} onClose={() => setActiveReignReport(null)} />}
+
+    {showVictory && (
+      <VictoryModal
+        score={score}
+        shipProgress={shipProgress}
+        facilityTotalLevel={regions.reduce((sum, r) => sum + r.level, 0)}
+        roleCount={roster.length}
+        knowledge={resources.knowledge}
+        day={day}
+        onRestart={exitGame}
+      />
+    )}
 
     {visitor && <Modal scrimClassName="event-scrim" panelClassName="diplomatic-letter event-modal" ariaLabel="深空来讯" ariaLive="polite">
       <PortraitSlot src={visitorPortraits[visitor.id]} alt={visitor.name} aria-label="访客肖像" />
@@ -1223,7 +1278,8 @@ function App() {
         <div className="scoreline"><span>国祚评分</span><strong>{score}</strong><small>星舰进度权重最高</small></div>
       </div>
       <TabNav items={navItems} activeId={activeTabId} onSelect={(id) => {
-        if (id === 'facilities' || id === 'visitors') { setView(id); return }
+        if (id === 'facilities') { setView(id); setDetailOpen(false); return }
+        if (id === 'visitors') { setView(id); return }
         if (id === 'palace') { selectFacility('K'); return }
         if (id === 'research') { selectFacility('L'); return }
         if (id === 'ecology') { selectFacility('R'); return }
