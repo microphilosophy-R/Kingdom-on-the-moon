@@ -356,7 +356,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
       kind: 'method' as const,
       facilityId: id,
       fromMethodId: currentMethod.id,
-      toMethodId: best.id,
+      toMethodId: (best as ProductionMethod).id,
       score: bestScore,
       weightedGain: bestScore,
       projectedResources: { ...workingResources },
@@ -364,12 +364,13 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   }
 
   while (true) {
-    const ranked = [
+    const candidates = [
       ...facilityOrder.map(evaluate),
       ...Object.values(technologyCatalog).map(evaluateTechnology),
       ...facilityOrder.map(evaluateMethod),
     ]
-      .filter((candidate): candidate is NonNullable<typeof evaluate> | NonNullable<typeof evaluateTechnology> | NonNullable<ReturnType<typeof evaluateMethod>> => Boolean(candidate))
+    const ranked = candidates
+      .filter(c => c != null)
       .sort((a, b) => b.score - a.score)
 
     const best = ranked[0]

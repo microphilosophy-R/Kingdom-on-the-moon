@@ -32,8 +32,11 @@ describe('character and event catalogs', () => {
     const longChains = eventChains.filter(chain => chain.arc === 'long')
     const simpleChains = eventChains.filter(chain => chain.arc === 'simple')
 
-    expect(longChains.map(chain => chain.id).sort()).toEqual(['atya-refuge', 'orri-leviathan'])
-    expect(simpleChains.every(chain => chain.events.length === 1)).toBe(true)
+    expect(longChains.map(chain => chain.id).sort()).toEqual([
+      'atya-refuge', 'evi-echo', 'melu-waterless', 'nix-labor',
+      'orri-leviathan', 'rosa-luxury', 'sava-catalyst', 'taro-alchemy',
+    ])
+    expect(simpleChains).toHaveLength(0)
     expect(longChains.every(chain => chain.events.length > 1)).toBe(true)
 
     eventChains.forEach(chain => {
@@ -73,7 +76,7 @@ describe('character and event catalogs', () => {
   it('keeps concealed accident events inferable through body text', () => {
     const concealedEvents = eventChains.flatMap(chain => chain.events).filter(event => event.concealed)
 
-    expect(concealedEvents).toHaveLength(2)
+    expect(concealedEvents).toHaveLength(7)
     concealedEvents.forEach(event => {
       expect(event.interaction).toBe('accident')
       expect(event.rolls?.length).toBeGreaterThan(1)
