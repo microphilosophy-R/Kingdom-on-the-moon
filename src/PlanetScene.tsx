@@ -13,12 +13,14 @@ type PlanetSceneProps = {
   onActivate?: () => void
 }
 
+const BASE = import.meta.env.BASE_URL
+
 export const planetTextures: PlanetTexture[] = [
-  { id: 'mercury', name: '水星纹理', path: '/textures/planets/mercury.jpg' },
-  { id: 'venus', name: '金星纹理', path: '/textures/planets/venus.jpg' },
-  { id: 'earth', name: '地球纹理', path: '/textures/planets/earth.jpg' },
-  { id: 'mars', name: '火星纹理', path: '/textures/planets/mars.jpg' },
-  { id: 'moon', name: '月球纹理', path: '/textures/planets/moon.jpg' },
+  { id: 'mercury', name: '水星纹理', path: `${BASE}textures/planets/mercury.jpg` },
+  { id: 'venus', name: '金星纹理', path: `${BASE}textures/planets/venus.jpg` },
+  { id: 'earth', name: '地球纹理', path: `${BASE}textures/planets/earth.jpg` },
+  { id: 'mars', name: '火星纹理', path: `${BASE}textures/planets/mars.jpg` },
+  { id: 'moon', name: '月球纹理', path: `${BASE}textures/planets/moon.jpg` },
 ]
 
 export function PlanetScene({ texture, compact = false, onActivate }: PlanetSceneProps) {
