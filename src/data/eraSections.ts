@@ -33,7 +33,6 @@ export const researchEraSections: { id: 'early' | 'mid' | 'late'; label: string;
 ]
 
 export const researchableTechIds: TechnologyId[] = Object.values(technologyCatalog)
-  .filter(tech => tech.category !== 'construction')
   .sort((a, b) => {
     const eraRank = { early: 1, mid: 2, late: 3 }
     return eraRank[a.era ?? 'early'] - eraRank[b.era ?? 'early'] || a.name.localeCompare(b.name, 'zh-Hans-CN')
