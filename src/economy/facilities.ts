@@ -267,7 +267,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     unlockYear: 26,
     requiredTech: 'TH-0',
     maxLevel: 12,
-    baseUpgradeCost: { alloy: 6, biomass: 5 },
+    baseUpgradeCost: { alloy: 6, biomass: 5, currency: 2 },  // H
     yieldGrowth: 0.07,
     priority: 5,
     reserveFloor: { biomass: 6 },
@@ -305,7 +305,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     unlockYear: 48,
     requiredTech: 'TD-0',
     maxLevel: 10,
-    baseUpgradeCost: { alloy: 80, currency: 2, quantumCore: 2 },
+    baseUpgradeCost: { alloy: 80, currency: 4, quantumCore: 2 },  // D
     yieldGrowth: 0.04,
     priority: 16,
     reserveFloor: { power: 14, alloy: 12, quantumCore: 2, currency: 6 },

@@ -1,5 +1,5 @@
-import { ChevronLeft, Users } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ChevronLeft, ChevronRight, Users } from 'lucide-react'
+import { useRef, type ReactNode } from 'react'
 import {
   canBuildFacility,
   emptyResources,
@@ -59,6 +59,7 @@ export interface FacilityDetailPanelProps {
   automationPlan: AutomationPlan
   regions: Region[]
   onBack: () => void
+  onSelect: (id: RegionId) => void
   onUpgrade: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'expand' | 'expand-continuous'>) => void
   onHold: (id: RegionId) => void
   onShrink: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'shrink' | 'shrink-continuous'>) => void
@@ -88,7 +89,9 @@ export function FacilityDetailPanel({
   selectedCost,
   resources,
   facilityModifiers,
+  regions,
   onBack,
+  onSelect,
   onUpgrade,
   onShrink,
   onMethod,
@@ -97,6 +100,14 @@ export function FacilityDetailPanel({
   onHousingRedistribute,
   children,
 }: FacilityDetailPanelProps) {
+  const touchStartX = useRef<number | null>(null)
+  const currentIndex = regions.findIndex(r => r.id === selectedRegion.id)
+  const prevRegion = currentIndex > 0 ? regions[currentIndex - 1] : undefined
+  const nextRegion = currentIndex >= 0 && currentIndex < regions.length - 1 ? regions[currentIndex + 1] : undefined
+
+  const navigateTo = (target: Region | undefined) => {
+    if (target) onSelect(target.id)
+  }
   const selectedSpec = facilityEconomySpecs[selectedRegion.id]
   const selectedFixed = isFixedFacility(selectedRegion.id)
   const selectedMethod = selectProductionMethod(selectedSpec.productionMethods, techs, productionMethods[selectedRegion.id])
@@ -190,7 +201,20 @@ export function FacilityDetailPanel({
   const throughputText = selectedFixed ? '在线' : isHousingFacility(selectedRegion.id) ? `${housingCapacity > 0 ? Math.round(housingResidents / housingCapacity * 100) : 0}%` : `${Math.round(throughput * 100)}%`
 
   return (
-    <aside className="inspector facility-detail-v2 standard-detail">
+    <aside
+      className="inspector facility-detail-v2 standard-detail"
+      onTouchStart={e => { touchStartX.current = e.changedTouches[0]?.clientX ?? null }}
+      onTouchEnd={e => {
+        const startX = touchStartX.current
+        const endX = e.changedTouches[0]?.clientX ?? startX
+        if (startX == null || endX == null) return
+        const delta = endX - startX
+        const threshold = 48
+        if (delta < -threshold) navigateTo(nextRegion)
+        else if (delta > threshold) navigateTo(prevRegion)
+        touchStartX.current = null
+      }}
+    >
       <header className="detail-v2-header">
         <button className="back-button" onClick={onBack}><ChevronLeft size={16} />建筑名录</button>
         <div className="detail-v2-title">
@@ -327,6 +351,27 @@ export function FacilityDetailPanel({
       </section>
 
       {children}
+
+      <button
+        type="button"
+        className={`facility-nav facility-nav-prev ${prevRegion ? 'available' : ''}`}
+        aria-label={prevRegion ? `上一个：${prevRegion.name}` : '无上一个设施'}
+        title={prevRegion ? prevRegion.name : undefined}
+        disabled={!prevRegion}
+        onClick={() => navigateTo(prevRegion)}
+      >
+        <ChevronLeft size={22} />
+      </button>
+      <button
+        type="button"
+        className={`facility-nav facility-nav-next ${nextRegion ? 'available' : ''}`}
+        aria-label={nextRegion ? `下一个：${nextRegion.name}` : '无下一个设施'}
+        title={nextRegion ? nextRegion.name : undefined}
+        disabled={!nextRegion}
+        onClick={() => navigateTo(nextRegion)}
+      >
+        <ChevronRight size={22} />
+      </button>
     </aside>
   )
 }

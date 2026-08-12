@@ -70,12 +70,16 @@ function destroyCharts() {
 
 // Discover available simulation runs
 async function discoverAvailableRuns() {
+  const difficultyLabels = { '001': '宽裕 easy', '002': '常规 normal', '003': '严峻 hard', '004': '极限 ultimate' };
   const available = [];
   for (let i = 1; i <= 10; i++) {
     const run = String(i).padStart(3, '0');
     try {
       const resp = await fetch(`../test-results/simulation/run-${run}.json`);
-      if (resp.ok) { available.push(run); }
+      if (resp.ok) {
+        const json = await resp.json();
+        available.push({ run, difficulty: json.difficulty || run, label: difficultyLabels[run] || `run-${run}` });
+      }
     } catch {}
   }
   return available;
@@ -296,11 +300,11 @@ function createCharts(data) {
     return;
   }
 
-  // Populate dropdown
-  selector.innerHTML = runs.map(r => `<option value="${r}">run-${r}</option>`).join('');
-  selector.value = runs[runs.length - 1]; // default to latest
+  // 填充下拉菜单
+  selector.innerHTML = runs.map(r => `<option value="${r.run}">${r.label}</option>`).join('');
+  selector.value = runs[runs.length - 1].run; // default to latest
 
-  // Load on dropdown change
+  // 切换下拉时加载数据
   selector.addEventListener('change', async () => {
     const run = selector.value;
     if (!run) return;
@@ -308,10 +312,10 @@ function createCharts(data) {
     status.className = 'status';
     try {
       const data = await loadData(run);
-      document.querySelector('h1').textContent = `${titleBase} (run-${run})`;
+      const difficulty = data.difficulty || run;
+      document.querySelector('h1').textContent = `${titleBase} (run-${run} · ${difficulty})`;
       createCharts(data);
-      // Also update summary table (cleared by destroyCharts? No, table is DOM)
-      status.textContent = `已加载 run-${run}`;
+      status.textContent = `已加载 run-${run} (${difficulty})`;
       status.className = 'status';
     } catch (e) {
       status.textContent = '加载失败';
@@ -319,15 +323,16 @@ function createCharts(data) {
     }
   });
 
-  // Load initial data
-  const initialRun = runs[runs.length - 1];
+  // 初始加载最新 run
+  const initial = runs[runs.length - 1];
   status.textContent = '加载中...';
   status.className = 'status';
   try {
-    const data = await loadData(initialRun);
-    document.querySelector('h1').textContent = `${titleBase} (run-${initialRun})`;
+    const data = await loadData(initial.run);
+    const difficulty = data.difficulty || initial.run;
+    document.querySelector('h1').textContent = `${titleBase} (run-${initial.run} · ${difficulty})`;
     createCharts(data);
-    status.textContent = `已加载 run-${initialRun}`;
+    status.textContent = `已加载 run-${initial.run} (${difficulty})`;
     status.className = 'status';
   } catch (e) {
     status.textContent = '加载失败';

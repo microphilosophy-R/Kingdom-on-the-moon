@@ -502,10 +502,12 @@ function writeSimulationReport(result: SimulationResult, runIndex: number) {
 describe('1000-day headless simulation', () => {
   const difficulties: Difficulty[] = ['easy', 'normal', 'hard', 'ultimate']
 
+  const difficultyIndex: Record<Difficulty, number> = { easy: 1, normal: 2, hard: 3, ultimate: 4 }
+
   difficulties.forEach(difficulty => {
     it(`runs ${difficulty} difficulty to day 1000 (1 run) and reports ship win day`, () => {
       const result = simulateToDay1000(difficulty)
-      writeSimulationReport(result, 1)
+      writeSimulationReport(result, difficultyIndex[difficulty])
 
       expect(result.final.day).toBe(1000)
       expect(result.final.resources.population).toBeGreaterThanOrEqual(defaultReserveFloors.population)

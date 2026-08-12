@@ -70,12 +70,16 @@ function destroyCharts() {
 
 // Discover available simulation runs (this file is in test-results/)
 async function discoverAvailableRuns() {
+  const difficultyLabels = { '001': '宽裕 easy', '002': '常规 normal', '003': '严峻 hard', '004': '极限 ultimate' };
   const available = [];
   for (let i = 1; i <= 10; i++) {
     const run = String(i).padStart(3, '0');
     try {
       const resp = await fetch(`simulation/run-${run}.json`);
-      if (resp.ok) { available.push(run); }
+      if (resp.ok) {
+        const json = await resp.json();
+        available.push({ run, difficulty: json.difficulty || run, label: difficultyLabels[run] || `run-${run}` });
+      }
     } catch {}
   }
   return available;
@@ -361,8 +365,8 @@ function expandData(compact) {
   }
 
   // 填充下拉菜单
-  selector.innerHTML = runs.map(r => `<option value="${r}">run-${r}</option>`).join('');
-  selector.value = runs[runs.length - 1];
+  selector.innerHTML = runs.map(r => `<option value="${r.run}">${r.label}</option>`).join('');
+  selector.value = runs[runs.length - 1].run;
 
   // 切换下拉时加载数据
   selector.addEventListener('change', async () => {
@@ -372,9 +376,10 @@ function expandData(compact) {
     status.className = 'status';
     try {
       const jsonData = await loadData(run);
-      document.querySelector('h1').textContent = `${titleBase} (run-${run})`;
+      const difficulty = jsonData.difficulty || run;
+      document.querySelector('h1').textContent = `${titleBase} (run-${run} · ${difficulty})`;
       createCharts(jsonData);
-      status.textContent = `已加载 run-${run}`;
+      status.textContent = `已加载 run-${run} (${difficulty})`;
       status.className = 'status';
     } catch (e) {
       status.textContent = '加载失败';
@@ -383,14 +388,15 @@ function expandData(compact) {
   });
 
   // 初始加载最新 run
-  const initialRun = runs[runs.length - 1];
+  const initial = runs[runs.length - 1];
   status.textContent = '加载中...';
   status.className = 'status';
   try {
-    const jsonData = await loadData(initialRun);
-    document.querySelector('h1').textContent = `${titleBase} (run-${initialRun})`;
+    const jsonData = await loadData(initial.run);
+    const difficulty = jsonData.difficulty || initial.run;
+    document.querySelector('h1').textContent = `${titleBase} (run-${initial.run} · ${difficulty})`;
     createCharts(jsonData);
-    status.textContent = `已加载 run-${initialRun}`;
+    status.textContent = `已加载 run-${initial.run} (${difficulty})`;
     status.className = 'status';
   } catch (e) {
     status.textContent = '加载失败';

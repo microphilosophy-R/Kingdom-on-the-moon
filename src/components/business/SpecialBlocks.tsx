@@ -25,6 +25,7 @@ import { ResourceAtom, ResourceBundle } from '../resources'
 import { SectionHeading } from '../layout'
 import { InfoToggle } from './InfoToggle'
 import { TechnologyCard } from './TechnologyCard'
+import { TrendChart, type TrendSeries } from './TrendChart'
 
 /* ===================== PalaceReportBlock ===================== */
 
@@ -36,12 +37,16 @@ export interface PalaceReportBlockProps {
 
 export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: PalaceReportBlockProps) {
   const reportProgress = Math.round((day % gameCalendar.reignMonthDays) / gameCalendar.reignMonthDays * 100)
-  const reportRows = lastReignReport
-    ? resourceOrder.filter(key => lastReignReport.resourceRows[key])
-    : []
   const populationDelta = lastReignReport
     ? `${lastReignReport.populationDelta >= 0 ? '+' : ''}${fmtAmount(lastReignReport.populationDelta)}`
     : '0'
+
+  // Mini trend series for palace preview
+  const miniSeries: TrendSeries[] = [
+    { key: 'alloy', label: '合金', color: 'oklch(58% .16 28)', accessor: p => p.alloy },
+    { key: 'currency', label: '货币', color: 'oklch(62% .12 85)', accessor: p => p.currency },
+    { key: 'population', label: '人口', color: 'oklch(55% .14 142)', accessor: p => p.population },
+  ]
 
   return (
     <section className="special-content-block palace-report-v2">
@@ -61,18 +66,12 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
         </div>
         <div className="palace-report-preview">
           <section>
-            <h3>每日产消</h3>
-            {reportRows.slice(0, 6).map(key => {
-              const row = lastReignReport.resourceRows[key]!
-              return (
-                <div key={key}>
-                  <span>{resourceMeta[key].label}</span>
-                  <b>{row.produced ? fmtAmount(row.produced) : '0'}</b>
-                  <b>{row.consumed ? fmtAmount(row.consumed) : '0'}</b>
-                  <b className={row.net < 0 ? 'negative' : ''}>{row.net >= 0 ? '+' : ''}{fmtAmount(row.net)}</b>
-                </div>
-              )
-            })}
+            <h3>资源趋势</h3>
+            <TrendChart
+              data={lastReignReport.trendPoints}
+              series={miniSeries}
+              mini
+            />
           </section>
           <section>
             <h3>建议</h3>

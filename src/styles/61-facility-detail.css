@@ -1,5 +1,6 @@
 /* Facility detail V2: two-column compact layout. */
 .facility-detail-v2 {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr;
   gap: .7rem;
@@ -430,6 +431,63 @@
   width: 4.7ch;
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+/* Prev / next facility navigation buttons */
+.facility-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 72px;
+  margin-top: -36px;
+  border: 1px solid oklch(70% .04 78 / .35);
+  border-radius: 7px;
+  padding: 0;
+  background: oklch(24% .02 85 / .55);
+  color: oklch(95% .01 85 / .72);
+  cursor: default;
+  opacity: .18;
+  pointer-events: none;
+  transition: opacity .18s ease, background .18s ease, transform .18s ease;
+}
+
+.facility-nav.available {
+  cursor: pointer;
+  opacity: .55;
+  pointer-events: auto;
+}
+
+.facility-nav.available:hover,
+.facility-nav.available:focus-visible {
+  opacity: 1;
+  background: oklch(28% .03 85 / .78);
+  color: oklch(98% .01 85);
+  transform: scale(1.04);
+}
+
+.facility-nav-prev {
+  left: -20px;
+}
+
+.facility-nav-next {
+  right: -20px;
+}
+
+@media (max-width: 1240px) {
+  .facility-nav-prev {
+    left: 8px;
+  }
+
+  .facility-nav-next {
+    right: 8px;
+  }
+
+  .facility-nav.available {
+    opacity: .7;
+  }
 }
 
 @media (max-width: 1100px) {

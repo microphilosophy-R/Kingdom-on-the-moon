@@ -36,6 +36,24 @@ export type SpecialFacilityViewModel = {
   methodName: string
 }
 
+export type TrendPoint = {
+  day: number
+  population: number
+  alloy: number
+  currency: number
+  water: number
+  oxygen: number
+  biomass: number
+  regolith: number
+  knowledge: number
+  power: number
+  luxury: number
+  gdp: number
+  netAlloy: number
+  netKnowledge: number
+  netCurrency: number
+}
+
 export type ReignReport = {
   id: string
   startDay: number
@@ -50,6 +68,7 @@ export type ReignReport = {
   resourceRows: Partial<Record<ResourceKey, { produced: number; consumed: number; net: number }>>
   suggestions: string[]
   phaseGuidance: { title: string; description: string; goals: string[] } | null
+  trendPoints: TrendPoint[]
 }
 
 export type ReignReportBaseline = {

@@ -3,6 +3,7 @@ import { gameCalendar, resourceMeta, resourceOrder } from '../../economy'
 import { fmt, fmtAmount } from '../../utils/format'
 import type { ReignReport } from '../../types/game'
 import { Button, IconButton } from '../ui'
+import { TrendChart, type TrendSeries } from './TrendChart'
 
 export interface ReignReportModalProps {
   report: ReignReport
@@ -18,6 +19,36 @@ export function ReignReportModal({ report, onClose }: ReignReportModalProps) {
   const positiveGdp = report.gdpDelta > 0
   const populationDelta = report.populationDelta >= 0 ? `+${fmtAmount(report.populationDelta)}` : fmtAmount(report.populationDelta)
   const gdpDelta = report.gdpDelta === 0 ? '0.0' : `${positiveGdp ? '+' : ''}${report.gdpDelta.toFixed(1)}`
+
+  // Fallback rows for when trend data is unavailable
+  const fallbackRows = rows.map(key => {
+    const row = report.resourceRows[key]!
+    return {
+      label: resourceMeta[key].label,
+      produced: row.produced ? fmtAmount(row.produced) : '0',
+      consumed: row.consumed ? fmtAmount(row.consumed) : '0',
+      net: `${row.net > 0 ? '+' : ''}${fmtAmount(row.net)}`,
+      negative: row.net < 0,
+    }
+  })
+
+  // Trend chart series definitions
+  const populationSeries: TrendSeries[] = [
+    { key: 'pop', label: '人口', color: 'oklch(55% .14 142)', accessor: p => p.population },
+  ]
+
+  const resourceSeries: TrendSeries[] = [
+    { key: 'alloy', label: '合金', color: 'oklch(58% .16 28)', accessor: p => p.alloy },
+    { key: 'regolith', label: '月壤', color: 'oklch(52% .02 250)', accessor: p => p.regolith },
+    { key: 'knowledge', label: '知识', color: 'oklch(58% .14 296)', accessor: p => p.knowledge },
+    { key: 'currency', label: '货币', color: 'oklch(62% .12 85)', accessor: p => p.currency },
+  ]
+
+  const netSeries: TrendSeries[] = [
+    { key: 'netAlloy', label: '合金/日', color: 'oklch(58% .16 28)', accessor: p => p.netAlloy },
+    { key: 'netKnowledge', label: '知识/日', color: 'oklch(58% .14 296)', accessor: p => p.netKnowledge },
+    { key: 'netCurrency', label: '货币/日', color: 'oklch(62% .12 85)', accessor: p => p.netCurrency },
+  ]
 
   return (
     <div className="reign-report-scrim" role="presentation">
@@ -47,20 +78,27 @@ export function ReignReportModal({ report, onClose }: ReignReportModalProps) {
         )}
 
         <div className="reign-report-grid">
-          <section>
-            <h3>每日产消</h3>
-            <div className="reign-resource-table">
-              {rows.map(key => {
-                const row = report.resourceRows[key]!
-                return <div key={key}>
-                  <span>{resourceMeta[key].label}</span>
-                  <b>{row.produced ? fmtAmount(row.produced) : '0'}</b>
-                  <b>{row.consumed ? fmtAmount(row.consumed) : '0'}</b>
-                  <b className={row.net < 0 ? 'negative' : ''}>{row.net > 0 ? '+' : ''}{fmtAmount(row.net)}</b>
-                </div>
-              })}
-            </div>
-          </section>
+          <div className="reign-charts-panel">
+            <TrendChart
+              data={report.trendPoints}
+              series={populationSeries}
+              title="人口趋势"
+              fallbackRows={fallbackRows}
+            />
+            <TrendChart
+              data={report.trendPoints}
+              series={resourceSeries}
+              title="核心资源库存"
+              rightAxisKey="currency"
+              fallbackRows={fallbackRows}
+            />
+            <TrendChart
+              data={report.trendPoints}
+              series={netSeries}
+              title="日净产趋势"
+              fallbackRows={fallbackRows}
+            />
+          </div>
 
           <section>
             <h3>下个王月方向</h3>

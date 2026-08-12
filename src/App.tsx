@@ -103,7 +103,7 @@ import { facilityEra, facilityEraSections, facilityOrderIndex, researchableTechI
 import { visitorPortraits } from './data/visitorPortraits'
 import { PlanetScene, planetTextures } from './PlanetScene'
 import charChenlin from './assets/char-00.jpg'
-import type { AppView, ConstructionProject, FacilityOrderMode, GameSaveState, Icon, ReignReport, ReignReportBaseline, Region, RegionId, SaveSlotMeta, StaffingPriority } from './types/game'
+import type { AppView, ConstructionProject, FacilityOrderMode, GameSaveState, Icon, ReignReport, ReignReportBaseline, Region, RegionId, SaveSlotMeta, StaffingPriority, TrendPoint } from './types/game'
 
 type FacilityEra = 'early' | 'mid' | 'late'
 type TechnologyEra = 'early' | 'mid' | 'late'
@@ -371,6 +371,8 @@ function App() {
   const [reignReportBaseline, setReignReportBaseline] = useState<ReignReportBaseline>({ day: 1, resources: initialResources, gdp: 0 })
   const [lastReignReport, setLastReignReport] = useState<ReignReport | null>(null)
   const [activeReignReport, setActiveReignReport] = useState<ReignReport | null>(null)
+  const [reignTrendPoints, setReignTrendPoints] = useState<TrendPoint[]>([])
+  const reignTrendRef = useRef<TrendPoint[]>([])
   const [log, setLog] = useState<string[]>(['御日 001：月面行宫已就位，御座号的第一根龙骨等待铸造。'])
   const [pendingMonthlyReport, setPendingMonthlyReport] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -615,6 +617,7 @@ function App() {
     reportConsumption: Resources = dailyConsumption,
     reportGdp: number = gdp,
     baseline: ReignReportBaseline = reignReportBaseline,
+    trendPoints: TrendPoint[] = [],
   ): ReignReport => {
     const reportPlan = gameOptimizers['crown-steward'].run({
       ...optimizerInput,
@@ -640,6 +643,7 @@ function App() {
       resourceRows: summarizeResourceRows(reportProduction, reportConsumption),
       suggestions: summarizeOptimizerDirections(reportPlan, reportPopulation),
       phaseGuidance: getPhaseGuidance(reportDay),
+      trendPoints,
     }
   }
 
@@ -1017,9 +1021,32 @@ function App() {
     }
 
     setDay(nextDay)
+    // Track daily trend point
+    const trendPoint: TrendPoint = {
+      day: nextDay,
+      population: finalResources.population,
+      alloy: finalResources.alloy,
+      currency: finalResources.currency,
+      water: finalResources.water,
+      oxygen: finalResources.oxygen,
+      biomass: finalResources.biomass,
+      regolith: finalResources.regolith,
+      knowledge: finalResources.knowledge,
+      power: finalResources.power,
+      luxury: finalResources.luxury ?? 0,
+      gdp: gdp,
+      netAlloy: dailyNet.alloy ?? 0,
+      netKnowledge: dailyNet.knowledge ?? 0,
+      netCurrency: dailyNet.currency ?? 0,
+    }
+    reignTrendRef.current = [...reignTrendRef.current, trendPoint]
+    setReignTrendPoints(reignTrendRef.current)
     if (isReportDay) {
-      const report = createReignReport(nextDay, finalResources)
-      publishReignReport(report, finalResources, report.gdp)
+      const trendData = [...reignTrendRef.current]
+      const report = createReignReport(nextDay, finalResources, regions, staffing, construction, populationProjection, dailyProduction, dailyConsumption, gdp, reignReportBaseline, trendData)
+      publishReignReport(report, finalResources, gdp)
+      reignTrendRef.current = []
+      setReignTrendPoints([])
     }
     if (pendingMonthlyReport && nextDay % gameCalendar.reignMonthDays === 1) {
       writeLog(pendingMonthlyReport)

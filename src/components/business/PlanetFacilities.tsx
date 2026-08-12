@@ -182,6 +182,7 @@ export function PlanetFacilities({
           automationPlan={automationPlan}
           regions={regions}
           onBack={onBack}
+          onSelect={onSelect}
           onUpgrade={onUpgrade}
           onHold={onHold}
           onShrink={onShrink}
