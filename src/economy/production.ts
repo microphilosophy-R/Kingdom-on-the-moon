@@ -1,7 +1,7 @@
 import { baseConstructionDays, getConstructionCostDiscount, getUpgradeCostScale, isHousingFacility, jobsPerFacilityLevel } from './calendar'
 import { facilityEconomySpecs, facilityOrder, shipProjectStages } from './facilities'
 import { applyTechnologyToMethod, canUseProductionMethod, estimateTechnologyResearchCost, hasRequiredFacilityTech, selectProductionMethod } from './technologies'
-import { emptyResources, resourceOrder, weightedValue, type ResourceFlow } from './resources'
+import { emptyResources, resourceOrder, resourceWeights, weightedValue, type ResourceFlow } from './resources'
 import { difficultyConfigs, type Difficulty } from './difficulty'
 import type { AnnualContext, FacilityEconomySpec, FacilityId, FacilityModifiers, ProductionMethodId, Resources, TechnologySpec } from './types'
 export const shipProjectTotalValue = shipProjectStages.reduce((sum, stage) => sum + weightedValue(stage.input), 0)
@@ -57,6 +57,24 @@ export function projectFacilityNet(
   })
 
   return net
+}
+
+/**
+ * 人均经济利润：每岗产出的资源价值 - 每岗消耗的资源价值。
+ * 人口作为劳动力计入产出价值（人口是驱动利润的瓶颈），
+ * 因此人口建筑的利润天然偏高，属正常现象。
+ */
+export function profitPerJob(
+  spec: FacilityEconomySpec,
+  assignedPopulation: number,
+  modifiers: FacilityModifiers = {},
+  techs: string[] = [],
+  selectedMethodId?: ProductionMethodId,
+  facilityLevel?: number,
+  weights: Resources = resourceWeights,
+): number {
+  const net = projectFacilityNet(spec, assignedPopulation, modifiers, techs, selectedMethodId, facilityLevel)
+  return weightedValue(net, weights) / Math.max(1, assignedPopulation)
 }
 
 export function projectFacilityCost(spec: FacilityEconomySpec, level: number, techs: string[] = [], difficulty: Difficulty = 'normal'): Partial<Resources> {
