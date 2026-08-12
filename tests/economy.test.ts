@@ -254,9 +254,9 @@ describe('economy catalog', () => {
     ])
     expect(technologyCatalog['TE3-0'].unlocks).toBe('ME3-1')
     expect(facilityEconomySpecs.E3.requiredTech).toBe('TE3-0')
-    expect(canBuildFacility(facilityEconomySpecs.E1, 0, defaultStartingTechs)).toBe(true)
-    expect(canBuildFacility(facilityEconomySpecs.E3, 60, [])).toBe(false)
-    expect(canBuildFacility(facilityEconomySpecs.E3, 0, ['TE3-0 外星科技：微型黑洞约束'])).toBe(true)
+    expect(canBuildFacility(facilityEconomySpecs.E1, defaultStartingTechs)).toBe(true)
+    expect(canBuildFacility(facilityEconomySpecs.E3, [])).toBe(false)
+    expect(canBuildFacility(facilityEconomySpecs.E3, ['TE3-0 外星科技：微型黑洞约束'])).toBe(true)
   })
 })
 
@@ -464,7 +464,7 @@ describe('population and construction scale', () => {
     const cost = { alloy: 12 }
     const facilities = facilityOrder.map(id => ({ id, level: id === 'S' ? 1 : 0 }))
     const tradePlan = planAutoTradesForCost(
-      { ...richResources, alloy: 8, currency: 100 },
+      { ...richResources, alloy: 8, currency: 200 },
       cost,
       facilities,
       ['TS-0 Starport charter'],

@@ -197,7 +197,6 @@ export function PlanetFacilities({
         <FacilityList
           regions={regions}
           selected={selected}
-          year={year}
           techs={techs}
           productionMethods={productionMethods}
           facilityOrders={facilityOrders}

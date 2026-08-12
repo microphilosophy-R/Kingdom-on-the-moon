@@ -138,7 +138,7 @@ export function FacilityDetailPanel({
   const staffingReachableMax = isHousing ? Math.min(housingCapacity, (isStaffingAuto ? housingResidents : staffing[selectedRegion.id] ?? housingResidents) + freePopulation) : Math.min(workCapacity, assignedPopulation + freePopulation)
   const staffColumnLabel = isHousing ? '居住人数' : '在岗人数'
   const staffDisplay = isHousing ? `${staffingCurrent}/${housingCapacity}` : `${assignedPopulation}/${workCapacity}`
-  const selectedBuildable = canBuildFacility(selectedSpec, year, techs)
+  const selectedBuildable = canBuildFacility(selectedSpec, techs)
   const selectedRequiredTech = selectedSpec.requiredTech ? technologyCatalog[selectedSpec.requiredTech] : undefined
   const currentOrder = facilityOrders[selectedRegion.id] ?? 'hold'
   const throughput = selectedModifier.outputMultiplier ?? 1

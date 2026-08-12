@@ -231,7 +231,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
       requiredTech.category !== 'construction' ||
       !hasTechnologyPrerequisites(requiredTech.id, workingTechs)
     )) return null
-    if (!requiredTech && !canBuildFacility(spec, year, workingTechs)) return null
+    if (!requiredTech && !canBuildFacility(spec, workingTechs)) return null
 
     const buildCost = projectFacilityCost(spec, current.level, workingTechs, difficulty)
     const unlockCost = requiredTech ? projectTechnologyCost(requiredTech, workingTechs) : {}

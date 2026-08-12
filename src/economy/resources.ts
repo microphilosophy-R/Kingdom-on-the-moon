@@ -45,7 +45,6 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     tradable: false,
     storable: false,
     reserveFloor: 12,
-    weight: 4.2,
   },
   water: {
     label: '水',
@@ -58,7 +57,6 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     tradable: true,
     storable: true,
     reserveFloor: 8,
-    weight: 2.2,
   },
   oxygen: {
     label: '氧气',
@@ -71,7 +69,6 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     tradable: true,
     storable: true,
     reserveFloor: 10,
-    weight: 2.5,
   },
   biomass: {
     label: '生物',
@@ -84,7 +81,6 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     tradable: true,
     storable: true,
     reserveFloor: 8,
-    weight: 2.0,
   },
   regolith: {
     label: '月壤',
@@ -97,7 +93,6 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     tradable: true,
     storable: true,
     reserveFloor: 12,
-    weight: 1.2,
   },
   alloy: {
     label: '合金',
@@ -110,7 +105,6 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     tradable: true,
     storable: true,
     reserveFloor: 10,
-    weight: 2.8,
   },
   quantumCore: {
     label: '量子计算核心',
@@ -123,7 +117,6 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     tradable: true,
     storable: true,
     reserveFloor: 2,
-    weight: 4.8,
   },
   currency: {
     label: '星海货币',
@@ -136,7 +129,6 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     tradable: false,
     storable: true,
     reserveFloor: 6,
-    weight: 2.6,
   },
   population: {
     label: '人口',
@@ -149,7 +141,6 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     tradable: true,
     storable: true,
     reserveFloor: 10,
-    weight: 3.6,
   },
   knowledge: {
     label: '知识',
@@ -162,7 +153,6 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     tradable: false,
     storable: true,
     reserveFloor: 0,
-    weight: 4.0,
   },
   luxury: {
     label: '艺术奢侈品',
@@ -175,7 +165,6 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     tradable: true,
     storable: true,
     reserveFloor: 0,
-    weight: 1.8,
   },
 }
 

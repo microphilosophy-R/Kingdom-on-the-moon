@@ -16,7 +16,6 @@ export type Region = FacilityState & {
   icon: Icon
   name: string
   subtitle: string
-  unlock: number
   max: number
   note: string
   interfaceDuty: string

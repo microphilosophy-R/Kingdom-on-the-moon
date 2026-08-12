@@ -26,7 +26,6 @@ export type ResourceSpec = {
   tradable: boolean
   storable: boolean
   reserveFloor: number
-  weight: number
 }
 
 export type FacilityId = 'E1' | 'E2' | 'E3' | 'C1' | 'C2' | 'B' | 'F' | 'P' | 'R' | 'S' | 'K' | 'L' | 'H' | 'M' | 'D'
@@ -71,7 +70,6 @@ export type FacilityEconomySpec = {
   name: string
   subtitle: string
   role: FacilityRole
-  unlockYear: number
   requiredTech?: TechnologyId
   maxLevel: number
   minLevel?: number

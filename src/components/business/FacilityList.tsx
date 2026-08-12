@@ -23,7 +23,6 @@ import type { FacilityOrderMode, Region, RegionId } from '../../types/game'
 export interface FacilityListProps {
   regions: Region[]
   selected: RegionId
-  year: number
   techs: string[]
   productionMethods: Record<RegionId, ProductionMethodId>
   facilityOrders: Record<RegionId, FacilityOrderMode>
@@ -43,7 +42,6 @@ export interface FacilityListProps {
 export function FacilityList({
   regions,
   selected,
-  year,
   techs,
   productionMethods,
   facilityOrders,
@@ -87,7 +85,7 @@ export function FacilityList({
                     ? facilityNetByRegion[region.id] ?? {}
                     : projectFacilityNet(spec, assignedPop, modifier, techs, method.id, region.level)
                   const order = facilityOrders[region.id] ?? 'hold'
-                  const canQuickUpgrade = !fixed && !isHousingFacility(region.id) && !construction[region.id] && order === 'hold' && region.level < region.max && canBuildFacility(spec, year, techs)
+                  const canQuickUpgrade = !fixed && !isHousingFacility(region.id) && !construction[region.id] && order === 'hold' && region.level < region.max && canBuildFacility(spec, techs)
                   const populationText = fixed ? '固定' : housingCapacity ? `${residentsByFacility[region.id] ?? 0}/${housingCapacity}` : capacity ? `${assignedPop}/${capacity}` : '未建'
                   const throughputText = fixed ? '在线' : region.level === 0 ? '未建' : `${Math.round(throughput * 100)}%`
                   return (

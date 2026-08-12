@@ -190,7 +190,6 @@ const regionTemplate: Region[] = facilityOrder.map(id => {
     icon: layout.icon,
     name: spec.name,
     subtitle: spec.subtitle,
-    unlock: spec.unlockYear,
     max: spec.maxLevel,
     note: spec.note,
     interfaceDuty: spec.interfaceDuty,
@@ -904,7 +903,7 @@ function App() {
       const spec = facilityEconomySpecs[id]
       if (mode === 'expand-continuous') {
         const cost = projectFacilityCost(spec, currentLevel, techs, difficulty)
-        if (!canBuildFacility(spec, nextDay, techs) || currentLevel >= spec.maxLevel || !canPay(finalResources, cost)) return
+        if (!canBuildFacility(spec, techs) || currentLevel >= spec.maxLevel || !canPay(finalResources, cost)) return
         finalResources = apply(finalResources, cost, -1)
         manualContinuousProjects.push([id, {
           mode: 'expand',
@@ -1091,7 +1090,7 @@ function App() {
       writeLog(`${formatDay(day)}：${region.name}是固定贸易节点，不需要扩建。`)
       return
     }
-    if (!canBuildFacility(spec, day, techs) || region.level >= region.max) return
+    if (!canBuildFacility(spec, techs) || region.level >= region.max) return
     if (construction[id]) {
       writeLog(`${formatDay(day)}：${region.name}仍在施工或拆除冷却中。`)
       return

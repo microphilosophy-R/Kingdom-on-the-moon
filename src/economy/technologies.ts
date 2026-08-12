@@ -422,10 +422,8 @@ export const hasRequiredFacilityTech = (spec: FacilityEconomySpec, techs: string
 export const hasTechnologyPrerequisites = (techId: TechnologyId, techs: string[] = []) =>
   (technologyCatalog[techId].prerequisites ?? []).every(prerequisite => hasTech(techs, prerequisite))
 
-export const canBuildFacility = (spec: FacilityEconomySpec, year: number, techs: string[] = []) => {
-  void year
-  return hasRequiredFacilityTech(spec, techs)
-}
+export const canBuildFacility = (spec: FacilityEconomySpec, techs: string[] = []) =>
+  hasRequiredFacilityTech(spec, techs)
 
 export const canUseProductionMethod = (method: ProductionMethod, techs: string[] = []) =>
   method.autoSelect !== false && hasTech(techs, method.unlockedBy)
