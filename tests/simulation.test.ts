@@ -1,5 +1,5 @@
-import { mkdirSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { mkdirSync, readdirSync, writeFileSync, unlinkSync } from 'node:fs'
+import { resolve, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   applyBundle,
@@ -444,11 +444,20 @@ function simulateToDay1000(): SimulationResult {
   }
 }
 
-function writeSimulationReport(result: SimulationResult) {
+function writeSimulationReport(result: SimulationResult, runIndex: number) {
   const outputDir = resolve(process.cwd(), 'test-results', 'simulation')
   mkdirSync(outputDir, { recursive: true })
-  const jsonPath = resolve(outputDir, 'latest-1000d.json')
-  const mdPath = resolve(outputDir, 'latest-1000d.md')
+
+  // 轮转：仅保留最近 10 次历史记录
+  const existing = readdirSync(outputDir).filter(name => /^run-\d{3}\.json$/.test(name)).sort()
+  while (existing.length >= 10) {
+    const oldest = existing.shift()!
+    unlinkSync(join(outputDir, oldest))
+  }
+
+  const padded = String(runIndex).padStart(3, '0')
+  const jsonPath = resolve(outputDir, `run-${padded}.json`)
+  const mdPath = resolve(outputDir, `run-${padded}.md`)
   writeFileSync(jsonPath, `${JSON.stringify(result, null, 2)}\n`, 'utf8')
   writeFileSync(mdPath, [
     '# 1000 御日自动经济模拟',
@@ -470,32 +479,34 @@ function writeSimulationReport(result: SimulationResult) {
     `结构化快照：\`${jsonPath}\``,
     '',
   ].join('\n'), 'utf8')
-  writeFileSync(resolve(outputDir, 'latest-1000d-findings.md'), [
-    '# 1000-day simulation findings',
-    '',
-    `Scenario: \`${result.scenario}\``,
-    '',
-    '## Findings',
-    ...result.findings.map(item => `- ${item}`),
-    '',
-    '## Final Snapshot',
-    '',
-    '```json',
-    JSON.stringify(result.final, null, 2),
-    '```',
-    '',
-    `Structured snapshots: \`${jsonPath}\``,
-    '',
-  ].join('\n'), 'utf8')
 }
 
 describe('1000-day headless simulation', () => {
-  it('runs the daily optimizer to day 1000 and records 50-day snapshots', () => {
-    const result = simulateToDay1000()
-    writeSimulationReport(result)
+  it('runs the daily optimizer to day 1000 for 10 runs and checks determinism', () => {
+    const results: SimulationResult[] = []
 
-    expect(result.final.day).toBe(1000)
-    expect(result.snapshots.map(snapshot => snapshot.day)).toEqual([1, ...Array.from({ length: 20 }, (_, index) => (index + 1) * 50)])
-    expect(result.final.resources.population).toBeGreaterThanOrEqual(defaultReserveFloors.population)
+    for (let run = 1; run <= 10; run++) {
+      const result = simulateToDay1000()
+      results.push(result)
+      writeSimulationReport(result, run)
+
+      expect(result.final.day).toBe(1000)
+      expect(result.snapshots.map(snapshot => snapshot.day)).toEqual([1, ...Array.from({ length: 20 }, (_, index) => (index + 1) * 50)])
+      expect(result.final.resources.population).toBeGreaterThanOrEqual(defaultReserveFloors.population)
+    }
+
+    // 多轮一致性检查：10 次运行的核心指标应完全相同
+    const first = results[0]
+    results.slice(1).forEach((result, index) => {
+      const runNum = index + 2
+      expect(result.final.population.total, `run ${runNum} population diverged`).toBe(first.final.population.total)
+      expect(result.final.population.capacity, `run ${runNum} capacity diverged`).toBe(first.final.population.capacity)
+      expect(result.final.cumulative.started, `run ${runNum} started diverged`).toBe(first.final.cumulative.started)
+      expect(result.final.cumulative.completed, `run ${runNum} completed diverged`).toBe(first.final.cumulative.completed)
+      expect(result.final.cumulative.maxPopulation, `run ${runNum} maxPopulation diverged`).toBe(first.final.cumulative.maxPopulation)
+      expect(result.final.levels, `run ${runNum} levels diverged`).toEqual(first.final.levels)
+    })
+
+    console.log(`\n10 runs consistent: population=${first.final.population.total}, capacity=${first.final.population.capacity}, started=${first.final.cumulative.started}, completed=${first.final.cumulative.completed}\n`)
   })
 })

@@ -319,57 +319,69 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     if (currentAssigned <= 0) return null
     const currentMethod = selectProductionMethod(spec.productionMethods, workingTechs, workingMethods[id])
     if (!canUseProductionMethod(currentMethod, workingTechs)) return null
-    const alternatives = spec.productionMethods.filter(method => method.id !== currentMethod.id && canUseProductionMethod(method, workingTechs))
-    if (!alternatives.length) return null
+    // 收集所有可用方法（包括当前方法），对所有方法独立评分后择优
+    const usableMethods = [currentMethod, ...spec.productionMethods.filter(method => method.id !== currentMethod.id && canUseProductionMethod(method, workingTechs))]
+    if (usableMethods.length <= 1) return null
 
     const modifiers = input.modifiers?.[id] ?? {}
     const evaluationTechs = workingTechs
-    const presentNet = projectFacilityNet(spec, currentAssigned, modifiers, evaluationTechs, currentMethod.id, stateById[id].level)
+    const horizon = Math.min(5, input.capitalHorizonYears ?? 5)
 
-    let best: ProductionMethod | null = null
-    let bestScore = 0
+    const scored = usableMethods.map(method => {
+      const net = projectFacilityNet(spec, currentAssigned, modifiers, evaluationTechs, method.id, stateById[id].level)
+      // 绝对基础收益：不考虑与当前方法的差异，直接对产出做加权
+      const baseValue = weightedValue(net, weights)
 
-    alternatives.forEach(method => {
-      const candidateNet = projectFacilityNet(spec, currentAssigned, modifiers, evaluationTechs, method.id, stateById[id].level)
-      const annualGain = mergeBundles(candidateNet)
-      resourceOrder.forEach(key => {
-        annualGain[key] = (candidateNet[key] ?? 0) - (presentNet[key] ?? 0)
-      })
-      let strategicBonus = 0
-      resourceOrder.forEach(key => {
-        if (workingResources[key] < reserveFloors[key] && annualGain[key] > 0) strategicBonus += annualGain[key] * weights[key] * 3
-        if (workingResources[key] < reserveFloors[key] && annualGain[key] < 0) strategicBonus += annualGain[key] * weights[key] * 2
-      })
-      const projectedResources = applyBundle(workingResources, annualGain)
-      // 远期投影：短期评估持续消耗的赤字风险。窗口不宜过大，否则高库存时误报
-      const horizon = Math.min(5, input.capitalHorizonYears ?? 5)
-      const forwardProjection = applyBundle(projectedResources, scaleGain(annualGain, horizon))
-      // 赤字惩罚：新方法导致更多资源短缺 → 被迫从星港溢价买入 → 净亏损
+      // 短缺激励：当某资源低于储备底线时，该资源产出/消耗获得额外权重
+      const shortageWeight = resourceOrder.reduce((sum, key) => {
+        const v = net[key] ?? 0
+        if (workingResources[key] < reserveFloors[key]) {
+          return sum + v * weights[key] * 2
+        }
+        return sum
+      }, 0)
+
+      // 赤字投影：应用该方法的净产出后，评估未来赤字风险
+      const projected = applyBundle(workingResources, net)
+      const forwardProjection = applyBundle(projected, scaleGain(net, horizon))
       const currentDeficit = deficitPremium(workingResources)
-      const immediateDeficit = deficitPremium(projectedResources)
+      const immediateDeficit = deficitPremium(projected)
       const forwardDeficit = deficitPremium(forwardProjection)
       const deficitDelta = Math.max(0, Math.max(immediateDeficit, forwardDeficit * 0.6) - currentDeficit)
-      const score = weightedValue(annualGain, weights) + strategicBonus - deficitDelta * 2
-      if (score > bestScore) {
-        bestScore = score
-        best = method
+
+      return {
+        method,
+        score: baseValue + shortageWeight - deficitDelta * 2,
+        net,
       }
     })
 
-    if (!best || bestScore <= 0) return null
+    scored.sort((a, b) => b.score - a.score)
+    const best = scored[0]
+
+    // 最优方法就是当前方法，无需切换
+    if (best.method.id === currentMethod.id) return null
+
+    // 需要有一定收益才切换（MinScoreThreshold 过滤噪声）
+    const currentScore = scored.find(s => s.method.id === currentMethod.id)?.score ?? 0
+    const improvement = best.score - currentScore
+    if (improvement <= 0.01) return null
 
     return {
       kind: 'method' as const,
       facilityId: id,
       fromMethodId: currentMethod.id,
-      toMethodId: (best as ProductionMethod).id,
-      score: bestScore,
-      weightedGain: bestScore,
-      projectedResources: { ...workingResources },
+      toMethodId: best.method.id,
+      score: improvement,
+      weightedGain: improvement,
+      projectedResources: applyBundle(workingResources, best.net),
     }
   }
 
-  while (true) {
+  const MAX_LOOP_ITERATIONS = 200
+  let loopIteration = 0
+  while (loopIteration < MAX_LOOP_ITERATIONS) {
+    loopIteration++
     const candidates = [
       ...facilityOrder.map(evaluate),
       ...Object.values(technologyCatalog).map(evaluateTechnology),

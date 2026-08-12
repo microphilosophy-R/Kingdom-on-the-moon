@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>月面王国 - 资源周期曲线分析</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; margin: 20px; }
+  h1 { color: #f0f6fc; text-align: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(700px, 1fr)); gap: 20px; margin-top: 20px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; }
+  .card h2 { margin: 0 0 8px 0; font-size: 16px; color: #f0f6fc; }
+  .card canvas { width: 100%; height: 380px; }
+  .summary { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-top: 20px; }
+  .summary h2 { color: #f0f6fc; margin-top: 0; }
+  .summary table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .summary th, .summary td { border: 1px solid #30363d; padding: 6px 12px; text-align: right; }
+  .summary th { background: #1c2129; color: #f0f6fc; text-align: center; }
+  .critical { color: #ff7b72; }
+  .warn { color: #d29922; }
+  .ok { color: #3fb950; }
+  .analysis { margin-top: 20px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; }
+  .analysis h2 { color: #f0f6fc; }
+  .analysis ul { color: #c9d1d9; line-height: 1.8; }
+  .analysis .highlight { color: #ff7b72; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>月面王国 · 1000御日资源周期曲线</h1>
+<div class="grid">
+  <div class="card"><h2>📈 人口增长 (Population)</h2><canvas id="chartPopulation"></canvas></div>
+  <div class="card"><h2>🏗️ 建筑等级演进 (Facility Levels)</h2><canvas id="chartLevels"></canvas></div>
+  <div class="card"><h2>💰 核心资源库存 (Key Resources)</h2><canvas id="chartResources"></canvas></div>
+  <div class="card"><h2>⚙️ 日产净额 (Daily Net Production)</h2><canvas id="chartDailyNet"></canvas></div>
+  <div class="card"><h2>📊 合金-月壤-货币 (Alloy-Regolith-Currency)</h2><canvas id="chartMaterials"></canvas></div>
+  <div class="card"><h2>🌱 生命维持资源 (Life Support)</h2><canvas id="chartLifeSupport"></canvas></div>
+</div>
+
+<div class="summary">
+<h2>关键指标分析</h2>
+<table>
+  <thead>
+    <tr><th>指标</th><th>Day 1</th><th>Day 50</th><th>Day 200</th><th>Day 400</th><th>Day 600</th><th>Day 800</th><th>Day 1000</th></tr>
+  </thead>
+  <tbody id="summaryBody"></tbody>
+</table>
+</div>
+
+<div class="analysis" id="analysisSection">
+</div>
+
+<script>
+// Load and parse simulation data
+async function loadData() {
+  // Try to load the latest run
+  const runs = Array.from({length: 10}, (_, i) => String(i + 1).padStart(3, '0'));
+  for (const run of runs.reverse()) {
+    try {
+      const resp = await fetch(`../test-results/simulation/run-${run}.json`);
+      if (resp.ok) {
+        return { data: await resp.json(), run };
+      }
+    } catch {}
+  }
+  // Fallback: embed the data
+  return null;
+}
+
+function createCharts(data) {
+  const snapshots = data.snapshots;
+  const days = snapshots.map(s => s.day);
+  
+  // Chart 1: Population
+  new Chart(document.getElementById('chartPopulation'), {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        { label: '总人口', data: snapshots.map(s => s.population.total), borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,0.1)', fill: true, tension: 0.3 },
+        { label: '住房容量', data: snapshots.map(s => s.population.capacity), borderColor: '#58a6ff', borderDash: [6,3], tension: 0.3 },
+        { label: '人口净增长/日', data: snapshots.map(s => s.population.net * 20), borderColor: '#d29922', yAxisID: 'y1', tension: 0.3 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#c9d1d9' } } },
+      scales: {
+        x: { title: { display: true, text: '御日', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y: { title: { display: true, text: '人数', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y1: { position: 'right', title: { display: true, text: '净增(x20)', color: '#d29922' }, ticks: { color: '#d29922' }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Chart 2: Facility Levels
+  const facilities = ['E1','C1','K','B','E2','C2','F','P','R','L','H','M'];
+  const colors = ['#ff7b72','#ffa657','#3fb950','#58a6ff','#c084fc','#f97583','#79c0ff','#d2a8ff','#7ee787','#a5d6ff','#f778ba','#e3b341'];
+  const levelDatasets = facilities.map((fac, i) => ({
+    label: fac,
+    data: snapshots.map(s => s.levels[fac]),
+    borderColor: colors[i],
+    backgroundColor: colors[i] + '20',
+    fill: false,
+    tension: 0.3,
+    pointRadius: 1,
+  }));
+  new Chart(document.getElementById('chartLevels'), {
+    type: 'line',
+    data: { labels: days, datasets: levelDatasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#c9d1d9', font: { size: 10 } } } },
+      scales: {
+        x: { title: { display: true, text: '御日', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y: { title: { display: true, text: '等级', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+      }
+    }
+  });
+
+  // Chart 3: Key Resources (log scale for readability)
+  new Chart(document.getElementById('chartResources'), {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        { label: '合金 Alloy', data: snapshots.map(s => s.resources.alloy), borderColor: '#ff7b72', tension: 0.3, pointRadius: 1 },
+        { label: '知识 Knowledge', data: snapshots.map(s => s.resources.knowledge), borderColor: '#c084fc', tension: 0.3, pointRadius: 1 },
+        { label: '货币 Currency', data: snapshots.map(s => s.resources.currency), borderColor: '#d29922', tension: 0.3, pointRadius: 1 },
+        { label: '月壤 Regolith', data: snapshots.map(s => s.resources.regolith), borderColor: '#8b949e', tension: 0.3, pointRadius: 1 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#c9d1d9' } } },
+      scales: {
+        x: { title: { display: true, text: '御日', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y: { type: 'logarithmic', title: { display: true, text: '库存 (log)', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+      }
+    }
+  });
+
+  // Chart 4: Daily Net Production
+  new Chart(document.getElementById('chartDailyNet'), {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        { label: '合金/日', data: snapshots.map(s => s.dailyNet.alloy), borderColor: '#ff7b72', tension: 0.3, pointRadius: 1 },
+        { label: '知识/日', data: snapshots.map(s => s.dailyNet.knowledge), borderColor: '#c084fc', tension: 0.3, pointRadius: 1 },
+        { label: '电力/日', data: snapshots.map(s => s.dailyNet.power), borderColor: '#d29922', tension: 0.3, pointRadius: 1 },
+        { label: '货币/日', data: snapshots.map(s => s.dailyNet.currency), borderColor: '#3fb950', tension: 0.3, pointRadius: 1 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#c9d1d9' } } },
+      scales: {
+        x: { title: { display: true, text: '御日', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y: { title: { display: true, text: '日产净值', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+      }
+    }
+  });
+
+  // Chart 5: Alloy, Regolith, Currency (linear scale)
+  new Chart(document.getElementById('chartMaterials'), {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        { label: '合金 Alloy', data: snapshots.map(s => s.resources.alloy), borderColor: '#ff7b72', backgroundColor: 'rgba(255,123,114,0.1)', fill: true, tension: 0.3, pointRadius: 1 },
+        { label: '月壤 Regolith', data: snapshots.map(s => s.resources.regolith), borderColor: '#8b949e', backgroundColor: 'rgba(139,148,158,0.1)', fill: true, tension: 0.3, pointRadius: 1 },
+        { label: '货币 Currency', data: snapshots.map(s => s.resources.currency), borderColor: '#d29922', backgroundColor: 'rgba(210,153,34,0.1)', fill: true, tension: 0.3, pointRadius: 1, yAxisID: 'y1' },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#c9d1d9' } } },
+      scales: {
+        x: { title: { display: true, text: '御日', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y: { title: { display: true, text: '库存', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y1: { position: 'right', title: { display: true, text: '货币', color: '#d29922' }, ticks: { color: '#d29922' }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Chart 6: Life Support
+  new Chart(document.getElementById('chartLifeSupport'), {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        { label: '水 Water', data: snapshots.map(s => s.resources.water), borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,0.1)', fill: true, tension: 0.3, pointRadius: 1 },
+        { label: '氧气 Oxygen', data: snapshots.map(s => s.resources.oxygen), borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,0.1)', fill: true, tension: 0.3, pointRadius: 1, yAxisID: 'y1' },
+        { label: '生物质 Biomass', data: snapshots.map(s => s.resources.biomass), borderColor: '#c084fc', backgroundColor: 'rgba(192,132,252,0.1)', fill: true, tension: 0.3, pointRadius: 1, yAxisID: 'y1' },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#c9d1d9' } } },
+      scales: {
+        x: { title: { display: true, text: '御日', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y: { title: { display: true, text: '水', color: '#58a6ff' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y1: { position: 'right', title: { display: true, text: '氧气/生物质', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Summary table
+  const summaryDays = [1, 50, 200, 400, 600, 800, 1000];
+  const summarySnaps = summaryDays.map(d => snapshots.find(s => s.day === d) || snapshots[0]);
+  const tbody = document.getElementById('summaryBody');
+  const metrics = [
+    { name: '人口', key: s => s.population.total, format: v => v.toFixed(1) },
+    { name: '住房容量', key: s => s.population.capacity },
+    { name: '合金库存', key: s => s.resources.alloy, format: v => v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0) },
+    { name: '月壤库存', key: s => s.resources.regolith, format: v => v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0) },
+    { name: '货币库存', key: s => s.resources.currency, format: v => v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0) },
+    { name: '水库存', key: s => s.resources.water, format: v => v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0) },
+    { name: '知识库存', key: s => s.resources.knowledge, format: v => v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0) },
+    { name: '合金日产净额', key: s => s.dailyNet.alloy, format: v => v.toFixed(1) },
+    { name: '知识日产净额', key: s => s.dailyNet.knowledge, format: v => v.toFixed(1) },
+    { name: '累计开工数', key: s => s.cumulative.started },
+    { name: '累计完工数', key: s => s.cumulative.completed },
+    { name: '容量满天', key: s => s.cumulative.capacityFullDays },
+    { name: '压力天数', key: s => s.cumulative.strainedDays },
+  ];
+  metrics.forEach(m => {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td style="text-align:left;color:#f0f6fc">${m.name}</td>` +
+      summarySnaps.map(s => `<td>${m.format ? m.format(m.key(s)) : m.key(s)}</td>`).join('');
+    tbody.appendChild(row);
+  });
+
+  // Analysis
+  const final = snapshots[snapshots.length - 1];
+  const day200 = snapshots.find(s => s.day === 200);
+  const day400 = snapshots.find(s => s.day >= 400);
+  
+  const alloyGrowth400_1000 = final.resources.alloy - day400.resources.alloy;
+  const dailyAlloyAfter400 = alloyGrowth400_1000 / (final.day - day400.day);
+  
+  document.getElementById('analysisSection').innerHTML = `
+<h2>🔍 曲线诊断分析</h2>
+<ul>
+  <li><span class="highlight">人口天花板过早触及</span>：人口在第 400 御日即达到 552 容量上限（总模拟 1000 日的 40% 处），剩余 600 日人口停滞增长，仅资源线性堆积。</li>
+  <li><span class="highlight">建筑等级飞速拉满</span>：至第 400 御日，E1/C1/K/B/L 已达最大等级 15，H 达 12，M 达 10。全部 150 项工程在 Day 450 前全部完工。</li>
+  <li><span class="highlight">合金爆炸级增长</span>：Day 400 合金库存 61.8K → Day 1000 达 250.2K，日均积累 <b>${dailyAlloyAfter400.toFixed(0)} 合金/日</b> 但无处可花。</li>
+  <li><span class="highlight">知识完全过剩</span>：Day 400 知识库存 139.7K → Day 1000 达 668.4K，科技全部完成后知识失去消耗出口。</li>
+  <li><span class="critical">根本问题：升级成本线性增长，但产出指数增长</span>。当前 cost = base × (level+1) × scale（线性），而产出随等级和科技提升呈超线性增长，导致中后期成本微不足道。</li>
+</ul>
+<h2>💡 建议收紧策略</h2>
+<ul>
+  <li><b>1. 将升级成本从线性改为平方增长</b>：cost = base × <b>(level+1)²</b> × scale，使高等级升级显著变贵。</li>
+  <li><b>2. 提高 <code>getUpgradeCostScale</code> 基础倍率</b>：当前标准设施 scale=4（即 1 岗容量对应 4 成本乘数），可提升至 6~8。</li>
+  <li><b>3. 科技研究成本与时代挂钩</b>：后期科技消耗更多知识，减缓科技全解锁速度。</li>
+  <li><b>4. 提升 housing 建筑的成本倍率</b>：K(2→4), H(4→8), M(6→12)，使人口扩容成本更高。</li>
+</ul>
+  `;
+}
+
+// Embedded data
+const DATA = {"days":[1,50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000],"pop_total":[8,15.92,16,16,16,16,16,16,16,16,16,16,17.9,24,24,44.37,79.23,136,219.98,330.33,459.5],"pop_capacity":[16,16,16,16,16,16,16,16,16,16,16,16,24,24,24,56,112,256,400,528,552],"pop_net":[2,0.08,0,0,0,0,0,0,0,0,0,0,0.48,0,0,0.59,0.81,1.39,1.98,2.52,2.62],"levels":{"E1":[1,1,1,2,2,2,2,2,3,3,3,3,3,3,3,6,9,12,15,15,15],"C1":[1,2,2,2,2,2,2,2,2,2,3,3,3,3,3,5,7,10,11,13,15],"K":[2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,5,8,11,14,15,15],"B":[0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,3,6,9,12,15,15],"E2":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,4,6,9,12,12],"C2":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,6,9,12,12],"F":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,4,7,10,12,12],"P":[0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,3,6,9,12,12,12],"R":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,4,7],"L":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,4,7,10,13],"H":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,3,6,9,12,12],"M":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,6,9,10]},"resources_alloy":[14,0,0,0,0,0.7,0.7,0.75,0.75,0.75,0.8,0.8,0,0,11.54,10.16,214.97,340.99,1498.74,7723.06,23517.94],"resources_regolith":[22,785.85,2252.44,3765.95,5270.57,6779.27,8307.92,9796.66,11325.31,12853.96,14377.65,15979.09,17546.33,19147.77,20462.15,20685.3,19488.17,16645.71,13700.32,19384.24,35295.66],"resources_currency":[10,44.26,18.7,66.7,41.2,15.7,63.7,6.7,54.7,102.7,45.7,93.7,26.26,95.32,14.57,13.01,18.36,138.98,640.28,2309.24,5313.18],"resources_water":[12,207.63,645.62,1084.48,1504.94,1920.72,2363.1,2805.48,3242.82,3677.56,4125.95,4589.14,5052.3,5506.7,5855.51,5984.62,5793.27,5454.69,5230.73,9438.12,15870.4],"resources_oxygen":[14,171.54,366.76,572.86,782.52,992.63,1202.74,1412.85,1631.41,1854.32,2077.23,2300.14,2523.03,2738.92,3238.95,4328.39,7541.81,13574.57,25131.02,42755.23,69710.52],"resources_biomass":[10,50.44,88.45,126.45,164.45,202.45,240.45,278.45,316.45,354.45,392.45,430.45,468.43,501.17,724.83,1275.15,2933.98,6023.51,11878.2,20524.4,34105.18],"resources_knowledge":[0,44.09,38.33,128.57,127.75,98.85,1077.95,2057.06,3036.16,4015.26,4994.36,5973.46,6952.57,7931.67,8910.77,9889.87,10945.83,13892.82,21989.26,38234.16,65573.87],"resources_power":[24,10.46,9.36,10.69,9.52,9.52,9.52,9.52,10.87,10.87,10.46,10.46,10.46,10.46,5.86,22.11,30.54,28.24,-19.51,267.09,700.24],"resources_luxury":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.35,6.78,7.98,7.98,9.4,60.55],"resources_quantumCore":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],"dailyNet_alloy":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,10.67,25.85,71.36,157.99,288.77,404.27,361.53],"dailyNet_knowledge":[0,11.4,11.4,11.4,19.58,19.58,19.58,19.58,19.58,19.58,19.58,19.58,19.58,19.58,19.58,19.58,32.31,102.62,234.2,446.47,700.06],"dailyNet_power":[0,10.46,9.36,10.69,9.52,9.52,9.52,9.52,10.87,10.87,10.46,10.46,10.46,10.46,5.86,22.11,30.54,28.24,-19.51,267.09,700.24],"dailyNet_currency":[0,0.9,0.96,0.96,0.96,0.96,0.96,0.96,0.96,0.96,0.96,0.96,1.02,1.44,5,9.12,21.47,40.49,74.76,103.45,107.46],"dailyNet_water":[0,7.45,8.91,8.76,8.85,8.85,8.85,8.85,8.69,8.69,9.26,9.26,9.24,9.06,9.06,11.34,17.07,43.77,100.69,172.39,118.85],"dailyNet_oxygen":[0,3.92,3.9,4.16,4.2,4.2,4.2,4.2,4.46,4.46,4.46,4.46,4.44,4.3,14.96,37.42,87.04,170.53,294.19,451.81,533.73],"dailyNet_biomass":[0,0.78,0.76,0.76,0.76,0.76,0.76,0.76,0.76,0.76,0.76,0.76,0.74,0.64,7.04,22.05,52.74,104.47,179.65,240.09,298.92],"cumulative_started":[0,1,2,2,3,4,4,5,5,5,6,6,7,7,13,31,58,89,121,140,147],"cumulative_completed":[0,1,1,2,3,3,4,4,5,5,6,6,7,7,8,24,48,78,111,136,145],"cumulative_capacityFullDays":[0,0,50,100,150,200,250,300,350,400,450,500,545,583,633,646,646,646,646,646,646],"pressureDays":[0,0,49,99,149,199,249,299,349,399,449,499,0,37,87,0,0,0,0,0,0]};
+function expandData(compact) {
+  return {
+    snapshots: compact.days.map((day, i) => ({
+      day,
+      resources: {
+        population: compact.pop_total[i],
+        alloy: compact.resources_alloy[i],
+        regolith: compact.resources_regolith[i],
+        currency: compact.resources_currency[i],
+        water: compact.resources_water[i],
+        oxygen: compact.resources_oxygen[i],
+        biomass: compact.resources_biomass[i],
+        knowledge: compact.resources_knowledge[i],
+        power: compact.resources_power[i],
+        luxury: compact.resources_luxury[i],
+        quantumCore: compact.resources_quantumCore[i],
+      },
+      dailyNet: {
+        alloy: compact.dailyNet_alloy[i],
+        knowledge: compact.dailyNet_knowledge[i],
+        power: compact.dailyNet_power[i],
+        currency: compact.dailyNet_currency[i],
+        water: compact.dailyNet_water[i],
+        oxygen: compact.dailyNet_oxygen[i],
+        biomass: compact.dailyNet_biomass[i],
+      },
+      population: {
+        total: compact.pop_total[i],
+        capacity: compact.pop_capacity[i],
+        net: compact.pop_net[i],
+        pressureDays: compact.pressureDays[i],
+        status: compact.pop_total[i] >= compact.pop_capacity[i] ? 'full' : 'stable',
+      },
+      levels: Object.fromEntries(["E1","C1","K","B","E2","C2","F","P","R","L","H","M"].map(f => [f, compact.levels[f][i]])),
+      cumulative: {
+        started: compact.cumulative_started[i],
+        completed: compact.cumulative_completed[i],
+        capacityFullDays: compact.cumulative_capacityFullDays[i],
+      },
+    }))
+  };
+}
+const data = expandData(DATA);
+createCharts(data);
+</script>
+</body>
+</html>

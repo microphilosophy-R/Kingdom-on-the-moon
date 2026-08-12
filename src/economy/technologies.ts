@@ -38,7 +38,7 @@ export const estimateTechnologyValue = (tech: TechnologySpec) =>
   Math.round(technologyBaseScale(tech) * technologyMagnitude(tech) * 360)
 
 export const estimateTechnologyResearchCost = (tech: TechnologySpec) =>
-  tech.category === 'construction' ? 0 : Math.max(8, Math.round(estimateTechnologyValue(tech) / 12))
+  tech.category === 'construction' ? 0 : Math.max(12, Math.round(estimateTechnologyValue(tech) / 9))
 
 export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
   'TE1-0': {

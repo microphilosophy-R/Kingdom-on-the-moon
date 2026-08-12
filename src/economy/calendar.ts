@@ -43,9 +43,10 @@ export const getConstructionCostDiscount = (techs: string[] = []) =>
 
 export const getUpgradeCostScale = (id: FacilityId) => {
   if (isFixedFacility(id)) return 0
-  if (id === 'K') return 2
-  if (id === 'H') return 4
-  if (id === 'M') return 6
-  if (id === 'E3') return 2
-  return jobsPerFacilityLevel
+  // 基准：200天合金累积利润 ~8260；人口建筑略加权（K:2x原值, H:1.75x, M:1.83x）
+  if (id === 'K') return 4
+  if (id === 'H') return 7
+  if (id === 'M') return 11
+  if (id === 'E3') return 4
+  return 7
 }

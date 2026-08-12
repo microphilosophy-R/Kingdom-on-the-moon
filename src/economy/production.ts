@@ -61,11 +61,13 @@ export function projectFacilityNet(
 export function projectFacilityCost(spec: FacilityEconomySpec, level: number, techs: string[] = []): Partial<Resources> {
   const nextLevel = Math.max(1, level + 1)
   const cost: Partial<Resources> = {}
-  const multiplier = getUpgradeCostScale(spec.id) * getConstructionCostDiscount(techs)
+  // 后期线性加重：L11+ 升级成本 1.5x，使高等级升级更昂贵
+  const levelTier = nextLevel > 10 ? 1.5 : 1.0
+  const multiplier = getUpgradeCostScale(spec.id) * nextLevel * levelTier * getConstructionCostDiscount(techs)
   resourceOrder.forEach(key => {
     const base = spec.baseUpgradeCost[key] ?? 0
     if (!base) return
-    cost[key] = base * nextLevel * multiplier
+    cost[key] = base * multiplier
   })
   return cost
 }
