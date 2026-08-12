@@ -6,6 +6,9 @@ import { difficultyConfigs, type Difficulty } from './difficulty'
 import type { AnnualContext, FacilityEconomySpec, FacilityId, FacilityModifiers, ProductionMethodId, Resources, TechnologySpec } from './types'
 export const shipProjectTotalValue = shipProjectStages.reduce((sum, stage) => sum + weightedValue(stage.input), 0)
 
+/** 人均利润基数：生产建筑产出缩放因子，用于研究不同人均利润水平下的经济模型。默认 1（当前反推值）。 */
+export const profitBase = Number(process.env.PROFIT_BASE ?? 1)
+
 export function projectFacilityFlow(
   spec: FacilityEconomySpec,
   assignedPopulation: number,
@@ -31,7 +34,7 @@ export function projectFacilityFlow(
   const levelScale = assignedPopulation * (1 + Math.max(0, builtLevel - 1) * spec.yieldGrowth)
 
   resourceOrder.forEach(key => {
-    const produced = (adjustedMethod.output[key] ?? 0) * levelScale * outputMultiplier
+    const produced = (adjustedMethod.output[key] ?? 0) * levelScale * outputMultiplier * profitBase
     const consumed = (adjustedMethod.input[key] ?? 0) * levelScale * upkeepMultiplier
     if (produced) flow.production[key] += produced
     if (consumed) flow.consumption[key] += consumed
@@ -162,7 +165,7 @@ export const buildFacilityModifiers = (
   policy: 'ration' | 'mandate' | 'festival',
   workerBoost: number,
 ) => {
-  const baseProductivity = 0.88
+  const baseProductivity = 1.0
   const habitatBonus = 1 + habitatLevel * 0.025
   const policyBonus = policy === 'mandate' ? 1.16 : policy === 'festival' ? 1.06 : 1
   return {

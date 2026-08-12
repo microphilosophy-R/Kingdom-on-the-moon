@@ -292,7 +292,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     const deficitRelief = Math.max(0, currentDeficitPremium - Math.min(immediateDeficitPremium, nextDeficitPremium))
     const weightedCost = (weightedValue(cost, weights) + tradePremium) / horizon + Math.max(0, deficitPremiumDelta)
     let score = weightedGain - weightedCost + spec.priority * 0.45 + strategicBonus + lateGameVictoryBonus(id)
-    score += deficitRelief * 0.35
+    score += deficitRelief * 1.5
     if (housingCapacityPressure) score = Math.max(score, 6 + spec.priority * 0.45)
     if (!Number.isFinite(score)) return null
 
