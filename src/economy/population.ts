@@ -3,7 +3,7 @@ import { defaultReserveFloors, resourceOrder } from './resources'
 import { hasTech } from './technologies'
 import type { FacilityId, PopulationContext, PopulationPolicy, PopulationProjection, ResourceKey, Resources } from './types'
 const residentRules: Record<FacilityId, { water: number; oxygen: number; biomass: number; currency?: number; luxury?: number }> = {
-  K: { water: 0.025, oxygen: 0.020, biomass: 0.015, currency: 0.040 },
+  K: { water: 0.025, oxygen: 0.020, biomass: 0.015, currency: 0.060 },
   H: { water: 0.035, oxygen: 0.030, biomass: 0.035, luxury: 0.025 },
   M: { water: 0.012, oxygen: 0.010, biomass: 0.010 },
   E1: { water: 0, oxygen: 0, biomass: 0 },

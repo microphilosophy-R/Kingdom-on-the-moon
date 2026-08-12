@@ -93,8 +93,8 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '小行星带远征采掘设施。西海采掘署负责太渊引力阱内小行星带资源的远征采掘，为中期水、月壤与合金资源的主要来源。',
     productionMethods: [
-      { id: 'MC2-1', name: '西海小行星带采掘', input: { power: 1.4, water: 0.3, oxygen: 0.4, biomass: 0.2 }, output: { water: 1.2, regolith: 3.1, alloy: 1.2 }, note: '小行星带开采。远征采掘需额外消耗水、氧气和生物质以维持补给，产出水、月壤与合金。' },
-      { id: 'MC2-2', name: '生态行星资源采集', input: { power: 1.4 }, output: { water: 1.2, regolith: 3.1, alloy: 1.2 }, unlockedBy: 'TC2-2', note: 'TC2-2 外星科技解锁后启用。经坐标导航确认宜居生态行星，远征采掘不再消耗生命维持补给。' },
+      { id: 'MC2-1', name: '西海小行星带采掘', input: { power: 1.4, water: 0.3, oxygen: 0.4, biomass: 0.2 }, output: { water: 1.2, regolith: 3.1, alloy: 1.6 }, note: '小行星带开采。远征采掘需额外消耗水、氧气和生物质以维持补给，产出水、月壤与合金。' },
+      { id: 'MC2-2', name: '生态行星资源采集', input: { power: 1.4 }, output: { water: 1.2, regolith: 3.1, alloy: 1.6 }, unlockedBy: 'TC2-2', note: 'TC2-2 外星科技解锁后启用。经坐标导航确认宜居生态行星，远征采掘不再消耗生命维持补给。' },
     ],
   },
   B: {
@@ -127,14 +127,14 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     requiredTech: 'TF-0',
     maxLevel: 12,
     baseUpgradeCost: { regolith: 4, alloy: 3, currency: 2 },
-    yieldGrowth: 0.07,
+    yieldGrowth: 0.08,
     priority: 8,
     reserveFloor: { power: 10, regolith: 10 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '工业精炼设施。天工精炼署以电力与月壤为投入，产出合金与少量氧气，为中期工业体系的核心环节。',
     productionMethods: [
-      { id: 'MF-1', name: '天工精炼', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 2.2, oxygen: 0.4 }, note: '消耗电力与月壤，精炼产出合金与少量氧气。' },
-      { id: 'MF-2', name: '重原子炼金', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 2.2, oxygen: 0.4, currency: 1.0 }, unlockedBy: 'TF-1', note: 'TF-1 外星科技解锁后启用。在默认精炼产出基础上额外产出星海货币，属附加产出而非策略切换。' },
+      { id: 'MF-1', name: '天工精炼', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 3.0, oxygen: 0.4 }, note: '消耗电力与月壤，精炼产出合金与少量氧气。' },
+      { id: 'MF-2', name: '重原子炼金', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 3.0, oxygen: 0.4, currency: 1.0 }, unlockedBy: 'TF-1', note: 'TF-1 外星科技解锁后启用。在默认精炼产出基础上额外产出星海货币，属附加产出而非策略切换。' },
     ],
   },
   P: {
@@ -330,19 +330,19 @@ export const shipProjectStages: ShipProjectStage[] = [
   {
     id: 1,
     name: '龙骨与生命舱',
-    input: { alloy: 8000, oxygen: 6000 },
+    input: { alloy: 6000, oxygen: 6000 },
     note: '第一阶段投入合金、氧气和电力，完成星舰基础结构与维生舱段。',
   },
   {
     id: 2,
     name: '远航壳层与循环农场',
-    input: { alloy: 16000, regolith: 30000, biomass: 12000 },
+    input: { alloy: 12000, regolith: 30000, biomass: 12000 },
     note: '第二阶段投入合金、电力、月壤和生物质，完成长期远航壳层与生态循环。',
   },
   {
     id: 3,
     name: '王座核心与深空储备',
-    input: { quantumCore: 16, alloy: 24000, water: 12000, biomass: 18000 },
+    input: { quantumCore: 16, alloy: 18000, water: 12000, biomass: 18000 },
     note: '第三阶段投入量子计算核心、电力、合金、水和生物质，完成御座号核心。',
   },
 ]

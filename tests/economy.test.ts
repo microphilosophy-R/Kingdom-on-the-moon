@@ -82,9 +82,9 @@ describe('economy catalog', () => {
       expectedRealMinutes: 60,
     })
     expect(projectAnnualNet).toBe(projectDailyNet)
-    expect(resourceWeights.regolith).toBe(1)
-    expect(resourceWeights.alloy).toBe(5)
-    expect(resourceWeights.quantumCore).toBe(120)
+    expect(resourceWeights.regolith).toBe(2)
+    expect(resourceWeights.alloy).toBe(8)
+    expect(resourceWeights.quantumCore).toBe(150)
   })
 
   it('settles power as a non-storable daily balance', () => {
@@ -137,12 +137,12 @@ describe('economy catalog', () => {
 
     expect(selectProductionMethod(facilityEconomySpecs.C2.productionMethods, ['TC2-0 西海采掘署建造许可']).id).toBe('MC2-1')
     expect(selectProductionMethod(facilityEconomySpecs.C2.productionMethods, ['TC2-0 西海采掘署建造许可', 'TC2-2 发现伊甸园'], 'MC2-2').id).toBe('MC2-2')
-    expect(projectFacilityNet(facilityEconomySpecs.C2, 1, {}, ['TC2-0 西海采掘署建造许可', 'TC2-2 发现伊甸园'], 'MC2-2')).toMatchObject({ power: -1.4, water: 1.2, regolith: 3.1, alloy: 1.2 })
+    expect(projectFacilityNet(facilityEconomySpecs.C2, 1, {}, ['TC2-0 西海采掘署建造许可', 'TC2-2 发现伊甸园'], 'MC2-2')).toMatchObject({ power: -1.4, water: 1.2, regolith: 3.1, alloy: 1.6 })
 
     expect(selectProductionMethod(facilityEconomySpecs.B.productionMethods, ['TB-0 水培生态球建造许可', 'TB-2 无水栽培技术'], 'MB-2').id).toBe('MB-2')
     expect(projectFacilityNet(facilityEconomySpecs.B, 1, {}, ['TB-0 水培生态球建造许可', 'TB-2 无水栽培技术'], 'MB-2')).toMatchObject({ regolith: -0.6, oxygen: 2.6, biomass: 1.8 })
 
-    expect(projectFacilityNet(facilityEconomySpecs.F, 1, {}, ['TF-0 天工精炼署建造许可', 'TF-1 重原子炼金术'], 'MF-2')).toMatchObject({ power: -1.2, regolith: -1.6, alloy: 2.2, oxygen: 0.4, currency: 1.0 })
+    expect(projectFacilityNet(facilityEconomySpecs.F, 1, {}, ['TF-0 天工精炼署建造许可', 'TF-1 重原子炼金术'], 'MF-2')).toMatchObject({ power: -1.2, regolith: -1.6, alloy: 3.0, oxygen: 0.4, currency: 1.0 })
     expect(projectFacilityNet(facilityEconomySpecs.P, 1, {}, ['TP-0 伊犁河谷建造许可'])).toMatchObject({ water: -0.6, regolith: -1, oxygen: 1.2, biomass: 1.8 })
     expect(projectFacilityNet(facilityEconomySpecs.P, 1, {}, ['TP-0 伊犁河谷建造许可', 'TP-1 合金作物'], 'MP-2')).toMatchObject({ water: -0.6, regolith: -1, oxygen: 0.8, biomass: 1.0, alloy: 0.4 })
   })
@@ -151,7 +151,7 @@ describe('economy catalog', () => {
     expect(projectFacilityNet(facilityEconomySpecs.E1, 1, {}, ['TE1-0 日冕能源署建造许可', 'TE1-2 光伏阵列校准']).power).toBeCloseTo(6.3)
     expect(projectFacilityNet(facilityEconomySpecs.C1, 1, {}, ['TC1-0 静海采掘署建造许可', 'TC1-1 月面钻头阵列']).regolith).toBeCloseTo(4.095)
     const anchored = projectFacilityNet(facilityEconomySpecs.C2, 1, {}, ['TC2-0 西海采掘署建造许可', 'TC2-1 小行星锚定索'])
-    expect(anchored.alloy).toBeCloseTo(1.26)
+    expect(anchored.alloy).toBeCloseTo(1.68)
     expect(anchored.oxygen).toBeCloseTo(-0.42)
     expect(projectFacilityNet(facilityEconomySpecs.B, 1, {}, ['TB-0 水培生态球建造许可', 'TB-1 闭环藻膜培养']).biomass).toBeCloseTo(1.89)
     expect(projectFacilityNet(facilityEconomySpecs.F, 1, {}, ['TF-0 天工精炼署建造许可', 'TG-2 空间微波散热学']).power).toBeCloseTo(-1.14)
@@ -221,9 +221,9 @@ describe('economy catalog', () => {
 
   it('splits the ship victory project into three material stages', () => {
     expect(shipProjectStages).toEqual([
-      expect.objectContaining({ id: 1, input: { alloy: 8000, oxygen: 6000 } }),
-      expect.objectContaining({ id: 2, input: { alloy: 16000, regolith: 30000, biomass: 12000 } }),
-      expect.objectContaining({ id: 3, input: { quantumCore: 16, alloy: 24000, water: 12000, biomass: 18000 } }),
+      expect.objectContaining({ id: 1, input: { alloy: 6000, oxygen: 6000 } }),
+      expect.objectContaining({ id: 2, input: { alloy: 12000, regolith: 30000, biomass: 12000 } }),
+      expect.objectContaining({ id: 3, input: { quantumCore: 16, alloy: 18000, water: 12000, biomass: 18000 } }),
     ])
     shipProjectStages.forEach(stage => {
       expect(stage.input.currency).toBeUndefined()
@@ -403,7 +403,7 @@ describe('population and construction scale', () => {
     expect(projection.capacity).toBe(16)
     expect(projection.availableCapacity).toBe(4)
     expect(projection.net.population).toBeGreaterThan(0)
-    expect(projection.facilityNet.K?.currency).toBeCloseTo(0.48)
+    expect(projection.facilityNet.K?.currency).toBeCloseTo(0.72)
   })
 
   it('pauses migration at capacity and applies attrition after sustained pressure', () => {
