@@ -21,6 +21,7 @@ export interface PlanetFacilitiesProps {
   selected: RegionId
   year: number
   techs: string[]
+  habitatLevel: number
   productionMethods: Record<RegionId, ProductionMethodId>
   facilityOrders: Record<RegionId, FacilityOrderMode>
   facilityOrderStarted: Record<RegionId, number>
@@ -52,6 +53,7 @@ export interface PlanetFacilitiesProps {
   onShrink: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'shrink' | 'shrink-continuous'>) => void
   onPriority: (id: RegionId, priority: StaffingPriority) => void
   onMethod: (id: RegionId, methodId: ProductionMethodId) => void
+  onStaffingSet?: (id: RegionId, staff: number) => void
   onAssignment: (visitorId: string | undefined) => void
   children?: ReactNode
 }
@@ -61,6 +63,7 @@ export function PlanetFacilities({
   selected,
   year,
   techs,
+  habitatLevel,
   productionMethods,
   facilityOrders,
   facilityOrderStarted,
@@ -92,6 +95,7 @@ export function PlanetFacilities({
   onShrink,
   onPriority,
   onMethod,
+  onStaffingSet,
   onAssignment,
   children,
 }: PlanetFacilitiesProps) {
@@ -150,6 +154,7 @@ export function PlanetFacilities({
           selected={selected}
           year={year}
           techs={techs}
+          habitatLevel={habitatLevel}
           productionMethods={productionMethods}
           facilityOrders={facilityOrders}
           facilityOrderStarted={facilityOrderStarted}
@@ -175,6 +180,7 @@ export function PlanetFacilities({
           onShrink={onShrink}
           onPriority={onPriority}
           onMethod={onMethod}
+          onStaffingSet={onStaffingSet}
           onAssignment={onAssignment}
         >{children}</FacilityDetailPanel>
       ) : (

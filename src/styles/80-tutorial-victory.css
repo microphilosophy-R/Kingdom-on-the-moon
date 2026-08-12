@@ -1,4 +1,4 @@
-/* ============================================
+﻿/* ============================================
    80-tutorial-victory.css
    新手引导浮层 & 胜利结算界面
    ============================================ */
@@ -200,7 +200,7 @@
   padding: .25rem 1rem;
   background: oklch(55% .1 76 / .12);
   color: oklch(75% .08 76);
-  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  font-family: 'Songti SC', 'Songti SC', serif;
   font-size: 19px;
   letter-spacing: .1em;
 }

@@ -1,0 +1,302 @@
+﻿
+/* Technology workbench drag surface: horizontal travel is driven by pointer drag. */
+.technology-workbench,
+.special-system-main.technology-workbench {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.technology-tree-scroll {
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(100vh - 18.5rem);
+  min-height: 520px;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  cursor: grab;
+  touch-action: pan-y;
+  scrollbar-gutter: stable;
+}
+
+.technology-tree-scroll.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.technology-tree-scroll.dragging .tech-card {
+  cursor: grabbing;
+}
+
+.technology-tree-scroll::-webkit-scrollbar:horizontal {
+  height: 0;
+}
+
+.technology-tree {
+  width: max-content;
+  min-width: 1080px;
+  grid-template-columns: repeat(3, 330px);
+  align-items: start;
+}
+
+.tech-era-column {
+  width: 330px;
+}
+
+@media (max-width: 1100px) {
+  .technology-tree-scroll {
+    max-height: calc(100vh - 17rem);
+    min-height: 480px;
+  }
+}
+
+@media (max-width: 760px) {
+  .technology-tree-scroll {
+    max-height: calc(100vh - 15.5rem);
+    min-height: 430px;
+  }
+}
+
+/* ============================================================
+   Compact technology card (tech-card-compact)
+   ============================================================ */
+.tech-card-compact {
+  display: grid;
+  gap: .32rem;
+  width: 100%;
+  min-height: 0;
+  border: 1px dashed oklch(70% .024 250);
+  border-radius: 5px;
+  padding: .52rem .58rem;
+  background: oklch(99% .006 85);
+  text-align: left;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.tech-card-compact:hover:not(:disabled) {
+  border-color: oklch(52% .1 76);
+  background: oklch(96% .03 80);
+}
+.tech-card-compact.completed {
+  border-style: solid;
+  border-color: oklch(50% .1 76);
+  background: oklch(95% .032 80);
+}
+.tech-card-compact.researching {
+  border-style: solid;
+  border-width: 2px;
+  border-color: oklch(54% .11 76);
+  padding: calc(.52rem - 1px) calc(.58rem - 1px);
+  background: oklch(94% .04 78);
+  box-shadow: 0 6px 16px oklch(38% .04 250 / .14);
+}
+.tech-card-compact.locked {
+  background: oklch(94% .012 86);
+  opacity: .72;
+}
+
+.tech-card-compact-top {
+  display: flex;
+  gap: .42rem;
+  align-items: center;
+  min-width: 0;
+}
+.tech-card-compact-top svg {
+  flex: 0 0 auto;
+}
+.tech-card-compact-head {
+  min-width: 0;
+}
+.tech-card-compact-head h3 {
+  margin: 0;
+  color: oklch(28% .035 250);
+  font-size: var(--font-card);
+  line-height: 1.28;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tech-card-compact-head span {
+  display: inline-block;
+  margin-top: .08rem;
+  border: 1px solid oklch(68% .035 250);
+  border-radius: 999px;
+  padding: .12rem .32rem;
+  color: oklch(42% .028 250);
+  font-size: 9px;
+  line-height: 1;
+}
+
+.tech-card-compact-note {
+  margin: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  color: oklch(43% .026 250);
+  font-size: var(--font-note);
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.tech-card-compact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .28rem .45rem;
+  min-width: 0;
+}
+.tech-card-compact-meta small {
+  color: oklch(48% .023 250);
+  font-size: 9px;
+  line-height: 1.35;
+}
+.tech-card-compact-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: .18rem;
+  color: oklch(48% .085 76);
+  font-size: 10px;
+  font-weight: 700;
+}
+.tech-card-compact-status {
+  display: inline-flex;
+  align-items: center;
+  gap: .14rem;
+  margin-left: auto;
+  color: oklch(45% .024 250);
+  font-size: 9px;
+}
+
+.tech-progress-mini {
+  position: relative;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: oklch(91% .018 82);
+}
+.tech-progress-mini > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: oklch(65% .12 78 / .56);
+}
+
+/* ============================================================
+   Technology tree v2: zoomable + draggable
+   ============================================================ */
+.technology-workbench-v2 {
+  display: grid;
+  gap: .72rem;
+  min-width: 0;
+}
+
+.tech-tree-toolbar {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  border-bottom: 1px solid var(--ui-line);
+  padding-bottom: .62rem;
+}
+.tech-tree-toolbar h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin: 0;
+  color: var(--ui-ink-strong);
+  font-size: var(--font-card);
+}
+.tech-tree-scale {
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+.tech-tree-hint {
+  margin-left: auto;
+  color: var(--ui-muted);
+  font-size: 10px;
+}
+
+.technology-tree-viewport {
+  overflow: auto;
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  background: var(--ui-surface-2);
+  box-shadow: inset 18px 0 24px oklch(90% .018 84), inset -18px 0 24px oklch(90% .018 84);
+  max-height: min(620px, calc(100vh - 28rem));
+  min-height: 380px;
+  touch-action: none;
+}
+.technology-tree-viewport.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+.technology-tree-viewport.dragging .tech-card-compact {
+  cursor: grabbing;
+}
+.technology-tree-viewport::-webkit-scrollbar:horizontal {
+  height: 0;
+}
+
+.technology-tree-v2 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: .7rem;
+  padding: .7rem;
+  min-width: 820px;
+  align-items: start;
+}
+
+.tech-era-column-v2 {
+  display: grid;
+  align-content: start;
+  gap: .48rem;
+  min-width: 0;
+}
+.tech-era-column-v2 header {
+  border: 1px solid oklch(72% .02 250);
+  border-radius: 5px;
+  padding: .45rem .55rem;
+  background: oklch(95% .018 82);
+}
+.tech-era-column-v2 header span {
+  display: block;
+  color: oklch(29% .035 250);
+  font-family: 'Songti SC', 'Songti SC', serif;
+  font-size: 14px;
+  font-weight: 700;
+}
+.tech-era-column-v2 header small {
+  display: block;
+  margin-top: .1rem;
+  color: oklch(49% .024 250);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   Responsive adjustments
+   ============================================================ */
+@media (max-width: 1100px) {
+  .technology-tree-viewport {
+    max-height: min(520px, calc(100vh - 26rem));
+    min-height: 340px;
+  }
+}
+
+@media (max-width: 760px) {
+  .technology-tree-viewport {
+    max-height: min(460px, calc(100vh - 24rem));
+    min-height: 300px;
+  }
+
+  .technology-tree-v2 {
+    grid-template-columns: 1fr;
+    min-width: 0;
+  }
+
+  .tech-tree-toolbar {
+    gap: .35rem;
+  }
+}
+

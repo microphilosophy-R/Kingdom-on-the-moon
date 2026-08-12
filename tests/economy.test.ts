@@ -403,7 +403,7 @@ describe('population and construction scale', () => {
     expect(projection.capacity).toBe(16)
     expect(projection.availableCapacity).toBe(4)
     expect(projection.net.population).toBeGreaterThan(0)
-    expect(projection.facilityNet.K?.currency).toBeCloseTo(0.72)
+    expect(projection.facilityNet.K?.currency).toBeCloseTo(9.6)
   })
 
   it('pauses migration at capacity and applies attrition after sustained pressure', () => {

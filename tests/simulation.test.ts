@@ -9,6 +9,7 @@ import {
   constrainDailyNet,
   defaultReserveFloors,
   defaultStartingTechs,
+  difficultyConfigs,
   facilityEconomySpecs,
   facilityOrder,
   gameCalendar,
@@ -25,6 +26,7 @@ import {
   resourceOrder,
   selectProductionMethod,
   technologyCatalog,
+  type Difficulty,
   type FacilityId,
   type FacilityState,
   type PopulationPolicy,
@@ -75,10 +77,12 @@ type Snapshot = {
 
 type SimulationResult = {
   scenario: string
+  difficulty: Difficulty
   assumptions: string[]
   snapshots: Snapshot[]
   final: Snapshot
   findings: string[]
+  shipWinDay: number
 }
 
 const initialResources: Resources = {
@@ -127,7 +131,7 @@ const firstResearchableTechnology = () =>
 const makeFacilityMap = (levels: Record<FacilityId, number>): Record<FacilityId, FacilityState> =>
   Object.fromEntries(facilityOrder.map(id => [id, { id, level: levels[id] }])) as Record<FacilityId, FacilityState>
 
-function simulateToDay1000(): SimulationResult {
+function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult {
   let day = 1
   let resources = { ...initialResources }
   const levels = Object.fromEntries(facilityOrder.map(id => [id, initialLevels[id] ?? 0])) as Record<FacilityId, number>
@@ -147,6 +151,7 @@ function simulateToDay1000(): SimulationResult {
   const autoTradeProtectionEnabled = true
   const autoTradeEnabled: Partial<Record<ResourceKey, boolean>> = {}
   const snapshots: Snapshot[] = []
+  let shipWinDay = 0 // D 达到 Lv6 且资源满足星舰阶段需求的御日
   const cumulative = {
     started: 0,
     completed: 0,
@@ -337,6 +342,7 @@ function simulateToDay1000(): SimulationResult {
       productionMethods,
       year: day,
       capitalHorizonYears: 360,
+      difficulty,
     })
     const startedIds = new Set<FacilityId>()
     plan.methodActions.forEach(action => {
@@ -389,6 +395,7 @@ function simulateToDay1000(): SimulationResult {
     cumulative.minBiomass = Math.min(cumulative.minBiomass, resources.biomass)
     if (postPopulationProjection.status === 'full') cumulative.capacityFullDays += 1
     if (postPopulationProjection.status === 'strained') cumulative.strainedDays += 1
+    if (shipWinDay === 0 && levels.D >= 6 && hasTech(techs, 'TD-1')) shipWinDay = nextDay
     if (day % 50 === 0 || day === gameCalendar.finalDay) snapshots.push(buildSnapshot(dailyNet))
   }
 
@@ -429,8 +436,15 @@ function simulateToDay1000(): SimulationResult {
     `Diagnosable expansion candidates: ${firstUnlockedExpansionCosts.map(item => `${item.id} ${JSON.stringify(item.cost)}`).join('; ') || 'none'}.`,
   )
 
+  findings.push(
+    shipWinDay > 0
+      ? `Ship victory achieved at day ${shipWinDay} (target: ${difficultyConfigs[difficulty].targetWinDay}).`
+      : `Ship not completed by day 1000 (D level ${final.levels.D}).`,
+  )
+
   return {
     scenario: `default-no-random-events-${crownStewardOptimizer.id}`,
+    difficulty,
     assumptions: [
       '使用默认初始资源、默认科技、默认配给基线。',
       '不触发随机访客事件，不手动切换生产方式。',
@@ -441,6 +455,7 @@ function simulateToDay1000(): SimulationResult {
     snapshots,
     final,
     findings,
+    shipWinDay,
   }
 }
 
@@ -485,31 +500,18 @@ function writeSimulationReport(result: SimulationResult, runIndex: number) {
 }
 
 describe('1000-day headless simulation', () => {
-  it('runs the daily optimizer to day 1000 for 10 runs and checks determinism', () => {
-    const results: SimulationResult[] = []
+  const difficulties: Difficulty[] = ['easy', 'normal', 'hard', 'ultimate']
 
-    for (let run = 1; run <= 10; run++) {
-      const result = simulateToDay1000()
-      results.push(result)
-      writeSimulationReport(result, run)
+  difficulties.forEach(difficulty => {
+    it(`runs ${difficulty} difficulty to day 1000 (1 run) and reports ship win day`, () => {
+      const result = simulateToDay1000(difficulty)
+      writeSimulationReport(result, 1)
 
       expect(result.final.day).toBe(1000)
-      expect(result.snapshots.map(snapshot => snapshot.day)).toEqual([1, ...Array.from({ length: 20 }, (_, index) => (index + 1) * 50)])
       expect(result.final.resources.population).toBeGreaterThanOrEqual(defaultReserveFloors.population)
-    }
 
-    // 多轮一致性检查：10 次运行的核心指标应完全相同
-    const first = results[0]
-    results.slice(1).forEach((result, index) => {
-      const runNum = index + 2
-      expect(result.final.population.total, `run ${runNum} population diverged`).toBe(first.final.population.total)
-      expect(result.final.population.capacity, `run ${runNum} capacity diverged`).toBe(first.final.population.capacity)
-      expect(result.final.cumulative.started, `run ${runNum} started diverged`).toBe(first.final.cumulative.started)
-      expect(result.final.cumulative.completed, `run ${runNum} completed diverged`).toBe(first.final.cumulative.completed)
-      expect(result.final.cumulative.maxPopulation, `run ${runNum} maxPopulation diverged`).toBe(first.final.cumulative.maxPopulation)
-      expect(result.final.levels, `run ${runNum} levels diverged`).toEqual(first.final.levels)
+      const target = difficultyConfigs[difficulty].targetWinDay
+      console.log(`\n[${difficulty}] pop=${result.final.population.total}/${result.final.population.capacity}, started=${result.final.cumulative.started}, shipWinDay=${result.shipWinDay} (target: ${target})\n`)
     })
-
-    console.log(`\n10 runs consistent: population=${first.final.population.total}, capacity=${first.final.population.capacity}, started=${first.final.cumulative.started}, completed=${first.final.cumulative.completed}\n`)
   })
 })

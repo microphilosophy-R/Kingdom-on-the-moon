@@ -108,7 +108,7 @@
 }
 .facility-era-section > header span {
   color: oklch(35% .034 250);
-  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  font-family: 'Songti SC', 'Songti SC', serif;
   font-size: 15px;
   font-weight: 700;
 }
@@ -174,13 +174,25 @@
   display: grid;
   width: 100%;
   aspect-ratio: 1 / 1;
-  max-width: 64px;
+  max-width: 80px;
   place-items: center;
   border: 1px solid oklch(59% .095 76);
   border-radius: 6px;
   background: var(--ui-raised);
   color: oklch(48% .1 76);
   box-shadow: inset 0 -3px 0 oklch(60% .1 76 / .18);
+  overflow: hidden;
+}
+
+.ledger-icon-square img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ledger-icon-square svg {
+  color: oklch(48% .1 76);
 }
 .ledger-identity b {
   display: -webkit-box;

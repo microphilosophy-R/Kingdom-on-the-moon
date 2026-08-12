@@ -1,24 +1,8 @@
 import { getHousingCapacity } from './calendar'
 import { defaultReserveFloors, resourceOrder } from './resources'
+import { facilityEconomySpecs } from './facilities'
 import { hasTech } from './technologies'
 import type { FacilityId, PopulationContext, PopulationPolicy, PopulationProjection, ResourceKey, Resources } from './types'
-const residentRules: Record<FacilityId, { water: number; oxygen: number; biomass: number; currency?: number; luxury?: number }> = {
-  K: { water: 0.025, oxygen: 0.020, biomass: 0.015, currency: 0.060 },
-  H: { water: 0.035, oxygen: 0.030, biomass: 0.035, luxury: 0.025 },
-  M: { water: 0.012, oxygen: 0.010, biomass: 0.010 },
-  E1: { water: 0, oxygen: 0, biomass: 0 },
-  E2: { water: 0, oxygen: 0, biomass: 0 },
-  E3: { water: 0, oxygen: 0, biomass: 0 },
-  C1: { water: 0, oxygen: 0, biomass: 0 },
-  C2: { water: 0, oxygen: 0, biomass: 0 },
-  B: { water: 0, oxygen: 0, biomass: 0 },
-  F: { water: 0, oxygen: 0, biomass: 0 },
-  P: { water: 0, oxygen: 0, biomass: 0 },
-  R: { water: 0, oxygen: 0, biomass: 0 },
-  S: { water: 0, oxygen: 0, biomass: 0 },
-  L: { water: 0, oxygen: 0, biomass: 0 },
-  D: { water: 0, oxygen: 0, biomass: 0 },
-}
 
 const populationPolicyOrder: Record<PopulationPolicy, FacilityId[]> = {
   ration: ['M', 'K', 'H'],
@@ -47,26 +31,30 @@ export function projectPopulationSystem(context: PopulationContext): PopulationP
 
   ;(['K', 'H', 'M'] as FacilityId[]).forEach(id => {
     const residents = residentsByFacility[id] ?? 0
-    const rule = residentRules[id]
+    const spec = facilityEconomySpecs[id]
+    const method = spec.productionMethods[0]
     const net: Partial<Resources> = {}
     if (residents <= 0) {
       facilityNet[id] = net
       return
     }
-    net.water = -residents * rule.water
-    net.oxygen = -residents * rule.oxygen
-    net.biomass = -residents * rule.biomass
-    if (rule.currency) {
-      net.currency = residents * rule.currency
+    const waterCost = residents * (method.input.water ?? 0)
+    const oxygenCost = residents * (method.input.oxygen ?? 0)
+    const biomassCost = residents * (method.input.biomass ?? 0)
+    net.water = -waterCost
+    net.oxygen = -oxygenCost
+    net.biomass = -biomassCost
+    if (method.output.currency) {
+      net.currency = residents * (method.output.currency ?? 0)
       currency += net.currency
     }
-    if (rule.luxury) {
-      net.luxury = residents * rule.luxury
+    if (method.output.luxury) {
+      net.luxury = residents * (method.output.luxury ?? 0)
       luxury += net.luxury
     }
-    lifeSupportCost.water = (lifeSupportCost.water ?? 0) + residents * rule.water
-    lifeSupportCost.oxygen = (lifeSupportCost.oxygen ?? 0) + residents * rule.oxygen
-    lifeSupportCost.biomass = (lifeSupportCost.biomass ?? 0) + residents * rule.biomass
+    lifeSupportCost.water = (lifeSupportCost.water ?? 0) + waterCost
+    lifeSupportCost.oxygen = (lifeSupportCost.oxygen ?? 0) + oxygenCost
+    lifeSupportCost.biomass = (lifeSupportCost.biomass ?? 0) + biomassCost
     facilityNet[id] = net
   })
 

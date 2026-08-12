@@ -336,6 +336,7 @@ function App() {
   const [researchProgress, setResearchProgress] = useState<Partial<Record<TechnologyId, number>>>({})
   const [productionMethods, setProductionMethods] = useState<Record<RegionId, ProductionMethodId>>(initialProductionMethods)
   const [staffingPriorities, setStaffingPriorities] = useState<Record<RegionId, StaffingPriority>>(initialStaffingPriorities)
+  const [manualStaffing, setManualStaffing] = useState<Partial<Record<RegionId, number>>>({})
   const [facilityOrders, setFacilityOrders] = useState<Record<RegionId, FacilityOrderMode>>(Object.fromEntries(facilityOrder.map(id => [id, 'hold'])) as Record<RegionId, FacilityOrderMode>)
   const [facilityOrderStarted, setFacilityOrderStarted] = useState<Record<RegionId, number>>(Object.fromEntries(facilityOrder.map(id => [id, 1])) as Record<RegionId, number>)
   const [construction, setConstruction] = useState<Record<RegionId, ConstructionProject | null>>(initialConstruction)
@@ -369,7 +370,17 @@ function App() {
   const habitatLevel = regions.find(region => region.id === 'M')?.level ?? 0
   const shipLevel = regions.find(region => region.id === 'D')!.level
   const completed = day >= gameCalendar.finalDay
-  const staffing = useMemo(() => autoAllocateStaffing(regions, resources.population, staffingPriorities), [regions, resources.population, staffingPriorities])
+  const staffing = useMemo(() => {
+    const auto = autoAllocateStaffing(regions, resources.population, staffingPriorities)
+    // 手动调配覆盖：保持手动值（不超过容量），自动分配补足其余
+    facilityOrder.forEach(id => {
+      const manual = manualStaffing[id]
+      if (manual !== undefined) {
+        auto[id] = Math.min(manual, getFacilityWorkCapacity(id, regions.find(r => r.id === id)?.level ?? 0))
+      }
+    })
+    return auto
+  }, [regions, resources.population, staffingPriorities, manualStaffing])
   const allocatedPopulation = useMemo(() => facilityOrder.reduce((sum, id) => sum + (staffing[id] ?? 0), 0), [staffing])
   const freePopulation = Math.max(0, Math.floor(resources.population - allocatedPopulation))
   const activeResearchSpec = technologyCatalog[activeResearch]
@@ -1247,7 +1258,7 @@ function App() {
     </Modal>}
 
     <section className="page-content">
-      {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={(regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId }))} onAssignment={(visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))}>
+      {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} habitatLevel={habitatLevel} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={(regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId }))} onStaffingSet={(id, staff) => setManualStaffing(previous => ({ ...previous, [id]: staff }))} onAssignment={(visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))}>
         {selected === 'K' && <PalaceReportBlock day={day} lastReignReport={lastReignReport} onOpenReport={setActiveReignReport} />}
         {selected === 'L' && <ResearchTreeBlock techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={setActiveResearch} />}
         {selected === 'R' && <EcologyPhaseBlock phaseNotes={selectedRegion.phaseNotes} />}
@@ -1274,8 +1285,7 @@ function App() {
 
     <footer className="command-deck bottom-tabs">
       <div className="footer-row footer-row-left">
-        <div className="scoreline gdp-line"><span>GDP</span><strong>{gdp.toFixed(1)}</strong><small>星海货币/日</small></div>
-        <div className="scoreline"><span>国祚评分</span><strong>{score}</strong><small>星舰进度权重最高</small></div>
+        <div className="scoreline gdp-line"><span>GDP</span><strong>{gdp.toFixed(1)}</strong><small><Coins size={14} /></small></div>
       </div>
       <TabNav items={navItems} activeId={activeTabId} onSelect={(id) => {
         if (id === 'facilities') { setView(id); setDetailOpen(false); return }
@@ -1287,9 +1297,14 @@ function App() {
         if (id === 'ship') { selectFacility('D'); return }
       }} />
       <div className="footer-row footer-row-right">
-        <div className="time-dock" aria-label="时间控制">
+        <div className="time-card" aria-label="时间控制">
+          <div className="day-counter">
+            <span>御日</span>
+            <div><strong>{String(day).padStart(3, '0')}</strong></div>
+            <small>/ {gameCalendar.finalDay}</small>
+          </div>
           <button className="time-control-btn" onClick={() => setSpeed(speed === 'normal' ? 'fast' : 'normal')} aria-label="切换时间速度"><Gauge size={15} /><span>{speed === 'normal' ? '正常' : '加速'}</span></button>
-          <button className="time-control-btn" onClick={() => setRunning(!isRunning)} aria-label={isRunning ? '暂停日历' : '恢复日历'} disabled={completed}>{isRunning ? <Pause size={15} /> : <Play size={15} />}<span>{isRunning ? '暂停' : '恢复'}</span></button>
+          <button className="time-control-btn" onClick={() => setRunning(!isRunning)} aria-label={isRunning ? '暂停日历' : '恢复日历'} disabled={completed}>{isRunning ? <Pause size={15} /> : <Play size={15} />}<span>{isRunning ? '暂停' : '继续'}</span></button>
         </div>
       </div>
     </footer>

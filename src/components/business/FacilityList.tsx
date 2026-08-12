@@ -11,6 +11,7 @@ import {
   selectProductionMethod,
   technologyCatalog,
 } from '../../economy'
+import { getFacilityArt } from '../../assets/facilityArt'
 import { FacilityNetRow } from '../resources'
 import { SectionHeading } from '../layout'
 import { throughputClass } from '../../utils/game'
@@ -73,6 +74,7 @@ export function FacilityList({
                   const worker = roster.find(item => item.id === assigned[region.id])
                   const special = specialFacilityViews[region.id]
                   const spec = facilityEconomySpecs[region.id]
+                  const artwork = getFacilityArt(region.id)
                   const method = selectProductionMethod(spec.productionMethods, techs, productionMethods[region.id])
                   const capacity = getFacilityWorkCapacity(region.id, region.level)
                   const housingCapacity = getHousingCapacity(region.id, region.level)
@@ -91,7 +93,7 @@ export function FacilityList({
                   return (
                     <div key={region.id} className={`ledger-card ${selected === region.id ? 'selected' : ''} ${special ? 'special' : ''} throughput-${throughputClass(throughput)}`}>
                       <div className="ledger-block ledger-identity">
-                        <div className="ledger-icon-square"><RegionIcon size={28} /></div>
+                        <div className="ledger-icon-square"><img src={artwork} alt={region.name} /></div>
                         <b>{region.name}</b>
                         {worker && <i title={`${worker.name} 执勤`}>{worker.glyph}</i>}
                       </div>

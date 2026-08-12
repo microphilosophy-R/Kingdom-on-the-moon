@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 import {
   canBuildFacility,
@@ -37,6 +37,7 @@ export interface FacilityDetailPanelProps {
   selected: RegionId
   year: number
   techs: string[]
+  habitatLevel: number
   productionMethods: Record<RegionId, ProductionMethodId>
   facilityOrders: Record<RegionId, FacilityOrderMode>
   facilityOrderStarted: Record<RegionId, number>
@@ -62,6 +63,7 @@ export interface FacilityDetailPanelProps {
   onShrink: (id: RegionId, orderMode?: Extract<FacilityOrderMode, 'shrink' | 'shrink-continuous'>) => void
   onPriority: (id: RegionId, priority: StaffingPriority) => void
   onMethod: (id: RegionId, methodId: ProductionMethodId) => void
+  onStaffingSet?: (id: RegionId, staff: number) => void
   onAssignment: (visitorId: string | undefined) => void
   children?: ReactNode
 }
@@ -70,6 +72,7 @@ export function FacilityDetailPanel({
   selected,
   year,
   techs,
+  habitatLevel,
   productionMethods,
   facilityOrders,
   construction,
@@ -83,6 +86,7 @@ export function FacilityDetailPanel({
   onUpgrade,
   onShrink,
   onMethod,
+  onStaffingSet,
   children,
 }: FacilityDetailPanelProps) {
   const selectedSpec = facilityEconomySpecs[selectedRegion.id]
@@ -111,7 +115,7 @@ export function FacilityDetailPanel({
   const selectedBuildable = canBuildFacility(selectedSpec, year, techs)
   const selectedRequiredTech = selectedSpec.requiredTech ? technologyCatalog[selectedSpec.requiredTech] : undefined
   const currentOrder = facilityOrders[selectedRegion.id] ?? 'hold'
-  const throughput = staffRate * (selectedModifier.outputMultiplier ?? 1)
+  const throughput = selectedModifier.outputMultiplier ?? 1
   const shrinkFloor = selectedSpec.minLevel ?? 0
   const affordExpansion = canAfford(resources, selectedCost)
   const availableMethodIds = selectedSpec.productionMethods.filter(method => hasTech(techs, method.unlockedBy) && method.autoSelect !== false).map(method => method.id)
@@ -144,8 +148,12 @@ export function FacilityDetailPanel({
         : ''
   const expandDisabled = Boolean(expandDisabledReason)
   const shrinkDisabled = Boolean(shrinkDisabledReason)
-  const withDisabledReason = (label: string, reason: string) => reason ? `${label}（${reason}）` : label
-  const statusTone = !selectedBuildable || selectedRegion.level === 0 || (!selectedFixed && !isHousingFacility(selectedRegion.id) && throughput <= 0) ? 'attention' : activeConstruction || (!selectedFixed && !isHousingFacility(selectedRegion.id) && throughput < 0.8) ? 'watch' : 'steady'
+  const expandButtonLabel = expandDisabledReason ? expandDisabledReason : '立即扩建'
+  const shrinkButtonLabel = shrinkDisabledReason ? shrinkDisabledReason : '立即缩减'
+  const continuousExpandLabel = expandDisabledReason ? expandDisabledReason : '持续扩建'
+  const continuousShrinkLabel = shrinkDisabledReason ? shrinkDisabledReason : '持续缩减'
+
+  const statusTone = !selectedBuildable || selectedRegion.level === 0 || (!selectedFixed && !isHousingFacility(selectedRegion.id) && assignedPopulation <= 0) ? 'attention' : activeConstruction || (!selectedFixed && !isHousingFacility(selectedRegion.id) && assignedPopulation < workCapacity) ? 'watch' : 'steady'
   const situationTitle = !selectedBuildable
     ? '尚未授权'
     : activeConstruction
@@ -156,13 +164,13 @@ export function FacilityDetailPanel({
         ? '固定在线'
       : isHousingFacility(selectedRegion.id)
         ? '容量在线'
+        : assignedPopulation <= 0
+        ? '停摆'
         : assignedPopulation < workCapacity
         ? '岗位未满'
-        : throughput >= 1
+          : throughput >= 1
           ? '运转充分'
-          : throughput > 0
-            ? '低负荷运行'
-            : '停摆'
+          : '低效运转'
   const staffText = selectedFixed ? '固定' : isHousingFacility(selectedRegion.id) ? `居民 ${housingResidents}/${housingCapacity}` : `${assignedPopulation}/${workCapacity}`
   const throughputText = selectedFixed ? '在线' : isHousingFacility(selectedRegion.id) ? `${housingCapacity > 0 ? Math.round(housingResidents / housingCapacity * 100) : 0}%` : `${Math.round(throughput * 100)}%`
 
@@ -183,19 +191,19 @@ export function FacilityDetailPanel({
         </div>
         <section className="detail-command-column">
           <article className="construction-card expand">
-            <h3>扩建</h3>
-            <div className="construction-resources"><span>扩建成本</span><CostResourceList bundle={selectedCost} baseBundle={baseExpansionCost} empty="无需成本" /><ConstructionDaysPill days={constructionDays} /></div>
+            <h3>扩建 | 支付成本</h3>
+            <div className="construction-resources"><CostResourceList bundle={selectedCost} baseBundle={baseExpansionCost} empty="无需成本" /><ConstructionDaysPill days={constructionDays} /></div>
             <div className="construction-actions">
-              <button className={currentOrder === 'expand' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand')} disabled={expandDisabled}><FacilityOrderGlyph mode="expand" />{withDisabledReason('立即扩建', expandDisabledReason)}</button>
-              <button className={currentOrder === 'expand-continuous' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand-continuous')} disabled={expandDisabled}><FacilityOrderGlyph mode="expand-continuous" />{withDisabledReason('持续扩建', expandDisabledReason)}</button>
+              <button className={currentOrder === 'expand' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand')} disabled={expandDisabled}><FacilityOrderGlyph mode="expand" />{expandButtonLabel}</button>
+              <button className={currentOrder === 'expand-continuous' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand-continuous')} disabled={expandDisabled}><FacilityOrderGlyph mode="expand-continuous" />{continuousExpandLabel}</button>
             </div>
             <ProgressLine value={expandProgress} label={activeConstruction?.mode === 'expand' ? `扩建 ${expandProgress}%` : currentOrder === 'expand-continuous' ? '持续扩建已记录' : '等待扩建命令'} />
             <hr className="construction-divider" />
-            <h3>缩减</h3>
-            <div className="construction-resources"><span>回收资源</span><CostResourceList bundle={shrinkRefund} baseBundle={baseShrinkRefund} empty="无可回收" /><ConstructionDaysPill days={constructionDays} /></div>
+            <h3>缩减 | 回收资源</h3>
+            <div className="construction-resources"><CostResourceList bundle={shrinkRefund} baseBundle={baseShrinkRefund} empty="无可回收" /><ConstructionDaysPill days={constructionDays} /></div>
             <div className="construction-actions">
-              <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink')} disabled={shrinkDisabled}><FacilityOrderGlyph mode="shrink" />{withDisabledReason('立即缩减', shrinkDisabledReason)}</button>
-              <button className={currentOrder === 'shrink-continuous' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink-continuous')} disabled={shrinkDisabled}><FacilityOrderGlyph mode="shrink-continuous" />{withDisabledReason('持续缩减', shrinkDisabledReason)}</button>
+              <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink')} disabled={shrinkDisabled}><FacilityOrderGlyph mode="shrink" />{shrinkButtonLabel}</button>
+              <button className={currentOrder === 'shrink-continuous' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink-continuous')} disabled={shrinkDisabled}><FacilityOrderGlyph mode="shrink-continuous" />{continuousShrinkLabel}</button>
             </div>
             <ProgressLine value={shrinkProgress} label={activeConstruction?.mode === 'shrink' ? `缩减 ${shrinkProgress}%` : currentOrder === 'shrink-continuous' ? '持续缩减已记录' : '等待缩减命令'} />
           </article>
@@ -235,22 +243,47 @@ export function FacilityDetailPanel({
             <span className="method-column-label">配方</span>
             <div className="method-formula"><ResourceDeltaRows input={selectedMethod.input} output={selectedMethod.output} /></div>
           </div>
-          <FlowArrowSvg className="equation-operator multiply" kind="multiply" />
           <div className="method-stage">
             <span className="method-column-label">在岗人数</span>
-            <div className="method-staff"><b>{staffText}</b></div>
+            <div className="method-staff">
+              {!selectedFixed && !isHousingFacility(selectedRegion.id) && workCapacity > 0 ? (
+                <div className="staffing-slider-row">
+                    <b><Users size={13} />{assignedPopulation}/{workCapacity}</b>
+                    <input
+                    type="range"
+                    min={0}
+                    max={workCapacity}
+                    value={assignedPopulation}
+                    onChange={e => onStaffingSet?.(selectedRegion.id, Number(e.target.value))}
+                    className="staffing-slider"
+                    disabled={!!activeConstruction}
+                  />
+                </div>
+              ) : (
+                <b>{staffText}</b>
+              )}
+            </div>
           </div>
-          <FlowArrowSvg className="equation-operator multiply" kind="multiply" />
           <div className="method-stage">
             <span className="method-column-label">吞吐率</span>
-            <div className="method-throughput"><b>{throughputText}</b></div>
+            <div className="method-throughput">
+              <b>{throughputText}</b>
+              {!selectedFixed && !isHousingFacility(selectedRegion.id) && (
+                <div className="throughput-inline-breakdown">
+                  <div className="breakdown-row"><span>基础效率</span><span className="throughput-base">88%</span></div>
+                  <div className="breakdown-row"><span>└ 栖息地</span><span className={`throughput-${habitatLevel > 0 ? 'bonus' : 'neutral'}`}>{habitatLevel > 0 ? '+' : ''}{(habitatLevel * 2.5).toFixed(1)}%</span></div>
+                </div>
+              )}
+            </div>
           </div>
-          <FlowArrowSvg className="equation-operator equals" kind="equals" />
           <div className="method-stage">
             <span className="method-column-label">总产量</span>
             <div className="method-output"><ResourceDeltaRows input={selectedFlow.consumption} output={selectedFlow.production} /></div>
           </div>
         </article>
+        {!selectedFixed && !isHousingFacility(selectedRegion.id) && (
+          <p className="method-equation-note">总产量 = 配方产出 × 在岗人数 × 吞吐率</p>
+        )}
       </section>
 
       {children}

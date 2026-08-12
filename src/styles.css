@@ -3,7 +3,12 @@
 @import './styles/20-facilities-policy.css';
 @import './styles/30-special-systems.css';
 @import './styles/40-layout-components.css';
+@import './styles/45-typography.css';
 @import './styles/50-theme-overrides.css';
-@import './styles/60-settings-reports.css';
+@import './styles/61-facility-detail.css';
+@import './styles/62-settings-modal.css';
+@import './styles/63-trade-board.css';
+@import './styles/64-technology.css';
+@import './styles/65-building-cards.css';
 @import './styles/70-components.css';
 @import './styles/80-tutorial-victory.css';

@@ -115,6 +115,7 @@ export interface ShipProgressBlockProps {
 }
 
 export function ShipProgressBlock({ shipProgress, shipProjectStages, activeStage }: ShipProgressBlockProps) {
+  const currentStage = shipProjectStages.find(s => s.id === activeStage)
   return (
     <section className="special-content-block ship-meter">
       <div className="tech-tree-toolbar">
@@ -124,6 +125,7 @@ export function ShipProgressBlock({ shipProgress, shipProjectStages, activeStage
       <div className="ship-progress-v2">
         <i style={{ width: `${shipProgress}%` }} />
       </div>
+      <p className="ship-progress-note">千日之限将至，御座号的完成度将决定此局国祚。{currentStage ? `当前阶段：${currentStage.name}。` : ''}</p>
       <div className="ship-stage-list">
         {shipProjectStages.map(stage => {
           const isActive = stage.id === activeStage

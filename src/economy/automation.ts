@@ -118,6 +118,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   const weights = { ...resourceWeights, ...input.weights } as Resources
   const horizon = input.capitalHorizonYears ?? 5
   const year = input.year ?? 0
+  const difficulty = input.difficulty ?? 'normal'
   const stateById: Record<FacilityId, FacilityState> = Object.fromEntries(
     facilityOrder.map(id => [id, input.facilities.find(item => item.id === id) ?? { id, level: 0 }]),
   ) as Record<FacilityId, FacilityState>
@@ -190,21 +191,26 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     return Math.min(24, materialSurplus / 1200)
   }
 
-  // 后期判断：年份过半 + 人口接近容量 + 核心建筑等级高 → 转向胜利目标
+  // 后期判断：年份阈值随难度浮动（成本越高越晚启动量子核心）
+  const lateGameYearThreshold = difficulty === 'easy' ? 400 : difficulty === 'normal' ? 550 : difficulty === 'hard' ? 680 : 790
   const isLateGame = () => {
-    if (year < 600) return false
+    if (year < lateGameYearThreshold) return false
     const popRatio = input.resources.population / Math.max(1, input.population?.capacity ?? 1)
     if (popRatio < 0.5) return false
     const coreFacilities = ['E1', 'C1', 'K', 'B', 'F', 'L'] as FacilityId[]
     const avgCoreLevel = coreFacilities.reduce((sum, id) => sum + (stateById[id]?.level ?? 0), 0) / coreFacilities.length
-    return avgCoreLevel >= 8
+    const levelThreshold = difficulty === 'easy' ? 6 : 7
+    return avgCoreLevel >= levelThreshold
   }
 
-  // 后期星舰战略加成：殖民地已稳固，全力推进御座号
+  // 后期星舰战略加成：殖民地已稳固，全力推进御座号（难度越高加成越强）
   const lateGameVictoryBonus = (id: FacilityId) => {
     if (!isLateGame()) return 0
-    if (id === 'D') return 40 + overstockTechnologyBonus() * 3
-    if (id === 'L' && (stateById.D?.level ?? 0) > 0) return 5 // D已建，继续支持quantumCore生产
+    if (id === 'D') {
+      const base = difficulty === 'easy' ? 30 : difficulty === 'normal' ? 40 : difficulty === 'hard' ? 45 : 60
+      return base + overstockTechnologyBonus() * 3
+    }
+    if (id === 'L' && (stateById.D?.level ?? 0) > 0) return 5
     return 0
   }
 
@@ -227,7 +233,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     )) return null
     if (!requiredTech && !canBuildFacility(spec, year, workingTechs)) return null
 
-    const buildCost = projectFacilityCost(spec, current.level, workingTechs)
+    const buildCost = projectFacilityCost(spec, current.level, workingTechs, difficulty)
     const unlockCost = requiredTech ? projectTechnologyCost(requiredTech, workingTechs) : {}
     const cost = requiredTech ? mergeBundles(unlockCost, buildCost) : buildCost
     const tradePlan = planAutoTradesForCost(

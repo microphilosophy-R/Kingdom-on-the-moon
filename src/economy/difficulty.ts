@@ -25,13 +25,13 @@ export const difficultyConfigs: Record<Difficulty, DifficultyConfig> = {
     targetWinDay: 650,
   },
   hard: {
-    costScaleMultiplier: 1.3,
-    shipResourceMultiplier: 3.0,
+    costScaleMultiplier: 1.15,
+    shipResourceMultiplier: 2.3,
     targetWinDay: 800,
   },
   ultimate: {
-    costScaleMultiplier: 1.6,
-    shipResourceMultiplier: 5.0,
+    costScaleMultiplier: 1.3,
+    shipResourceMultiplier: 3.5,
     targetWinDay: 950,
   },
 }
