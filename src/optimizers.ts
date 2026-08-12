@@ -41,6 +41,7 @@ export const createDisabledAutomationPlan = (
   actions: [],
   technologyActions: [],
   methodActions: [],
+  staffingActions: [],
   targetLevels: Object.fromEntries(
     facilityOrder.map(id => [id, facilities.find(facility => facility.id === id)?.level ?? 0]),
   ) as Record<FacilityId, number>,

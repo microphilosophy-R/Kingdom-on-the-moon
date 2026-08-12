@@ -5,7 +5,7 @@ import { canBuildFacility, canUseProductionMethod, estimateTechnologyValue, hasT
 import { estimateResourceDeficitPremium, estimateTradePremium, planAutoTradesForCost, resourceDebtLimits } from './trade'
 import { projectFacilityCost, projectFacilityNet, projectTechnologyCost } from './production'
 import { eventChains, getCurrentGameEra } from '../events'
-import type { AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, MethodAutomationAction, PopulationProjection, ProductionMethod, ProductionMethodId, Resources, TechnologyAutomationAction, TechnologySpec } from './types'
+import type { AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, MethodAutomationAction, PopulationProjection, ProductionMethod, ProductionMethodId, Resources, StaffingAction, TechnologyAutomationAction, TechnologySpec } from './types'
 const mergeBundles = (...bundles: Partial<Resources>[]) => {
   const total = emptyResources()
   bundles.forEach(bundle => {
@@ -16,17 +16,8 @@ const mergeBundles = (...bundles: Partial<Resources>[]) => {
   return total
 }
 
-const meetsFloor = (resources: Resources, floors: Resources) =>
-  resourceOrder.every(key => resources[key] >= floors[key])
-
 const reserveBreach = (resources: Resources, floors: Resources) =>
   resourceOrder.find(key => resources[key] < floors[key])
-
-const respectsReserveTrajectory = (before: Resources, after: Resources, floors: Resources) =>
-  resourceOrder.every(key => {
-    if (before[key] < floors[key]) return after[key] >= before[key]
-    return after[key] >= floors[key]
-  })
 
 const isProjectSinkFacility = (id: FacilityId) => id === 'R' || id === 'D'
 
@@ -49,6 +40,15 @@ const projectSinkTargets = (id: FacilityId, reserveFloors: Resources): Partial<R
     regolith: reserveFloors.regolith * 250,
     alloy: reserveFloors.alloy * 120,
   }
+}
+
+const scaleGain = (gain: Partial<Resources>, factor: number): Partial<Resources> => {
+  const scaled: Partial<Resources> = {}
+  resourceOrder.forEach(key => {
+    const v = gain[key] ?? 0
+    if (v !== 0) scaled[key] = v * factor
+  })
+  return scaled
 }
 
 const projectSinkGain = (
@@ -254,9 +254,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     }
 
     const projectedResources = applyBundle(tradePlan.resources, cost, -1)
-    if (!respectsReserveTrajectory(workingResources, projectedResources, reserveFloors)) return null
     const nextYearProjection = applyBundle(projectedResources, upgradedNet)
-    if (!respectsReserveTrajectory(projectedResources, nextYearProjection, reserveFloors)) return null
 
     const normalGain = weightedValue(annualGain, weights)
     const weightedGain = Math.max(normalGain, projectSinkGain(id, current.level, projectedResources, annualGain, reserveFloors, weights))
@@ -291,7 +289,6 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     const cost = projectTechnologyCost(tech, workingTechs)
     if (!canAfford(workingResources, cost)) return null
     const projectedResources = applyBundle(workingResources, cost, -1)
-    if (!respectsReserveTrajectory(workingResources, projectedResources, reserveFloors)) return null
 
     const weightedGain = (tech.value ?? estimateTechnologyValue(tech)) / horizon + overstockTechnologyBonus()
     const deficitPremiumDelta = deficitPremium(projectedResources) - deficitPremium(workingResources)
@@ -343,7 +340,16 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
         if (workingResources[key] < reserveFloors[key] && annualGain[key] > 0) strategicBonus += annualGain[key] * weights[key] * 3
         if (workingResources[key] < reserveFloors[key] && annualGain[key] < 0) strategicBonus += annualGain[key] * weights[key] * 2
       })
-      const score = weightedValue(annualGain, weights) + strategicBonus
+      const projectedResources = applyBundle(workingResources, annualGain)
+      // 远期投影：短期评估持续消耗的赤字风险。窗口不宜过大，否则高库存时误报
+      const horizon = Math.min(5, input.capitalHorizonYears ?? 5)
+      const forwardProjection = applyBundle(projectedResources, scaleGain(annualGain, horizon))
+      // 赤字惩罚：新方法导致更多资源短缺 → 被迫从星港溢价买入 → 净亏损
+      const currentDeficit = deficitPremium(workingResources)
+      const immediateDeficit = deficitPremium(projectedResources)
+      const forwardDeficit = deficitPremium(forwardProjection)
+      const deficitDelta = Math.max(0, Math.max(immediateDeficit, forwardDeficit * 0.6) - currentDeficit)
+      const score = weightedValue(annualGain, weights) + strategicBonus - deficitDelta * 2
       if (score > bestScore) {
         bestScore = score
         best = method
@@ -439,17 +445,57 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
       actions: [],
       technologyActions: [],
       methodActions: [],
+      staffingActions: [],
       targetLevels,
       weightedProfit: 0,
       projectedResources: { ...input.resources },
     }
   }
 
+  // 人力分配：将自由人口分配到空置岗位，按加权产出排序
+  const staffingActions: StaffingAction[] = []
+  const totalStaffed = facilityOrder.reduce((sum, id) => sum + (input.staffing?.[id] ?? 0), 0)
+  let freePopulation = Math.max(0, Math.floor((input.resources?.population ?? 0) - totalStaffed))
+
+  if (freePopulation > 0) {
+    // 按当前边际产出排序：优先填最高价值空缺
+    const facilityMargins = facilityOrder
+      .filter(id => !isHousingFacility(id) && !isFixedFacility(id))
+      .map(id => {
+        const capacity = getFacilityWorkCapacity(id, stateById[id]?.level ?? 0)
+        const current = input.staffing?.[id] ?? 0
+        const deficit = capacity - current
+        if (deficit <= 0) return null
+        const spec = facilityEconomySpecs[id]
+        const method = selectProductionMethod(spec.productionMethods, workingTechs, workingMethods[id])
+        const modifiers = input.modifiers?.[id] ?? {}
+        const addition = projectFacilityNet(spec, Math.min(capacity, current + 1), modifiers, workingTechs, method.id, stateById[id]?.level ?? 1)
+        const base = projectFacilityNet(spec, current, modifiers, workingTechs, method.id, stateById[id]?.level ?? 1)
+        const margin = weightedValue(addition, weights) - weightedValue(base, weights)
+        return { id, current, capacity, deficit, margin }
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+      .sort((a, b) => b.margin - a.margin)
+
+    facilityMargins.forEach(item => {
+      if (freePopulation <= 0) return
+      const assign = Math.min(freePopulation, item.deficit)
+      staffingActions.push({
+        facilityId: item.id,
+        fromStaff: item.current,
+        toStaff: item.current + assign,
+        score: item.margin,
+      })
+      freePopulation -= assign
+    })
+  }
+
   return {
-    mode: 'auto',
+    mode: 'auto' as const,
     actions,
     technologyActions,
     methodActions,
+    staffingActions,
     targetLevels,
     weightedProfit,
     projectedResources: workingResources,

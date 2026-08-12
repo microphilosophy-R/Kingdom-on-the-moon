@@ -286,7 +286,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     unlockYear: 30,
     requiredTech: 'TM-0',
     maxLevel: 10,
-    baseUpgradeCost: { alloy: 18, regolith: 16, water: 8, quantumCore: 1 },
+    baseUpgradeCost: { alloy: 18, regolith: 16, water: 8 },
     yieldGrowth: 0.05,
     priority: 6,
     reserveFloor: { population: 10 },

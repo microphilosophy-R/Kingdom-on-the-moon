@@ -2,6 +2,7 @@ import { ChevronLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 import {
   canBuildFacility,
+  emptyResources,
   facilityEconomySpecs,
   getConstructionDays,
   getFacilityWorkCapacity,
@@ -93,7 +94,20 @@ export function FacilityDetailPanel({
   const assignedPopulation = Math.min(workCapacity, staffing[selectedRegion.id] ?? 0)
   const staffRate = workCapacity > 0 ? assignedPopulation / workCapacity : housingCapacity > 0 || selectedFixed ? 1 : 0
   const selectedModifier = facilityModifiers[selectedRegion.id] ?? { outputMultiplier: 1, upkeepMultiplier: 1 }
-  const selectedFlow = projectFacilityFlow(selectedSpec, assignedPopulation, selectedModifier, techs, selectedMethod.id, selectedRegion.level)
+  const facilityNet = populationProjection.facilityNet[selectedRegion.id] ?? {}
+  const selectedFlow = isHousingFacility(selectedRegion.id)
+    ? (() => {
+        const flow = { production: emptyResources(), consumption: emptyResources(), net: emptyResources() }
+        resourceOrder.forEach(key => {
+          const net = facilityNet[key] ?? 0
+          if (net > 0) flow.production[key] = net
+          if (net < 0) flow.consumption[key] = Math.abs(net)
+          flow.net[key] = net
+        })
+        return flow
+      })()
+    : projectFacilityFlow(selectedSpec, assignedPopulation, selectedModifier, techs, selectedMethod.id, selectedRegion.level)
+  const housingResidents = isHousingFacility(selectedRegion.id) ? (populationProjection.residentsByFacility[selectedRegion.id] ?? 0) : 0
   const selectedBuildable = canBuildFacility(selectedSpec, year, techs)
   const selectedRequiredTech = selectedSpec.requiredTech ? technologyCatalog[selectedSpec.requiredTech] : undefined
   const currentOrder = facilityOrders[selectedRegion.id] ?? 'hold'
@@ -149,8 +163,8 @@ export function FacilityDetailPanel({
           : throughput > 0
             ? '低负荷运行'
             : '停摆'
-  const staffText = selectedFixed ? '固定' : isHousingFacility(selectedRegion.id) ? `容量 ${housingCapacity}` : `${assignedPopulation}/${workCapacity}`
-  const throughputText = selectedFixed ? '在线' : isHousingFacility(selectedRegion.id) ? '容量' : `${Math.round(throughput * 100)}%`
+  const staffText = selectedFixed ? '固定' : isHousingFacility(selectedRegion.id) ? `居民 ${housingResidents}/${housingCapacity}` : `${assignedPopulation}/${workCapacity}`
+  const throughputText = selectedFixed ? '在线' : isHousingFacility(selectedRegion.id) ? `${housingCapacity > 0 ? Math.round(housingResidents / housingCapacity * 100) : 0}%` : `${Math.round(throughput * 100)}%`
 
   return (
     <aside className="inspector facility-detail-v2 standard-detail">

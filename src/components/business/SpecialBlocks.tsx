@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, type WheelEvent as ReactWheelEvent, type PointerEvent as ReactPointerEvent } from 'react'
-import { ArrowDown, ArrowLeftRight, ArrowRight, ArrowUp, ArrowUpToLine, BookOpen, Check, Crown, FlaskConical, Lock, Maximize2, Minus, Plus, Rocket, Trash2, Waves } from 'lucide-react'
+import { ArrowDown, ArrowDownUp, ArrowLeftRight, ArrowRight, ArrowUp, ArrowUpToLine, BookOpen, Check, Crown, FlaskConical, Lock, Maximize2, Minus, Plus, Repeat, Rocket, Trash2, Waves } from 'lucide-react'
 import {
   canExecuteStarportTrade,
   currencyDebtInterestRate,
@@ -272,6 +272,11 @@ const outputPerBatch = (offer: StarportTradeOffer) => (offer.output[offer.resour
 
 const stepSizes = [1, 10, 100, 1000]
 
+/** 常规资源：支持单次交易和连续交易 */
+const regularTradeResources: ResourceKey[] = ['water', 'oxygen', 'biomass', 'regolith', 'alloy']
+/** 高级/特殊资源：仅支持单次交易 */
+const advancedTradeResources: ResourceKey[] = ['knowledge', 'quantumCore', 'luxury', 'population']
+
 export interface TradeBoardBlockProps {
   resources: Resources
   populationProjection: PopulationProjection
@@ -350,6 +355,7 @@ export function TradeBoardBlock({
           const protectionOn = isProtected(offer)
           const disabled = !unlocked || protectionOn || (popBlocked && isBuy)
           const isDaily = isDailyTradeResource(offer.resource)
+          const canContinuous = regularTradeResources.includes(offer.resource)
           const activeDailyTrade = dailyTrades[offer.resource]
 
           const bp = buyPrice(offer)
@@ -482,45 +488,43 @@ export function TradeBoardBlock({
                     <button type="button" className="action-icon-btn clear" onClick={() => clearTrade(offer.id)} disabled={disabled || qty <= 0} title="清空">
                       <Trash2 size={13} />
                     </button>
-                    {isDaily ? (
+                    <button
+                      type="button"
+                      className="action-icon-btn single-trade"
+                      onClick={() => {
+                        const dirLabel = isBuy ? '进口' : '出口'
+                        onTrade(`${offer.name} ${dirLabel} ×${qty}`, input, output)
+                        clearTrade(offer.id)
+                      }}
+                      disabled={disabled || qty <= 0 || !canAfford}
+                      title="单次交易"
+                    >
+                      <ArrowDownUp size={13} />
+                    </button>
+                    {canContinuous && (
                       activeDailyTrade ? (
                         <button
                           type="button"
-                          className="action-icon-btn cancel-daily"
+                          className="action-icon-btn cancel-continuous"
                           onClick={() => onCancelDailyTrade(offer.resource)}
-                          title="取消每日交易"
+                          title="取消连续交易"
                         >
-                          <Check size={13} />
+                          <Repeat size={13} />
                         </button>
                       ) : (
                         <button
                           type="button"
-                          className="action-icon-btn confirm"
+                          className="action-icon-btn continuous-trade"
                           onClick={() => {
-                            const dirLabel = isBuy ? '进口' : '出口'
                             onScheduleDailyTrade(offer.resource, dir, qty, input, output)
                             clearTrade(offer.id)
                           }}
                           disabled={disabled || qty <= 0 || !canAfford}
-                          title="锁定每日交易"
+                          title="连续交易（每日自动执行）"
                         >
-                          <Check size={13} />
+                          <Repeat size={13} />
                         </button>
                       )
-                    ) : (
-                      <button
-                        type="button"
-                        className="action-icon-btn confirm"
-                        onClick={() => {
-                          const dirLabel = isBuy ? '进口' : '出口'
-                          onTrade(`${offer.name} ${dirLabel} ×${qty}`, input, output)
-                          clearTrade(offer.id)
-                        }}
-                        disabled={disabled || qty <= 0 || !canAfford}
-                        title="确认交易"
-                      >
-                        <Check size={13} />
-                      </button>
                     )}
                   </div>
                 </div>

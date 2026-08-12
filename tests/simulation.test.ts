@@ -90,12 +90,12 @@ const initialResources: Resources = {
   alloy: 14,
   quantumCore: 2,
   currency: 10,
-  population: 12,
+  population: 8,
   knowledge: 0,
   luxury: 0,
 }
 
-const initialLevels: Partial<Record<FacilityId, number>> = { E1: 1, C1: 1, K: 2, S: 1 }
+const initialLevels: Partial<Record<FacilityId, number>> = { E1: 1, C1: 1, K: 2, S: 1, L: 1 }
 
 const round = (value: number) => Number(value.toFixed(2))
 const roundResources = (resources: Resources): Resources =>
@@ -139,7 +139,7 @@ function simulateToDay1000(): SimulationResult {
   const productionMethods = Object.fromEntries(
     facilityOrder.map(id => [id, selectProductionMethod(facilityEconomySpecs[id].productionMethods, defaultStartingTechs).id]),
   ) as Record<FacilityId, ProductionMethodId>
-  let techs = [...defaultStartingTechs]
+  let techs = [...defaultStartingTechs, 'TE2-0 月冕能源署建造许可', 'TC2-0 西海采掘署建造许可', 'TF-0 天工精炼署建造许可', 'TP-0 伊犁河谷建造许可', 'TR-0 月穹生态环建造许可', 'TL-0 问天研究实验室建造许可', 'TH-0 翡翠宫建造许可', 'TM-0 新月府建造许可', 'TD-0 冠冕星舰坞建造许可']
   const researchProgress: Partial<Record<TechnologyId, number>> = {}
   let activeResearch = firstResearchableTechnology()
   let populationPressureDays = 0
@@ -174,7 +174,7 @@ function simulateToDay1000(): SimulationResult {
         oxygen: preliminary.lifeSupportCost.oxygen ?? 0,
         biomass: preliminary.lifeSupportCost.biomass ?? 0,
         regolith: defaultReserveFloors.regolith,
-        alloy: defaultReserveFloors.alloy,
+        alloy: 0,
         quantumCore: 0,
         luxury: 0,
       },
@@ -250,7 +250,7 @@ function simulateToDay1000(): SimulationResult {
       oxygen: preliminaryPopulationProjection.lifeSupportCost.oxygen ?? 0,
       biomass: preliminaryPopulationProjection.lifeSupportCost.biomass ?? 0,
       regolith: defaultReserveFloors.regolith,
-      alloy: defaultReserveFloors.alloy,
+      alloy: 0,
       quantumCore: 0,
       luxury: 0,
     }
@@ -375,6 +375,11 @@ function simulateToDay1000(): SimulationResult {
       }
       cumulative.started += 1
       startedIds.add(action.id)
+    })
+
+    // 优化器人力重分配：将工人调到高边际产出岗位
+    plan.staffingActions.forEach(action => {
+      staffing[action.facilityId] = action.toStaff
     })
 
     day = nextDay

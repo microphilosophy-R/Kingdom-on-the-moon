@@ -3891,25 +3891,34 @@ small,
   background: color-mix(in oklab, var(--ui-brass) 12%, var(--ui-surface));
 }
 
-.trade-qty-actions .action-icon-btn.confirm {
+.trade-qty-actions .action-icon-btn.single-trade {
   background: var(--ui-brass);
   border-color: var(--ui-brass);
   color: var(--ui-surface);
 }
 
-.trade-qty-actions .action-icon-btn.confirm:hover:not(:disabled) {
+.trade-qty-actions .action-icon-btn.single-trade:hover:not(:disabled) {
   filter: brightness(1.08);
 }
 
-.trade-qty-actions .action-icon-btn.cancel-daily {
-  background: var(--ui-brass);
-  border-color: var(--ui-brass);
+.trade-qty-actions .action-icon-btn.continuous-trade {
+  background: oklch(62% .14 250);
+  border-color: oklch(62% .14 250);
   color: var(--ui-surface);
 }
 
-.trade-qty-actions .action-icon-btn.cancel-daily:hover:not(:disabled) {
+.trade-qty-actions .action-icon-btn.continuous-trade:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.trade-qty-actions .action-icon-btn.cancel-continuous {
   background: oklch(48% .12 28);
   border-color: oklch(48% .12 28);
+  color: var(--ui-surface);
+}
+
+.trade-qty-actions .action-icon-btn.cancel-continuous:hover:not(:disabled) {
+  filter: brightness(1.05);
 }
 
 .trade-qty-actions .action-icon-btn.clear {
