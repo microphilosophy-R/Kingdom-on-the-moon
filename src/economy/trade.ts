@@ -356,30 +356,34 @@ export function planAutoTradesForCost(
   const floors = { ...defaultReserveFloors, ...reserveFloors } as Resources
   let working = { ...resources }
   const trades: AutoTrade[] = []
-  const alloyTarget = (cost.alloy ?? 0) + floors.alloy
-  let alloyShortage = Math.max(0, alloyTarget - working.alloy)
-  if (alloyShortage <= 0) return { trades, resources: working }
 
+  // 遍历所有自动贸易品，处理每种物资的短缺（用货币购买）
   starportTradeOffers
-    .filter(offer => offer.automated && (offer.output.alloy ?? 0) > 0 && hasTech(techs, offer.unlockTech))
+    .filter(offer => offer.automated && hasTech(techs, offer.unlockTech))
     .forEach(offer => {
-      if (alloyShortage <= 0) return
-      const outputAlloy = offer.output.alloy ?? 0
-      const maxBatches = resourceOrder.reduce((limit, key) => {
-        const required = offer.input[key] ?? 0
-        if (!required) return limit
-        const reserved = (cost[key] ?? 0) + floors[key]
-        const surplus = Math.max(0, working[key] - reserved)
-        return Math.min(limit, Math.floor(surplus / required))
-      }, Number.POSITIVE_INFINITY)
-      if (!Number.isFinite(maxBatches) || maxBatches <= 0) return
+      const outputKeys = resourceOrder.filter(key => (offer.output[key] ?? 0) > 0)
+      outputKeys.forEach(outputKey => {
+        if (outputKey === 'power' || outputKey === 'population' || outputKey === 'knowledge' || outputKey === 'luxury') return
+        const outputPerBatch = offer.output[outputKey] ?? 0
+        if (outputPerBatch <= 0) return
 
-      const batches = Math.min(maxBatches, Math.ceil(alloyShortage / outputAlloy))
-      const input = scaleBundle(offer.input, batches)
-      const output = scaleBundle(offer.output, batches)
-      working = applyBundle(applyBundle(working, input, -1), output)
-      alloyShortage = Math.max(0, alloyTarget - working.alloy)
-      trades.push({ offerId: offer.id, name: offer.name, input, output })
+        const target = (cost[outputKey] ?? 0) + floors[outputKey]
+        const shortage = Math.max(0, target - working[outputKey])
+        if (shortage <= 0) return
+
+        // 可用货币 = 当前货币 - 建筑消耗所需货币 - 储备底线
+        const availableCurrency = Math.max(0, working.currency - (cost.currency ?? 0) - floors.currency)
+        const currencyCost = offer.input.currency ?? 0
+        const maxBatchesByCurrency = currencyCost > 0 ? Math.floor(availableCurrency / currencyCost) : Number.POSITIVE_INFINITY
+        const maxBatchesByShortage = Math.ceil(shortage / outputPerBatch)
+        const batches = Math.min(maxBatchesByCurrency, maxBatchesByShortage)
+        if (batches <= 0 || !Number.isFinite(batches)) return
+
+        const input = scaleBundle(offer.input, batches)
+        const output = scaleBundle(offer.output, batches)
+        working = applyBundle(applyBundle(working, input, -1), output)
+        trades.push({ offerId: offer.id, name: offer.name, input, output })
+      })
     })
 
   return { trades, resources: working }
