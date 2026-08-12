@@ -13,20 +13,50 @@ const tutorialSteps: TutorialStep[] = [
   {
     targetSelector: '.bottom-tabs',
     title: '底部导航栏',
-    body: '切换设施、王城、科技、生态、星海贸易、星舰进度和异客名录七个视图。',
+    body: '切换设施、王城、科技、生态、星海贸易、星舰进度和异客名录七个视图。核心玩法是建造并扩建建筑生产资源，最终用于建造御座号星舰。',
     placement: 'top',
   },
   {
     targetSelector: '.resource-rail',
     title: '资源库存栏',
-    body: '监控11种资源的实时库存与每日净变化。点击三角形按钮可展开或收起此栏。',
+    body: '监控11种资源的实时库存与每日净变化。净变化由各建筑的产出与消耗决定，是判断产业链是否健康的关键。点击三角形按钮可展开或收起此栏。',
     placement: 'bottom',
   },
   {
-    targetSelector: '.page-content',
+    targetSelector: '.facility-ledger',
     title: '设施名录',
-    body: '点击「展开设施名录」查看全部建筑卡片。每位执政官可从15座设施中选择扩建方向。',
+    body: '点击「展开设施名录」查看全部建筑卡片。建造与扩建建筑是生产资源的核心手段——每位执政官可从15座设施中选择扩建方向。',
     placement: 'top',
+  },
+  {
+    targetSelector: '.page-content',
+    title: '资源分配',
+    body: '选中一座设施后，在详情面板调整人口分配（staffing）。不同设施的人口投入决定各类资源的产出速率，合理分配是优化产能的关键。',
+    placement: 'top',
+  },
+  {
+    targetSelector: '.tab-nav button[data-tab="research"]',
+    title: '科研计划',
+    body: '点击「科技」标签进入科研树。指定科研计划可解锁新的生产方式与效率修正，是扩大建筑产能、推进星舰建造的引擎。',
+    placement: 'bottom',
+  },
+  {
+    targetSelector: '.tab-nav button[data-tab="ship"]',
+    title: '建造星舰',
+    body: '点击「星舰」标签查看御座号建造进度。星舰是千日试验的终局目标，完成度是国祚评分的最大权重——需储备三阶段物资持续推进。',
+    placement: 'bottom',
+  },
+  {
+    targetSelector: '.tab-nav button[data-tab="starport"]',
+    title: '星海贸易',
+    body: '点击「贸易」标签进入星海贸易港。用盈余资源交换稀缺物资，可补齐产业链缺口，为星舰建造加速。',
+    placement: 'bottom',
+  },
+  {
+    targetSelector: '.tab-nav button[data-tab="visitors"]',
+    title: '外星人事件',
+    body: '点击「异客」标签查看深空来讯。应对外星人事件、招募合适的异客角色入职，可带来设施加成与额外产能优势。',
+    placement: 'bottom',
   },
   {
     targetSelector: '.time-dock',
@@ -37,7 +67,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     targetSelector: '.scoreline:nth-child(2)',
     title: '国祚评分',
-    body: '右侧实时显示当前评分。最终国祚由星舰完成度、设施规模、招募角色和知识储量共同决定。',
+    body: '右侧实时显示当前评分。最终国祚由星舰完成度（权重最高）、设施规模、招募角色和知识储量共同决定。',
     placement: 'top',
   },
 ]

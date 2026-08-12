@@ -45,6 +45,7 @@ export interface FacilityDetailPanelProps {
   populationProjection: PopulationProjection
   staffing: Record<RegionId, number>
   staffingPriorities: Record<RegionId, StaffingPriority>
+  autoStaffingByFacility: Partial<Record<RegionId, boolean>>
   allocatedPopulation: number
   freePopulation: number
   facilityModifiers: Partial<Record<RegionId, { outputMultiplier?: number; upkeepMultiplier?: number }>>
@@ -64,6 +65,8 @@ export interface FacilityDetailPanelProps {
   onPriority: (id: RegionId, priority: StaffingPriority) => void
   onMethod: (id: RegionId, methodId: ProductionMethodId) => void
   onStaffingSet?: (id: RegionId, staff: number) => void
+  onClearManualStaffing?: (id: RegionId, auto: boolean) => void
+  onHousingRedistribute?: (id: RegionId, residents: number) => void
   onAssignment: (visitorId: string | undefined) => void
   children?: ReactNode
 }
@@ -78,6 +81,9 @@ export function FacilityDetailPanel({
   construction,
   populationProjection,
   staffing,
+  staffingPriorities,
+  autoStaffingByFacility,
+  freePopulation,
   selectedRegion,
   selectedCost,
   resources,
@@ -87,6 +93,8 @@ export function FacilityDetailPanel({
   onShrink,
   onMethod,
   onStaffingSet,
+  onClearManualStaffing,
+  onHousingRedistribute,
   children,
 }: FacilityDetailPanelProps) {
   const selectedSpec = facilityEconomySpecs[selectedRegion.id]
@@ -112,6 +120,13 @@ export function FacilityDetailPanel({
       })()
     : projectFacilityFlow(selectedSpec, assignedPopulation, selectedModifier, techs, selectedMethod.id, selectedRegion.level)
   const housingResidents = isHousingFacility(selectedRegion.id) ? (populationProjection.residentsByFacility[selectedRegion.id] ?? 0) : 0
+  const isHousing = isHousingFacility(selectedRegion.id)
+  const isStaffingAuto = autoStaffingByFacility[selectedRegion.id] !== false
+  const staffingCurrent = isHousing ? (isStaffingAuto ? housingResidents : staffing[selectedRegion.id] ?? housingResidents) : assignedPopulation
+  const staffingHardMax = isHousing ? housingCapacity : workCapacity
+  const staffingReachableMax = isHousing ? Math.min(housingCapacity, (isStaffingAuto ? housingResidents : staffing[selectedRegion.id] ?? housingResidents) + freePopulation) : Math.min(workCapacity, assignedPopulation + freePopulation)
+  const staffColumnLabel = isHousing ? '居住人数' : '在岗人数'
+  const staffDisplay = isHousing ? `${staffingCurrent}/${housingCapacity}` : `${assignedPopulation}/${workCapacity}`
   const selectedBuildable = canBuildFacility(selectedSpec, year, techs)
   const selectedRequiredTech = selectedSpec.requiredTech ? technologyCatalog[selectedSpec.requiredTech] : undefined
   const currentOrder = facilityOrders[selectedRegion.id] ?? 'hold'
@@ -244,20 +259,45 @@ export function FacilityDetailPanel({
             <div className="method-formula"><ResourceDeltaRows input={selectedMethod.input} output={selectedMethod.output} /></div>
           </div>
           <div className="method-stage">
-            <span className="method-column-label">在岗人数</span>
+            <span className="method-column-label">{staffColumnLabel}</span>
             <div className="method-staff">
-              {!selectedFixed && !isHousingFacility(selectedRegion.id) && workCapacity > 0 ? (
+              {!selectedFixed && staffingHardMax > 0 ? (
                 <div className="staffing-slider-row">
-                    <b><Users size={13} />{assignedPopulation}/{workCapacity}</b>
-                    <input
+                  <b><Users size={13} />{staffDisplay}</b>
+                  <input
                     type="range"
                     min={0}
-                    max={workCapacity}
-                    value={assignedPopulation}
-                    onChange={e => onStaffingSet?.(selectedRegion.id, Number(e.target.value))}
+                    max={staffingHardMax}
+                    value={staffingCurrent}
+                    onChange={e => {
+                      const v = Number(e.target.value)
+                      if (isHousing && onHousingRedistribute) {
+                        onHousingRedistribute(selectedRegion.id, v)
+                      } else {
+                        onStaffingSet?.(selectedRegion.id, v)
+                      }
+                    }}
                     className="staffing-slider"
-                    disabled={!!activeConstruction}
+                    disabled={!!activeConstruction || isStaffingAuto}
+                    style={{
+                      background: staffingHardMax > staffingReachableMax
+                        ? `linear-gradient(90deg,
+                            var(--ui-brass) ${(staffingReachableMax / staffingHardMax * 100).toFixed(1)}%,
+                            var(--ui-line) ${(staffingReachableMax / staffingHardMax * 100).toFixed(1)}%,
+                            var(--ui-line) 100%)`
+                        : undefined,
+                    }}
                   />
+                  {isHousing && (
+                    <label className="staffing-auto-toggle">
+                      <input
+                        type="checkbox"
+                        checked={isStaffingAuto}
+                        onChange={() => onClearManualStaffing?.(selectedRegion.id, !isStaffingAuto)}
+                      />
+                      <span>自动调配</span>
+                    </label>
+                  )}
                 </div>
               ) : (
                 <b>{staffText}</b>

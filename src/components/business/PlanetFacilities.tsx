@@ -29,6 +29,7 @@ export interface PlanetFacilitiesProps {
   populationProjection: PopulationProjection
   staffing: Record<RegionId, number>
   staffingPriorities: Record<RegionId, StaffingPriority>
+  autoStaffingByFacility: Partial<Record<RegionId, boolean>>
   allocatedPopulation: number
   freePopulation: number
   facilityModifiers: Partial<Record<RegionId, { outputMultiplier?: number; upkeepMultiplier?: number }>>
@@ -54,6 +55,8 @@ export interface PlanetFacilitiesProps {
   onPriority: (id: RegionId, priority: StaffingPriority) => void
   onMethod: (id: RegionId, methodId: ProductionMethodId) => void
   onStaffingSet?: (id: RegionId, staff: number) => void
+  onClearAutoStaffing?: (id: RegionId, auto: boolean) => void
+  onHousingRedistribute?: (id: RegionId, residents: number) => void
   onAssignment: (visitorId: string | undefined) => void
   children?: ReactNode
 }
@@ -71,6 +74,7 @@ export function PlanetFacilities({
   populationProjection,
   staffing,
   staffingPriorities,
+  autoStaffingByFacility,
   allocatedPopulation,
   freePopulation,
   facilityModifiers,
@@ -96,6 +100,8 @@ export function PlanetFacilities({
   onPriority,
   onMethod,
   onStaffingSet,
+  onClearAutoStaffing,
+  onHousingRedistribute,
   onAssignment,
   children,
 }: PlanetFacilitiesProps) {
@@ -162,6 +168,7 @@ export function PlanetFacilities({
           populationProjection={populationProjection}
           staffing={staffing}
           staffingPriorities={staffingPriorities}
+          autoStaffingByFacility={autoStaffingByFacility}
           allocatedPopulation={allocatedPopulation}
           freePopulation={freePopulation}
           facilityModifiers={facilityModifiers}
@@ -181,6 +188,8 @@ export function PlanetFacilities({
           onPriority={onPriority}
           onMethod={onMethod}
           onStaffingSet={onStaffingSet}
+          onClearManualStaffing={onClearAutoStaffing}
+          onHousingRedistribute={onHousingRedistribute}
           onAssignment={onAssignment}
         >{children}</FacilityDetailPanel>
       ) : (

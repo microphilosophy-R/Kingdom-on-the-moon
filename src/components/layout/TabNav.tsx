@@ -23,6 +23,7 @@ export function TabNav<T extends string = string>({ items, activeId, onSelect, a
         return (
           <button
             key={item.id}
+            data-tab={item.id}
             className={activeId === item.id ? 'active' : ''}
             style={{ '--tab-color': item.color ?? 'var(--ui-brass)' } as React.CSSProperties}
             onClick={() => onSelect(item.id)}

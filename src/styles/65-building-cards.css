@@ -32,12 +32,12 @@
 .building-metric-grid strong {
   color: var(--ui-brass-dark);
   font-family: var(--ui-mono);
-  font-size: 20px;
+  font-size: var(--font-data-lg);
 }
 
 .building-metric-grid small {
   color: var(--ui-muted);
-  font-size: 11px;
+  font-size: var(--font-label);
 }
 
 .building-net-row {
@@ -70,7 +70,7 @@
 .intervention-copy h3 {
   margin: .12rem 0 .32rem;
   color: var(--ui-ink-strong);
-  font-size: 16px;
+  font-size: var(--font-card);
   line-height: 1.38;
 }
 
@@ -102,7 +102,7 @@
   min-height: 38px;
   padding-right: .42rem;
   padding-left: .42rem;
-  font-size: 10px;
+  font-size: var(--font-micro);
 }
 
 .priority-control {
@@ -275,7 +275,7 @@
 .ship-progress-note {
   margin: 0 0 .65rem;
   color: var(--ui-ink);
-  font-size: 12px;
+  font-size: var(--font-note);
   line-height: 1.65;
 }
 

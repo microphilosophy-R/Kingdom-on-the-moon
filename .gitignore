@@ -2,3 +2,5 @@ node_modules
 dist
 .env
 storage/game-content-agent
+test-results
+test

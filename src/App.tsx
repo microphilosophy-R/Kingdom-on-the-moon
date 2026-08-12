@@ -38,7 +38,9 @@ import {
   starportTradeOffers,
   technologyCatalog,
   weightedValue,
+  defaultDifficulty,
   type AutomationPlan,
+  type Difficulty,
   type FacilityId,
   type FacilityState,
   type PopulationProjection,
@@ -84,6 +86,7 @@ import {
   TutorialOverlay,
   VictoryModal,
   Visitors,
+  type StartOptions,
 } from './components/business'
 import {
   EcologyPhaseBlock,
@@ -208,6 +211,19 @@ const navItems: { id: AppView; label: string; icon: Icon; color: string }[] = [
   { id: 'ship', label: '星舰', icon: Rocket, color: 'oklch(50% .12 330)' },
   { id: 'visitors', label: '异客', icon: Sparkles, color: 'oklch(60% .11 85)' },
 ]
+
+const milestoneLogs: Record<number, string> = {
+  100: '百日已过，月面设施初具规模。关注资源盈余，规划科技方向。',
+  200: '二百御日，殖民地进入成长期。星海贸易港可补充稀缺资源，异客来访值得留意。',
+  300: '三百御日，检查各设施等级是否均衡。御座号星舰坞应已启动建造。',
+  400: '四百御日，千日试验已过五分之二。科技树的中层突破将解锁关键生产方式。',
+  500: '五百御日过半。评估 GDP 增速与人口承载力是否匹配星舰需求。',
+  600: '六百御日，试验进入后半程。确保星舰三阶段物资储备进度。',
+  700: '七百御日，时间紧迫。审视王月报告中的优化建议，补齐短板。',
+  800: '八百御日，距试验到期仅剩二百御日。御座号完成度应过半。',
+  900: '九百御日，最后百御日冲刺。将所有资源向星舰倾斜。',
+  950: '九百五十御日，仅剩五十御日。检查是否有遗漏的科技或设施可瞬间提升国祚。',
+}
 
 const specialTabFacility: Record<string, AppView> = {
   K: 'palace', L: 'research', R: 'ecology', S: 'starport', D: 'ship',
@@ -337,11 +353,14 @@ function App() {
   const [productionMethods, setProductionMethods] = useState<Record<RegionId, ProductionMethodId>>(initialProductionMethods)
   const [staffingPriorities, setStaffingPriorities] = useState<Record<RegionId, StaffingPriority>>(initialStaffingPriorities)
   const [manualStaffing, setManualStaffing] = useState<Partial<Record<RegionId, number>>>({})
+  const [autoStaffingByFacility, setAutoStaffingByFacility] = useState<Partial<Record<RegionId, boolean>>>({})
   const [facilityOrders, setFacilityOrders] = useState<Record<RegionId, FacilityOrderMode>>(Object.fromEntries(facilityOrder.map(id => [id, 'hold'])) as Record<RegionId, FacilityOrderMode>)
   const [facilityOrderStarted, setFacilityOrderStarted] = useState<Record<RegionId, number>>(Object.fromEntries(facilityOrder.map(id => [id, 1])) as Record<RegionId, number>)
   const [construction, setConstruction] = useState<Record<RegionId, ConstructionProject | null>>(initialConstruction)
   const [populationPressureDays, setPopulationPressureDays] = useState(0)
   const [activeOptimizerId, setActiveOptimizerId] = useState<OptimizerId | 'none'>('none')
+  const [difficulty, setDifficulty] = useState<Difficulty>(defaultDifficulty)
+  const [observerMode, setObserverMode] = useState(false)
   const [autoEventsEnabled, setAutoEventsEnabled] = useState(false)
   const [autoTradeProtectionEnabled, setAutoTradeProtectionEnabled] = useState(true)
   const [autoTradeEnabled, setAutoTradeEnabled] = useState<Partial<Record<ResourceKey, boolean>>>({})
@@ -364,7 +383,7 @@ function App() {
   const [showVictory, setShowVictory] = useState(false)
 
   const selectedRegion = regions.find(region => region.id === selected)!
-  const selectedCost = projectFacilityCost(facilityEconomySpecs[selectedRegion.id], selectedRegion.level, techs)
+  const selectedCost = projectFacilityCost(facilityEconomySpecs[selectedRegion.id], selectedRegion.level, techs, difficulty)
   const palaceRegion = regions.find(region => region.id === 'K')!
   const palaceLevel = palaceRegion.level
   const habitatLevel = regions.find(region => region.id === 'M')?.level ?? 0
@@ -376,13 +395,74 @@ function App() {
     facilityOrder.forEach(id => {
       const manual = manualStaffing[id]
       if (manual !== undefined) {
-        auto[id] = Math.min(manual, getFacilityWorkCapacity(id, regions.find(r => r.id === id)?.level ?? 0))
+        if (isHousingFacility(id)) {
+          auto[id] = Math.min(manual, getHousingCapacity(id, regions.find(r => r.id === id)?.level ?? 0))
+        } else {
+          auto[id] = Math.min(manual, getFacilityWorkCapacity(id, regions.find(r => r.id === id)?.level ?? 0))
+        }
       }
     })
     return auto
   }, [regions, resources.population, staffingPriorities, manualStaffing])
   const allocatedPopulation = useMemo(() => facilityOrder.reduce((sum, id) => sum + (staffing[id] ?? 0), 0), [staffing])
   const freePopulation = Math.max(0, Math.floor(resources.population - allocatedPopulation))
+
+  // 人口建筑手动调配重分配：总量不变，按优先级再平衡
+  const housingIds = useMemo(() => facilityOrder.filter(id => isHousingFacility(id)), [])
+
+  /** 切换某建筑的自动/手动调配模式 */
+  const handleToggleAutoStaffing = (id: RegionId, auto: boolean) => {
+    if (auto) {
+      // 切回自动：清除手动值
+      setAutoStaffingByFacility(prev => { const n = { ...prev }; delete n[id]; return n })
+      setManualStaffing(prev => { const n = { ...prev }; delete n[id]; return n })
+    } else {
+      // 切到手動：保留当前值作为手动
+      setAutoStaffingByFacility(prev => ({ ...prev, [id]: false }))
+      setManualStaffing(prev => ({ ...prev, [id]: staffing[id] ?? 0 }))
+    }
+  }
+
+  /** 人口建筑手动调配：重分配空闲人口到其它建筑以保持总量 */
+  const handleHousingRedistribute = (id: RegionId, newValue: number) => {
+    if (observerMode) return
+    const oldValue = staffing[id] ?? 0
+    const delta = newValue - oldValue
+    if (delta === 0) return
+    setAutoStaffingByFacility(prev => { const n = { ...prev }; n[id] = false; return n })
+    setManualStaffing(prev => {
+      const next = { ...prev, [id]: newValue }
+      // 计算其它可分配人口建筑的当前人数
+      const otherIds = housingIds.filter(hid => hid !== id)
+      const otherStaffing = otherIds.map(hid => {
+        const manual = prev[hid] ?? staffing[hid]
+        return { hid, manual, capacity: getHousingCapacity(hid, regions.find(r => r.id === hid)?.level ?? 0) }
+      }).sort((a, b) => (staffingPriorities[b.hid] ?? 0) - (staffingPriorities[a.hid] ?? 0))
+      let remaining = -delta
+      if (remaining > 0) {
+        // 削减此建筑，按优先级分配给其它建筑
+        const reversed = [...otherStaffing].sort((a, b) => (staffingPriorities[b.hid] ?? 0) - (staffingPriorities[a.hid] ?? 0))
+        for (const item of reversed) {
+          if (remaining <= 0) break
+          const space = item.capacity - (item.manual ?? staffing[item.hid] ?? 0)
+          const give = Math.min(space, remaining)
+          if (give > 0) { next[item.hid] = (item.manual ?? staffing[item.hid] ?? 0) + give; remaining -= give }
+        }
+      } else if (remaining < 0) {
+        // 增加此建筑，按优先级从其它建筑抽取
+        for (const item of otherStaffing) {
+          if (remaining >= 0) break
+          const current = item.manual ?? staffing[item.hid] ?? 0
+          const take = Math.min(current, -remaining)
+          if (take > 0) { next[item.hid] = current - take; remaining += take }
+        }
+        // 剩余不足则截断目标值
+        if (remaining < 0) next[id] = newValue + remaining
+      }
+      return next
+    })
+  }
+
   const activeResearchSpec = technologyCatalog[activeResearch]
   const researchThroughput = Math.max(1, Math.min(10, 1 + Math.floor((staffing.L ?? 0) * 0.5) + (hasTech(techs, 'TL-2') ? 1 : 0) + (hasTech(techs, 'TL-3') ? 2 : 0)))
 
@@ -487,7 +567,8 @@ function App() {
     capitalHorizonYears: 360,
     autoEventsEnabled,
     chainProgress,
-  }), [resources, regions, staffing, populationProjection, construction, facilityModifiers, techs, productionMethods, policy, day, autoEventsEnabled, chainProgress])
+    difficulty,
+  }), [resources, regions, staffing, populationProjection, construction, facilityModifiers, techs, productionMethods, policy, day, autoEventsEnabled, chainProgress, difficulty])
   const automationPlan = useMemo<AutomationPlan>(() => (
     activeOptimizerId === 'none'
       ? createDisabledAutomationPlan(resources, regions.map(region => ({ id: region.id, level: region.level })))
@@ -600,6 +681,8 @@ function App() {
     construction,
     populationPressureDays,
     activeOptimizerId,
+    difficulty,
+    observerMode,
     autoEventsEnabled,
     autoTradeProtectionEnabled,
     autoTradeEnabled,
@@ -709,6 +792,9 @@ function App() {
     setSettingsOpen(false)
     setShowVictory(false)
     setGameStarted(false)
+    setActiveOptimizerId('none')
+    setObserverMode(false)
+    setDifficulty(defaultDifficulty)
     audioRef.current?.pause()
   }
 
@@ -813,7 +899,7 @@ function App() {
       const currentLevel = completedProject?.mode === 'expand' ? completedProject.toLevel : region.level
       const spec = facilityEconomySpecs[id]
       if (mode === 'expand-continuous') {
-        const cost = projectFacilityCost(spec, currentLevel, techs)
+        const cost = projectFacilityCost(spec, currentLevel, techs, difficulty)
         if (!canBuildFacility(spec, nextDay, techs) || currentLevel >= spec.maxLevel || !canPay(finalResources, cost)) return
         finalResources = apply(finalResources, cost, -1)
         manualContinuousProjects.push([id, {
@@ -827,7 +913,7 @@ function App() {
         return
       }
       if (currentLevel <= 0) return
-      const refund = scaleResourceBundle(projectFacilityCost(spec, currentLevel - 1, techs), 0.5)
+      const refund = scaleResourceBundle(projectFacilityCost(spec, currentLevel - 1, techs, difficulty), 0.5)
       finalResources = apply(finalResources, refund)
       manualImmediateLevels[id] = currentLevel - 1
       manualContinuousProjects.push([id, {
@@ -940,6 +1026,9 @@ function App() {
       setPendingMonthlyReport(null)
     }
     if (!isReportDay && !visitor && (nextDay % 80 === 0 || Math.random() < 0.025)) chooseVisitor()
+    if (milestoneLogs[nextDay]) {
+      writeLog(`${formatDay(nextDay)}：${milestoneLogs[nextDay]}`)
+    }
     if (nextDay === gameCalendar.finalDay) {
       writeLog(`${formatDay(gameCalendar.finalDay)}：千日试验到期。御座号的完成度将成为此局国祚。`)
       setShowVictory(true)
@@ -961,10 +1050,16 @@ function App() {
     setDetailOpen(true)
   }
 
+  // 观察者模式下拦截一切玩家主动操作（建造/拆除/科研/贸易/人员/分配）
+  const guarded = <Args extends unknown[]>(fn: (...args: Args) => void) => (...args: Args) => {
+    if (!observerMode) fn(...args)
+  }
+
   const upgrade = (id: RegionId, orderMode: Extract<FacilityOrderMode, 'expand' | 'expand-continuous'> = 'expand') => {
+    if (observerMode) return
     const region = regions.find(item => item.id === id)!
     const spec = facilityEconomySpecs[id]
-    const cost = projectFacilityCost(facilityEconomySpecs[id], region.level, techs)
+    const cost = projectFacilityCost(facilityEconomySpecs[id], region.level, techs, difficulty)
     if (isFixedFacility(id)) {
       writeLog(`${formatDay(day)}：${region.name}是固定贸易节点，不需要扩建。`)
       return
@@ -996,6 +1091,7 @@ function App() {
   }
 
   const holdFacility = (id: RegionId) => {
+    if (observerMode) return
     const region = regions.find(item => item.id === id)!
     setFacilityOrders(previous => ({ ...previous, [id]: 'hold' }))
     setFacilityOrderStarted(previous => ({ ...previous, [id]: day }))
@@ -1015,7 +1111,7 @@ function App() {
     }
     setFacilityOrders(previous => ({ ...previous, [id]: orderMode }))
     setFacilityOrderStarted(previous => ({ ...previous, [id]: day }))
-    const refund = scaleResourceBundle(projectFacilityCost(facilityEconomySpecs[id], region.level - 1, techs), 0.5)
+    const refund = scaleResourceBundle(projectFacilityCost(facilityEconomySpecs[id], region.level - 1, techs, difficulty), 0.5)
     setRegions(previous => previous.map(item => item.id === id ? { ...item, level: Math.max(0, item.level - 1) } : item))
     setResources(previous => apply(previous, refund))
     setConstruction(previous => ({
@@ -1033,6 +1129,7 @@ function App() {
   }
 
   const setStaffPriority = (id: RegionId, priority: StaffingPriority) => {
+    if (observerMode) return
     const region = regions.find(item => item.id === id)!
     if (isFixedFacility(id) || isHousingFacility(id)) {
       writeLog(`${formatDay(day)}：${region.name}不占用岗位，优先级不参与人口分配。`)
@@ -1043,6 +1140,7 @@ function App() {
   }
 
   const acceptTrade = () => {
+    if (observerMode) return
     if (!visitor || !canPay(resources, visitor.offer.take)) return
     if (visitor.offer.give.population && (populationProjection.availableCapacity < visitor.offer.give.population || populationProjection.lifeSupportRatio < 1)) {
       writeLog(`${formatDay(day)}：住房或生命维持不足，${visitor.event.title}暂缓接纳人口。`)
@@ -1055,6 +1153,7 @@ function App() {
   }
 
   const employ = () => {
+    if (observerMode) return
     if (!visitor) return
     if (!canPay(resources, visitor.retainerCost)) return
     setResources(previous => apply(previous, visitor.retainerCost, -1))
@@ -1069,7 +1168,14 @@ function App() {
     if (visitor) advanceEncounter(visitor, true)
   }
 
+  // 观察者模式下访客来函自动礼送，避免阻塞自动推进
+  useEffect(() => {
+    if (observerMode && visitor) dismiss()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [observerMode, visitor])
+
   const executeTrade = (name: string, input: Partial<Resources>, output: Partial<Resources>) => {
+    if (observerMode) return
     if (!canExecuteStarportTrade(resources, input)) {
       writeLog(`${formatDay(day)}：${name}未能成交，库存不足。`)
       return
@@ -1083,6 +1189,7 @@ function App() {
   }
 
   const scheduleDailyTrade = (key: ResourceKey, dir: 'buy' | 'sell', qty: number, input: Partial<Resources>, output: Partial<Resources>) => {
+    if (observerMode) return
     if (!canExecuteStarportTrade(resources, input)) {
       writeLog(`${formatDay(day)}：每日交易设置失败，库存不足。`)
       return
@@ -1095,6 +1202,7 @@ function App() {
   }
 
   const cancelDailyTrade = (key: ResourceKey) => {
+    if (observerMode) return
     setDailyManualTrades(previous => {
       const next = { ...previous }
       delete next[key]
@@ -1103,13 +1211,17 @@ function App() {
     })
   }
 
-  const startGame = () => {
+  const startGame = (options: StartOptions) => {
+    setDifficulty(options.difficulty)
+    setObserverMode(options.observerMode)
+    setActiveOptimizerId(options.observerMode ? 'crown-steward' : 'none')
+    setRunning(options.observerMode)
     const openingBaseline = { day: 1, resources, gdp }
     const report = createReignReport(1, resources, regions, staffing, construction, populationProjection, dailyProduction, dailyConsumption, gdp, openingBaseline)
     setGameStarted(true)
     publishReignReport(report, resources, gdp)
     setShowVictory(false)
-    if (!window.localStorage.getItem(tutorialSeenKey)) setTutorialOpen(true)
+    if (options.tutorialEnabled) setTutorialOpen(true)
   }
 
   if (!gameStarted) {
@@ -1232,7 +1344,7 @@ function App() {
       />
     )}
 
-    {visitor && <Modal scrimClassName="event-scrim" panelClassName="diplomatic-letter event-modal" ariaLabel="深空来讯" ariaLive="polite">
+    {visitor && !observerMode && <Modal scrimClassName="event-scrim" panelClassName="diplomatic-letter event-modal" ariaLabel="深空来讯" ariaLive="polite">
       <PortraitSlot src={visitorPortraits[visitor.id]} alt={visitor.name} aria-label="访客肖像" />
       <div className="letter-copy">
         <div className="event-transmission-head">
@@ -1258,14 +1370,14 @@ function App() {
     </Modal>}
 
     <section className="page-content">
-      {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} habitatLevel={habitatLevel} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={(regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId }))} onStaffingSet={(id, staff) => setManualStaffing(previous => ({ ...previous, [id]: staff }))} onAssignment={(visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId }))}>
+      {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} habitatLevel={habitatLevel} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} autoStaffingByFacility={autoStaffingByFacility} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={guarded((regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId })))} onStaffingSet={guarded((id, staff) => setManualStaffing(previous => ({ ...previous, [id]: staff })))} onClearAutoStaffing={handleToggleAutoStaffing} onHousingRedistribute={handleHousingRedistribute} onAssignment={guarded((visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId })))}>
         {selected === 'K' && <PalaceReportBlock day={day} lastReignReport={lastReignReport} onOpenReport={setActiveReignReport} />}
-        {selected === 'L' && <ResearchTreeBlock techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={setActiveResearch} />}
+        {selected === 'L' && <ResearchTreeBlock techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={guarded(setActiveResearch)} />}
         {selected === 'R' && <EcologyPhaseBlock phaseNotes={selectedRegion.phaseNotes} />}
-        {selected === 'S' && <TradeBoardBlock resources={resources} populationProjection={populationProjection} techs={techs} autoTradeProtectionEnabled={autoTradeProtectionEnabled} autoTradeEnabled={autoTradeEnabled} dailyTrades={dailyManualTrades} onProtection={setAutoTradeProtectionEnabled} onTrade={executeTrade} onScheduleDailyTrade={scheduleDailyTrade} onCancelDailyTrade={cancelDailyTrade} onAutoTrade={(key, enabled) => setAutoTradeEnabled(previous => ({ ...previous, [key]: enabled }))} />}
+        {selected === 'S' && <TradeBoardBlock resources={resources} populationProjection={populationProjection} techs={techs} autoTradeProtectionEnabled={autoTradeProtectionEnabled} autoTradeEnabled={autoTradeEnabled} dailyTrades={dailyManualTrades} onProtection={guarded(setAutoTradeProtectionEnabled)} onTrade={executeTrade} onScheduleDailyTrade={scheduleDailyTrade} onCancelDailyTrade={cancelDailyTrade} onAutoTrade={guarded((key, enabled) => setAutoTradeEnabled(previous => ({ ...previous, [key]: enabled })))} />}
         {selected === 'D' && <ShipProgressBlock shipProgress={shipProgress} shipProjectStages={shipProjectStages} activeStage={activeStage} />}
       </PlanetFacilities>}
-      {view === 'visitors' && <Visitors roster={roster} assigned={assigned} regions={regions} visitor={visitor} onSelect={selectFacility} onAssignment={(regionId, visitorId) => setAssigned(previous => ({ ...previous, [regionId]: visitorId }))} />}
+      {view === 'visitors' && <Visitors roster={roster} assigned={assigned} regions={regions} visitor={visitor} onSelect={selectFacility} onAssignment={guarded((regionId, visitorId) => setAssigned(previous => ({ ...previous, [regionId]: visitorId })))} />}
     </section>
 
     {settingsOpen && (

@@ -1,6 +1,6 @@
 
 .brand-block h1 {
-  font-size: 24px;
+  font-size: var(--font-data-lg);
   line-height: 1.12;
 }
 
@@ -298,12 +298,12 @@
 }
 
 .event-modal .letter-copy strong {
-  font-size: 28px;
+  font-size: var(--font-data-xl);
 }
 
 .event-modal .letter-body {
   color: var(--ui-ink);
-  font-size: 14px;
+  font-size: var(--font-body);
   line-height: 1.86;
 }
 
@@ -332,7 +332,7 @@
 }
 
 .planet-title h2 {
-  font-size: 36px;
+  font-size: var(--font-display);
 }
 
 .planet-title button {
@@ -350,7 +350,7 @@
 
 @media (max-width: 760px) {
   .brand-block h1 {
-    font-size: 20px;
+    font-size: var(--font-panel);
   }
 
   .welcome-panel h2,
@@ -358,22 +358,22 @@
   .palace-hero h2,
   .system-hero h2,
   .visitor-hero h2 {
-    font-size: 24px;
+    font-size: var(--font-data-lg);
   }
 
   .section-heading h2,
   .section-heading h3,
   .inspector-head h2,
   .special-panel-head h2 {
-    font-size: 18px;
+    font-size: var(--font-card);
   }
 
   .event-modal .letter-copy strong {
-    font-size: 20px;
+    font-size: var(--font-panel);
   }
 
   .event-modal .letter-body {
-    font-size: 13px;
+    font-size: var(--font-note);
   }
 
   .planet-title {
@@ -552,7 +552,7 @@
 }
 
 .building-title-copy h2 {
-  font-size: 24px;
+  font-size: var(--font-data-lg);
 }
 
 .building-status-block {

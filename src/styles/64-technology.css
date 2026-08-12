@@ -153,7 +153,7 @@
   align-items: center;
   gap: .18rem;
   color: oklch(48% .085 76);
-  font-size: 10px;
+  font-size: var(--font-micro);
   font-weight: 700;
 }
 .tech-card-compact-status {
@@ -208,13 +208,13 @@
 .tech-tree-scale {
   color: var(--ui-brass-dark);
   font-family: var(--ui-mono);
-  font-size: 11px;
+  font-size: var(--font-label);
   font-weight: 700;
 }
 .tech-tree-hint {
   margin-left: auto;
   color: var(--ui-muted);
-  font-size: 10px;
+  font-size: var(--font-micro);
 }
 
 .technology-tree-viewport {
@@ -262,8 +262,8 @@
 .tech-era-column-v2 header span {
   display: block;
   color: oklch(29% .035 250);
-  font-family: 'Songti SC', 'Songti SC', serif;
-  font-size: 14px;
+  font-family: var(--ui-serif);
+  font-size: var(--font-body);
   font-weight: 700;
 }
 .tech-era-column-v2 header small {

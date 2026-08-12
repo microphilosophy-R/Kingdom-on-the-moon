@@ -23,10 +23,21 @@
   .analysis h2 { color: #f0f6fc; }
   .analysis ul { color: #c9d1d9; line-height: 1.8; }
   .analysis .highlight { color: #ff7b72; font-weight: bold; }
+  .toolbar { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 12px 0 0; }
+  .toolbar label { color: #8b949e; font-size: 14px; }
+  .toolbar select { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; padding: 6px 12px; font-size: 14px; cursor: pointer; }
+  .toolbar select:focus { outline: none; border-color: #58a6ff; }
+  .toolbar .status { color: #3fb950; font-size: 13px; }
+  .toolbar .status.error { color: #ff7b72; }
 </style>
 </head>
 <body>
 <h1>月面王国 · 1000御日资源周期曲线</h1>
+<div class="toolbar">
+  <label for="runSelector">📂 数据源：</label>
+  <select id="runSelector"><option value="">扫描中...</option></select>
+  <span class="status" id="loadStatus"></span>
+</div>
 <div class="grid">
   <div class="card"><h2>📈 人口增长 (Population)</h2><canvas id="chartPopulation"></canvas></div>
   <div class="card"><h2>🏗️ 建筑等级演进 (Facility Levels)</h2><canvas id="chartLevels"></canvas></div>
@@ -50,28 +61,40 @@
 </div>
 
 <script>
-// Load and parse simulation data
-async function loadData() {
-  // Try to load the latest run
-  const runs = Array.from({length: 10}, (_, i) => String(i + 1).padStart(3, '0'));
-  for (const run of runs.reverse()) {
+let charts = [];
+
+function destroyCharts() {
+  charts.forEach(c => c.destroy());
+  charts = [];
+}
+
+// Discover available simulation runs
+async function discoverAvailableRuns() {
+  const available = [];
+  for (let i = 1; i <= 10; i++) {
+    const run = String(i).padStart(3, '0');
     try {
       const resp = await fetch(`../test-results/simulation/run-${run}.json`);
-      if (resp.ok) {
-        return { data: await resp.json(), run };
-      }
+      if (resp.ok) { available.push(run); }
     } catch {}
   }
-  // Fallback: embed the data
-  return null;
+  return available;
+}
+
+// Load simulation data for a specific run
+async function loadData(run) {
+  const resp = await fetch(`../test-results/simulation/run-${run}.json`);
+  if (!resp.ok) throw new Error(`无法加载 run-${run}`);
+  return await resp.json();
 }
 
 function createCharts(data) {
+  destroyCharts();
   const snapshots = data.snapshots;
   const days = snapshots.map(s => s.day);
-  
+
   // Chart 1: Population
-  new Chart(document.getElementById('chartPopulation'), {
+  charts.push(new Chart(document.getElementById('chartPopulation'), {
     type: 'line',
     data: {
       labels: days,
@@ -90,7 +113,7 @@ function createCharts(data) {
         y1: { position: 'right', title: { display: true, text: '净增(x20)', color: '#d29922' }, ticks: { color: '#d29922' }, grid: { display: false } }
       }
     }
-  });
+  }));
 
   // Chart 2: Facility Levels
   const facilities = ['E1','C1','K','B','E2','C2','F','P','R','L','H','M'];
@@ -104,7 +127,7 @@ function createCharts(data) {
     tension: 0.3,
     pointRadius: 1,
   }));
-  new Chart(document.getElementById('chartLevels'), {
+  charts.push(new Chart(document.getElementById('chartLevels'), {
     type: 'line',
     data: { labels: days, datasets: levelDatasets },
     options: {
@@ -115,10 +138,10 @@ function createCharts(data) {
         y: { title: { display: true, text: '等级', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
       }
     }
-  });
+  }));
 
   // Chart 3: Key Resources (log scale for readability)
-  new Chart(document.getElementById('chartResources'), {
+  charts.push(new Chart(document.getElementById('chartResources'), {
     type: 'line',
     data: {
       labels: days,
@@ -137,10 +160,10 @@ function createCharts(data) {
         y: { type: 'logarithmic', title: { display: true, text: '库存 (log)', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
       }
     }
-  });
+  }));
 
   // Chart 4: Daily Net Production
-  new Chart(document.getElementById('chartDailyNet'), {
+  charts.push(new Chart(document.getElementById('chartDailyNet'), {
     type: 'line',
     data: {
       labels: days,
@@ -159,10 +182,10 @@ function createCharts(data) {
         y: { title: { display: true, text: '日产净值', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
       }
     }
-  });
+  }));
 
   // Chart 5: Alloy, Regolith, Currency (linear scale)
-  new Chart(document.getElementById('chartMaterials'), {
+  charts.push(new Chart(document.getElementById('chartMaterials'), {
     type: 'line',
     data: {
       labels: days,
@@ -181,10 +204,10 @@ function createCharts(data) {
         y1: { position: 'right', title: { display: true, text: '货币', color: '#d29922' }, ticks: { color: '#d29922' }, grid: { display: false } }
       }
     }
-  });
+  }));
 
   // Chart 6: Life Support
-  new Chart(document.getElementById('chartLifeSupport'), {
+  charts.push(new Chart(document.getElementById('chartLifeSupport'), {
     type: 'line',
     data: {
       labels: days,
@@ -203,12 +226,13 @@ function createCharts(data) {
         y1: { position: 'right', title: { display: true, text: '氧气/生物质', color: '#c9d1d9' }, ticks: { color: '#8b949e' }, grid: { display: false } }
       }
     }
-  });
+  }));
 
-  // Summary table
+  // Summary table (clear first)
+  const tbody = document.getElementById('summaryBody');
+  tbody.innerHTML = '';
   const summaryDays = [1, 50, 200, 400, 600, 800, 1000];
   const summarySnaps = summaryDays.map(d => snapshots.find(s => s.day === d) || snapshots[0]);
-  const tbody = document.getElementById('summaryBody');
   const metrics = [
     { name: '人口', key: s => s.population.total, format: v => v.toFixed(1) },
     { name: '住房容量', key: s => s.population.capacity },
@@ -258,18 +282,57 @@ function createCharts(data) {
   `;
 }
 
-// Load embedded data or fetch
+// Init: discover runs, populate dropdown, load latest
 (async () => {
-  let data;
-  try {
-    const resp = await fetch('../test-results/simulation/run-010.json');
-    data = await resp.json();
-    document.querySelector('h1').textContent += ` (run-010)`;
-  } catch {
-    document.querySelector('h1').textContent += ' [数据加载失败，请运行 npm test 生成模拟数据]';
+  const selector = document.getElementById('runSelector');
+  const status = document.getElementById('loadStatus');
+  const titleBase = document.querySelector('h1').textContent;
+
+  const runs = await discoverAvailableRuns();
+  if (runs.length === 0) {
+    selector.innerHTML = '<option value="">无可用数据</option>';
+    status.textContent = '请运行 npm test 生成模拟数据';
+    status.className = 'status error';
     return;
   }
-  createCharts(data);
+
+  // Populate dropdown
+  selector.innerHTML = runs.map(r => `<option value="${r}">run-${r}</option>`).join('');
+  selector.value = runs[runs.length - 1]; // default to latest
+
+  // Load on dropdown change
+  selector.addEventListener('change', async () => {
+    const run = selector.value;
+    if (!run) return;
+    status.textContent = '加载中...';
+    status.className = 'status';
+    try {
+      const data = await loadData(run);
+      document.querySelector('h1').textContent = `${titleBase} (run-${run})`;
+      createCharts(data);
+      // Also update summary table (cleared by destroyCharts? No, table is DOM)
+      status.textContent = `已加载 run-${run}`;
+      status.className = 'status';
+    } catch (e) {
+      status.textContent = '加载失败';
+      status.className = 'status error';
+    }
+  });
+
+  // Load initial data
+  const initialRun = runs[runs.length - 1];
+  status.textContent = '加载中...';
+  status.className = 'status';
+  try {
+    const data = await loadData(initialRun);
+    document.querySelector('h1').textContent = `${titleBase} (run-${initialRun})`;
+    createCharts(data);
+    status.textContent = `已加载 run-${initialRun}`;
+    status.className = 'status';
+  } catch (e) {
+    status.textContent = '加载失败';
+    status.className = 'status error';
+  }
 })();
 </script>
 </body>

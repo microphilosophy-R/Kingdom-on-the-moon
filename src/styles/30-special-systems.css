@@ -9,7 +9,7 @@
 }
 .event-modal .event-exchange b {
   color: oklch(45% .075 76);
-  font-size: 11px;
+  font-size: var(--font-label);
 }
 .event-modal .letter-actions {
   position: absolute;
@@ -22,7 +22,7 @@
 .event-modal .letter-actions button {
   min-width: 76px;
   padding: .58rem .78rem;
-  font-size: 12px;
+  font-size: var(--font-note);
   font-weight: 700;
 }
 .event-modal .letter-actions .primary {
@@ -49,10 +49,10 @@
     padding: 1.35rem 1.1rem 5.2rem;
   }
   .event-modal .letter-copy strong {
-    font-size: 24px;
+    font-size: var(--font-page);
   }
   .event-modal .letter-body {
-    font-size: 13px;
+    font-size: var(--font-button);
   }
   .event-modal .event-exchange,
   .event-modal .event-exchange.concealed {
@@ -126,6 +126,77 @@
   line-height: 1.75;
 }
 
+.start-options {
+  display: grid;
+  gap: .7rem;
+  padding: .85rem 0 .25rem;
+  border-top: 1px dashed var(--ui-line);
+}
+
+.start-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+}
+
+.start-option-label {
+  font-size: var(--font-note);
+  font-weight: 700;
+  color: var(--ui-muted);
+  display: grid;
+  gap: .15rem;
+}
+
+.start-option-label small {
+  font-weight: 500;
+  color: oklch(52% .02 84);
+  font-size: calc(var(--font-note) - 1px);
+}
+
+.difficulty-picker {
+  display: inline-flex;
+  border: 1px solid var(--ui-line);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.difficulty-chip {
+  border: none;
+  border-right: 1px solid var(--ui-line);
+  padding: .42rem .7rem;
+  background: var(--ui-raised);
+  color: var(--ui-muted);
+  font-size: var(--font-note);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .16s ease-out, color .16s ease-out;
+}
+
+.difficulty-chip:last-child {
+  border-right: none;
+}
+
+.difficulty-chip:hover {
+  background: oklch(95% .036 78);
+}
+
+.difficulty-chip.active {
+  background: var(--ui-brass);
+  color: oklch(20% .03 78);
+}
+
+.toggle-row {
+  cursor: pointer;
+}
+
+.toggle-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ui-brass);
+  cursor: pointer;
+}
+
 .start-actions {
   display: flex;
   align-items: center;
@@ -141,7 +212,7 @@
   padding: .7rem .9rem;
   background: var(--ui-raised);
   color: var(--ui-muted);
-  font-size: 12px;
+  font-size: var(--font-note);
   font-weight: 700;
   cursor: pointer;
   transition: color .18s ease-out, border-color .18s ease-out, background .18s ease-out, box-shadow .18s ease-out;
@@ -192,12 +263,12 @@
 }
 
 .resource-atom small {
-  font-size: 10px;
+  font-size: var(--font-micro);
   white-space: nowrap;
 }
 
 .resource-atom strong {
-  font-size: 12px;
+  font-size: var(--font-note);
   font-variant-numeric: tabular-nums;
 }
 
@@ -345,7 +416,7 @@
 
 .building-title-copy h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: var(--font-page);
 }
 
 .building-title-copy p {
@@ -474,7 +545,7 @@
 .trade-offer-list span {
   color: var(--ui-brass-dark);
   font-family: var(--ui-mono);
-  font-size: 10px;
+  font-size: var(--font-micro);
 }
 
 .trade-offer-list h3 {

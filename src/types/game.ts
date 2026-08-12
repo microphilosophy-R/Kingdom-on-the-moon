@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 import type { LucideProps } from 'lucide-react'
-import type { FacilityId, FacilityState, ProductionMethodId, ResourceKey, Resources, TechnologyId } from '../economy'
+import type { Difficulty, FacilityId, FacilityState, ProductionMethodId, ResourceKey, Resources, TechnologyId } from '../economy'
 import type { Encounter, Role } from '../events'
 import type { OptimizerId } from '../optimizers'
 
@@ -99,6 +99,8 @@ export type GameSaveState = {
   construction: Record<RegionId, ConstructionProject | null>
   populationPressureDays: number
   activeOptimizerId: OptimizerId | 'none'
+  difficulty?: Difficulty
+  observerMode?: boolean
   autoEventsEnabled?: boolean
   autoTradeProtectionEnabled?: boolean
   autoTradeEnabled?: Partial<Record<ResourceKey, boolean>>

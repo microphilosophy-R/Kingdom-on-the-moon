@@ -54,7 +54,7 @@
 .tutorial-tooltip p {
   margin: 0;
   color: oklch(40% .03 250);
-  font-size: 13px;
+  font-size: var(--font-button);
   line-height: 1.6;
 }
 
@@ -64,7 +64,7 @@
   border-radius: 4px;
   padding: .12rem .5rem;
   color: oklch(45% .075 76);
-  font-size: 10px;
+  font-size: var(--font-micro);
   font-weight: 700;
   letter-spacing: .06em;
 }
@@ -82,7 +82,7 @@
   padding: .45rem .75rem;
   background: transparent;
   color: oklch(42% .03 250);
-  font-size: 12px;
+  font-size: var(--font-note);
   font-weight: 600;
   cursor: pointer;
   transition: background .15s;
@@ -186,7 +186,7 @@
 .victory-number {
   display: block;
   color: oklch(82% .07 76);
-  font-family: ui-monospace, monospace;
+  font-family: var(--ui-mono);
   font-size: 56px;
   font-weight: 700;
   line-height: 1;
@@ -200,7 +200,7 @@
   padding: .25rem 1rem;
   background: oklch(55% .1 76 / .12);
   color: oklch(75% .08 76);
-  font-family: 'Songti SC', 'Songti SC', serif;
+  font-family: var(--ui-serif);
   font-size: 19px;
   letter-spacing: .1em;
 }
@@ -208,7 +208,7 @@
 .victory-flavor {
   margin: .55rem 0 0;
   color: oklch(62% .03 250);
-  font-size: 13px;
+  font-size: var(--font-button);
   line-height: 1.6;
 }
 
@@ -237,22 +237,22 @@
 
 .victory-dim span {
   color: oklch(62% .03 76);
-  font-size: 10px;
+  font-size: var(--font-micro);
   font-weight: 700;
   letter-spacing: .05em;
 }
 
 .victory-dim strong {
   color: oklch(72% .04 250);
-  font-family: ui-monospace, monospace;
-  font-size: 12px;
+  font-family: var(--ui-mono);
+  font-size: var(--font-note);
   font-weight: 600;
 }
 
 .victory-dim b {
   color: oklch(78% .06 76);
-  font-family: ui-monospace, monospace;
-  font-size: 20px;
+  font-family: var(--ui-mono);
+  font-size: var(--font-data-lg);
 }
 
 .victory-footer {

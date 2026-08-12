@@ -1,4 +1,4 @@
-﻿
+
 .trade-offer-list button {
   border: 1px solid var(--ui-brass-dark);
   border-radius: 4px;
@@ -264,9 +264,9 @@
 /* Impeccable color system v2: warm lunar console, restrained product UI. */
 :root {
   color-scheme: light;
-  --ui-font: 'PingFang SC', 'Microsoft YaHei UI', 'Segoe UI', system-ui, sans-serif;
-  --ui-serif: 'Songti SC', 'Source Han Serif SC', 'Songti SC', serif;
-  --ui-mono: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --ui-font: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --ui-serif: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', serif;
+  --ui-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
   --ui-shell: oklch(92% .018 86);
   --ui-shell-2: oklch(88% .018 84);
   --ui-surface: oklch(97% .01 86);
@@ -293,17 +293,19 @@
   --ui-shadow: oklch(35% .028 250 / .11);
   --ui-shadow-strong: oklch(21% .025 250 / .26);
   --font-micro: 10px;
-  --font-label: 11px;
+  --font-caption: 12px;
+  --font-label: 12px;
   --font-note: 12px;
-  --font-button: 13px;
-  --font-body: 14px;
-  --font-data: 15px;
-  --font-card: 16px;
-  --font-panel: 18px;
-  --font-data-lg: 20px;
-  --font-page: 24px;
-  --font-data-xl: 28px;
-  --font-display: 36px;
+  --font-button: 14px;
+  --font-body: 16px;
+  --font-data: 16px;
+  --font-card: 18px;
+  --font-panel: 20px;
+  --font-data-lg: 24px;
+  --font-page: 32px;
+  --font-data-xl: 32px;
+  --font-display: 40px;
+  --font-hero: 56px;
 }
 
 body {
