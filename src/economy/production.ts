@@ -2,6 +2,7 @@ import { baseConstructionDays, getConstructionCostDiscount, getUpgradeCostScale,
 import { facilityEconomySpecs, facilityOrder, shipProjectStages } from './facilities'
 import { applyTechnologyToMethod, canUseProductionMethod, estimateTechnologyResearchCost, hasRequiredFacilityTech, selectProductionMethod } from './technologies'
 import { emptyResources, resourceOrder, weightedValue, type ResourceFlow } from './resources'
+import { difficultyConfigs, type Difficulty } from './difficulty'
 import type { AnnualContext, FacilityEconomySpec, FacilityId, FacilityModifiers, ProductionMethodId, Resources, TechnologySpec } from './types'
 export const shipProjectTotalValue = shipProjectStages.reduce((sum, stage) => sum + weightedValue(stage.input), 0)
 
@@ -58,12 +59,13 @@ export function projectFacilityNet(
   return net
 }
 
-export function projectFacilityCost(spec: FacilityEconomySpec, level: number, techs: string[] = []): Partial<Resources> {
+export function projectFacilityCost(spec: FacilityEconomySpec, level: number, techs: string[] = [], difficulty: Difficulty = 'normal'): Partial<Resources> {
   const nextLevel = Math.max(1, level + 1)
   const cost: Partial<Resources> = {}
-  // 后期线性加重：L11+ 升级成本 1.5x，使高等级升级更昂贵
-  const levelTier = nextLevel > 10 ? 1.5 : 1.0
-  const multiplier = getUpgradeCostScale(spec.id) * nextLevel * levelTier * getConstructionCostDiscount(techs)
+  // 分段线性：前期折扣（L1-5: 0.8x），中期基准（L6-10: 1x），后期加价（L11+: 1.5x）
+  const levelTier = nextLevel <= 5 ? 0.8 : nextLevel <= 10 ? 1.0 : 1.5
+  const difficultyMult = difficultyConfigs[difficulty].costScaleMultiplier
+  const multiplier = getUpgradeCostScale(spec.id) * nextLevel * levelTier * difficultyMult * getConstructionCostDiscount(techs)
   resourceOrder.forEach(key => {
     const base = spec.baseUpgradeCost[key] ?? 0
     if (!base) return

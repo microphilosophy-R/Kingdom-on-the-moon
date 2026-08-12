@@ -2,6 +2,7 @@ import { getFacilityWorkCapacity, getHousingCapacity, isFixedFacility, isHousing
 import { facilityEconomySpecs, facilityOrder } from './facilities'
 import { canAfford, applyBundle, defaultReserveFloors, emptyResources, resourceMeta, resourceOrder, resourceWeights, weightedValue } from './resources'
 import { canBuildFacility, canUseProductionMethod, estimateTechnologyValue, hasTech, hasTechnologyPrerequisites, selectProductionMethod, technologyCatalog } from './technologies'
+import { difficultyConfigs, type Difficulty } from './difficulty'
 import { estimateResourceDeficitPremium, estimateTradePremium, planAutoTradesForCost, resourceDebtLimits } from './trade'
 import { projectFacilityCost, projectFacilityNet, projectTechnologyCost } from './production'
 import { eventChains, getCurrentGameEra } from '../events'
@@ -63,7 +64,7 @@ const projectSinkGain = (
   if (id === 'D' && currentLevel >= 6) return 0
   const targets = projectSinkTargets(id, reserveFloors)
   const consumedMaterialKeys = resourceOrder.filter(key => {
-    if (key === 'power' || key === 'population' || key === 'quantumCore' || key === 'currency' || key === 'knowledge' || key === 'luxury') return false
+    if (key === 'power' || key === 'population' || key === 'currency' || key === 'knowledge' || key === 'luxury') return false
     return (deltaNet[key] ?? 0) < 0
   })
   const hasSafeStocksForAllInputs = consumedMaterialKeys.every(key => {
@@ -73,7 +74,7 @@ const projectSinkGain = (
   if (!hasSafeStocksForAllInputs) return 0
 
   const materialPressures = resourceOrder.map(key => {
-    if (key === 'power' || key === 'population' || key === 'quantumCore' || key === 'currency' || key === 'knowledge' || key === 'luxury') return 0
+    if (key === 'power' || key === 'population' || key === 'currency' || key === 'knowledge' || key === 'luxury') return 0
     const target = targets[key] ?? 0
     if (!target) return 0
     return Math.min(1, Math.max(0, (resources[key] - target) / target))
@@ -105,6 +106,7 @@ export type PlanInput = {
   productionMethods?: Partial<Record<FacilityId, ProductionMethodId>>
   year?: number
   capitalHorizonYears?: number
+  difficulty?: Difficulty
   /** 启用后优化器按 defaultAction 自动处理事件 */
   autoEventsEnabled?: boolean
   /** 事件链进度 */
@@ -188,6 +190,24 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     return Math.min(24, materialSurplus / 1200)
   }
 
+  // 后期判断：年份过半 + 人口接近容量 + 核心建筑等级高 → 转向胜利目标
+  const isLateGame = () => {
+    if (year < 600) return false
+    const popRatio = input.resources.population / Math.max(1, input.population?.capacity ?? 1)
+    if (popRatio < 0.5) return false
+    const coreFacilities = ['E1', 'C1', 'K', 'B', 'F', 'L'] as FacilityId[]
+    const avgCoreLevel = coreFacilities.reduce((sum, id) => sum + (stateById[id]?.level ?? 0), 0) / coreFacilities.length
+    return avgCoreLevel >= 8
+  }
+
+  // 后期星舰战略加成：殖民地已稳固，全力推进御座号
+  const lateGameVictoryBonus = (id: FacilityId) => {
+    if (!isLateGame()) return 0
+    if (id === 'D') return 40 + overstockTechnologyBonus() * 3
+    if (id === 'L' && (stateById.D?.level ?? 0) > 0) return 5 // D已建，继续支持quantumCore生产
+    return 0
+  }
+
   const deficitPremium = (resources: Resources) =>
     estimateResourceDeficitPremium(resources, reserveFloors, Object.values(stateById), workingTechs, weights)
 
@@ -265,7 +285,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     const deficitPremiumDelta = Math.max(immediateDeficitPremium, nextDeficitPremium) - currentDeficitPremium
     const deficitRelief = Math.max(0, currentDeficitPremium - Math.min(immediateDeficitPremium, nextDeficitPremium))
     const weightedCost = (weightedValue(cost, weights) + tradePremium) / horizon + Math.max(0, deficitPremiumDelta)
-    let score = weightedGain - weightedCost + spec.priority * 0.45 + strategicBonus
+    let score = weightedGain - weightedCost + spec.priority * 0.45 + strategicBonus + lateGameVictoryBonus(id)
     score += deficitRelief * 0.35
     if (housingCapacityPressure) score = Math.max(score, 6 + spec.priority * 0.45)
     if (!Number.isFinite(score)) return null
@@ -349,9 +369,14 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
       const forwardDeficit = deficitPremium(forwardProjection)
       const deficitDelta = Math.max(0, Math.max(immediateDeficit, forwardDeficit * 0.6) - currentDeficit)
 
+      // 后期星舰驱动：若方法产出 quantumCore 且殖民地进入后期，强力加分
+      const victoryPressure = isLateGame() && (net.quantumCore ?? 0) > 0
+        ? (net.quantumCore ?? 0) * weights.quantumCore * 6
+        : 0
+
       return {
         method,
-        score: baseValue + shortageWeight - deficitDelta * 2,
+        score: baseValue + shortageWeight - deficitDelta * 2 + victoryPressure,
         net,
       }
     })

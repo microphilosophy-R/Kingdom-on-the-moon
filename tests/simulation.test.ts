@@ -86,10 +86,10 @@ const initialResources: Resources = {
   water: 12,
   oxygen: 14,
   biomass: 10,
-  regolith: 22,
-  alloy: 14,
+  regolith: 40,
+  alloy: 30,
   quantumCore: 2,
-  currency: 10,
+  currency: 20,
   population: 8,
   knowledge: 0,
   luxury: 0,
@@ -448,12 +448,15 @@ function writeSimulationReport(result: SimulationResult, runIndex: number) {
   const outputDir = resolve(process.cwd(), 'test-results', 'simulation')
   mkdirSync(outputDir, { recursive: true })
 
-  // 轮转：仅保留最近 10 次历史记录
-  const existing = readdirSync(outputDir).filter(name => /^run-\d{3}\.json$/.test(name)).sort()
-  while (existing.length >= 10) {
-    const oldest = existing.shift()!
-    unlinkSync(join(outputDir, oldest))
+  // 轮转：仅保留最近 10 次历史记录（json + md）
+  const rotate = (ext: string) => {
+    const files = readdirSync(outputDir).filter(name => new RegExp(`^run-\\d{3}\\.${ext}$`).test(name)).sort()
+    while (files.length >= 10) {
+      unlinkSync(join(outputDir, files.shift()!))
+    }
   }
+  rotate('json')
+  rotate('md')
 
   const padded = String(runIndex).padStart(3, '0')
   const jsonPath = resolve(outputDir, `run-${padded}.json`)
