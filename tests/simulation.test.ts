@@ -94,7 +94,7 @@ const initialResources: Resources = {
   regolith: 80,
   alloy: 60,
   quantumCore: 2,
-  currency: 100,
+  currency: 5000,
   population: 10,
   knowledge: 0,
   luxury: 0,

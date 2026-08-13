@@ -217,6 +217,81 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   const deficitPremium = (resources: Resources) =>
     estimateResourceDeficitPremium(resources, reserveFloors, Object.values(stateById), workingTechs, weights)
 
+  // 以“当前总人口”为唯一约束的人力投影：人口可随时重分配，按每岗净值 + 赤字溢价
+  // 贪心分配全部人口，返回候选设施在目标等级下实际能分到多少在岗人口。
+  const projectStaffing = (candidateId: FacilityId, candidateLevel: number): number => {
+    const projectionLevels = Object.fromEntries(
+      facilityOrder.map(fid => [fid, fid === candidateId ? candidateLevel : (stateById[fid]?.level ?? 0)]),
+    ) as Record<FacilityId, number>
+
+    type RatedFacility = { id: FacilityId; capacity: number; perJobNet: Partial<Resources>; score: number }
+    const rated: RatedFacility[] = []
+    const totalNet = emptyResources()
+
+    facilityOrder.forEach(fid => {
+      const facilitySpec = facilityEconomySpecs[fid]
+      if (isHousingFacility(fid) || isFixedFacility(fid)) return
+      const level = projectionLevels[fid] ?? 0
+      const capacity = getFacilityWorkCapacity(fid, level)
+      if (capacity <= 0) return
+      const method = selectProductionMethod(facilitySpec.productionMethods, workingTechs, workingMethods[fid])
+      const perJobNet = projectFacilityNet(facilitySpec, 1, input.modifiers?.[fid], workingTechs, method.id, level)
+      rated.push({ id: fid, capacity, perJobNet, score: 0 })
+      const assigned = Math.min(capacity, input.staffing?.[fid] ?? 0)
+      if (assigned > 0) {
+        resourceOrder.forEach(key => {
+          totalNet[key] += (perJobNet[key] ?? 0) * assigned
+        })
+      }
+    })
+
+    const deficitWeights: Partial<Resources> = {}
+    resourceOrder.forEach(key => {
+      if (key === 'population' || key === 'knowledge' || key === 'luxury') return
+      const floor = reserveFloors[key] ?? 0
+      const stock = workingResources[key] ?? 0
+      const net = totalNet[key] ?? 0
+      let weight = 0
+      if (key === 'power') {
+        if (net < 0) weight = Math.min(3, 1 + Math.abs(net) / Math.max(1, floor))
+      } else {
+        if (stock < floor) {
+          weight = Math.min(3, 1 + (floor - stock) / Math.max(1, floor))
+        } else if (net < 0) {
+          const daysToFloor = (stock - floor) / Math.abs(net)
+          if (daysToFloor < 10) weight = Math.max(0.2, 1 - daysToFloor / 10)
+        }
+      }
+      if (weight > 0) deficitWeights[key] = weight
+    })
+
+    // 电力不可存储：净电力盈余时，边际电力价值按 0 计，避免为多余电力浪费人力。
+    const powerSurplus = (totalNet.power ?? 0) >= 0
+    rated.forEach(item => {
+      let score = 0
+      resourceOrder.forEach(key => {
+        const baseWeight = key === 'power' && powerSurplus ? 0 : resourceWeights[key]
+        score += (item.perJobNet[key] ?? 0) * baseWeight
+      })
+      resourceOrder.forEach(key => {
+        const weight = deficitWeights[key] ?? 0
+        if (weight > 0) score += (item.perJobNet[key] ?? 0) * resourceWeights[key] * weight
+      })
+      item.score = score
+    })
+
+    rated.sort((a, b) => b.score - a.score)
+
+    let workers = Math.max(0, Math.floor(workingResources.population ?? 0))
+    let result = 0
+    for (const item of rated) {
+      const take = Math.min(item.capacity, workers)
+      if (item.id === candidateId) result = take
+      workers -= take
+    }
+    return result
+  }
+
   const evaluate = (id: FacilityId) => {
     const current = stateById[id]
     const spec = facilityEconomySpecs[id]
@@ -247,8 +322,17 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
 
     const modifiers = input.modifiers?.[id] ?? {}
     const evaluationTechs = requiredTech ? [...workingTechs, `${requiredTech.id} ${requiredTech.name}`] : workingTechs
-    const presentAssigned = isHousingFacility(id) ? 0 : getFacilityWorkCapacity(id, current.level)
-    const upgradedAssigned = isHousingFacility(id) ? 0 : getFacilityWorkCapacity(id, current.level + 1)
+    // 扩建收益按“当前总人口”约束下的人力投影计算：人口可随时重分配，
+    // 候选设施能分到多少在岗人口由 projectStaffing 贪心分配决定，而非满员容量。
+    let presentAssigned = 0
+    let upgradedAssigned = 0
+    if (isHousingFacility(id)) {
+      presentAssigned = 0
+      upgradedAssigned = 0
+    } else {
+      presentAssigned = Math.min(getFacilityWorkCapacity(id, current.level), input.staffing?.[id] ?? 0)
+      upgradedAssigned = projectStaffing(id, current.level + 1)
+    }
     const presentNet = projectFacilityNet(spec, presentAssigned, modifiers, evaluationTechs, input.productionMethods?.[id], current.level)
     const upgradedNet = projectFacilityNet(spec, upgradedAssigned, modifiers, evaluationTechs, input.productionMethods?.[id], current.level + 1)
     let strategicBonus = requiredTech ? overstockTechnologyBonus() : 0
@@ -291,9 +375,9 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     const deficitPremiumDelta = Math.max(immediateDeficitPremium, nextDeficitPremium) - currentDeficitPremium
     const deficitRelief = Math.max(0, currentDeficitPremium - Math.min(immediateDeficitPremium, nextDeficitPremium))
     const weightedCost = (weightedValue(cost, weights) + tradePremium) / horizon + Math.max(0, deficitPremiumDelta)
-    let score = weightedGain - weightedCost + spec.priority * 0.45 + strategicBonus + lateGameVictoryBonus(id)
+    let score = weightedGain - weightedCost + spec.priority * 0.01 + strategicBonus + lateGameVictoryBonus(id)
     score += deficitRelief * 1.5
-    if (housingCapacityPressure) score = Math.max(score, 6 + spec.priority * 0.45)
+    if (housingCapacityPressure) score = Math.max(score, 6)
     if (!Number.isFinite(score)) return null
 
     return {
@@ -495,43 +579,9 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     }
   }
 
-  // 人力分配：将自由人口分配到空置岗位，按加权产出排序
+  // 人力分配已由 rebalanceStaffing 在每日循环中统一执行（人口可重分配），
+  // 优化器不再做“空余人口自动分配”这种低级补位。
   const staffingActions: StaffingAction[] = []
-  const totalStaffed = facilityOrder.reduce((sum, id) => sum + (input.staffing?.[id] ?? 0), 0)
-  let freePopulation = Math.max(0, Math.floor((input.resources?.population ?? 0) - totalStaffed))
-
-  if (freePopulation > 0) {
-    // 按当前边际产出排序：优先填最高价值空缺
-    const facilityMargins = facilityOrder
-      .filter(id => !isHousingFacility(id) && !isFixedFacility(id))
-      .map(id => {
-        const capacity = getFacilityWorkCapacity(id, stateById[id]?.level ?? 0)
-        const current = input.staffing?.[id] ?? 0
-        const deficit = capacity - current
-        if (deficit <= 0) return null
-        const spec = facilityEconomySpecs[id]
-        const method = selectProductionMethod(spec.productionMethods, workingTechs, workingMethods[id])
-        const modifiers = input.modifiers?.[id] ?? {}
-        const addition = projectFacilityNet(spec, Math.min(capacity, current + 1), modifiers, workingTechs, method.id, stateById[id]?.level ?? 1)
-        const base = projectFacilityNet(spec, current, modifiers, workingTechs, method.id, stateById[id]?.level ?? 1)
-        const margin = weightedValue(addition, weights) - weightedValue(base, weights)
-        return { id, current, capacity, deficit, margin }
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null)
-      .sort((a, b) => b.margin - a.margin)
-
-    facilityMargins.forEach(item => {
-      if (freePopulation <= 0) return
-      const assign = Math.min(freePopulation, item.deficit)
-      staffingActions.push({
-        facilityId: item.id,
-        fromStaff: item.current,
-        toStaff: item.current + assign,
-        score: item.margin,
-      })
-      freePopulation -= assign
-    })
-  }
 
   return {
     mode: 'auto' as const,
@@ -705,8 +755,14 @@ export function rebalanceStaffing(
     if (weight > 0) deficitWeights[key] = weight
   })
 
+  // 电力不可存储：净电力盈余时，边际电力价值按 0 计，避免为多余电力浪费人力。
+  const powerSurplus = (totalNet.power ?? 0) >= 0
   rated.forEach(item => {
-    let score = weightedValue(item.perJobNet, resourceWeights)
+    let score = 0
+    resourceOrder.forEach(key => {
+      const baseWeight = key === 'power' && powerSurplus ? 0 : resourceWeights[key]
+      score += (item.perJobNet[key] ?? 0) * baseWeight
+    })
     resourceOrder.forEach(key => {
       const weight = deficitWeights[key] ?? 0
       if (weight > 0) score += (item.perJobNet[key] ?? 0) * resourceWeights[key] * weight
