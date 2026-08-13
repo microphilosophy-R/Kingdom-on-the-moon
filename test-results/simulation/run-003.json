@@ -19,7 +19,7 @@
         "regolith": 80,
         "alloy": 60,
         "quantumCore": 2,
-        "currency": 5000,
+        "currency": 1000,
         "population": 10,
         "knowledge": 0,
         "luxury": 0
@@ -97,69 +97,69 @@
     {
       "day": 50,
       "resources": {
-        "power": -23.11,
-        "water": 9.11,
-        "oxygen": 80.25,
-        "biomass": 16.83,
-        "regolith": 85.04,
-        "alloy": 13.74,
+        "power": 60.39,
+        "water": 0.87,
+        "oxygen": 17.11,
+        "biomass": 15.3,
+        "regolith": 15.72,
+        "alloy": 31.84,
         "quantumCore": 2,
-        "currency": 48.1,
-        "population": 19.54,
-        "knowledge": 9.68,
+        "currency": 60.01,
+        "population": 16.81,
+        "knowledge": 31,
         "luxury": 0
       },
       "dailyNet": {
-        "power": -23.11,
-        "water": 8.2,
-        "oxygen": -4.58,
-        "biomass": -5.5,
-        "regolith": 31.27,
-        "alloy": 12.3,
+        "power": 60.39,
+        "water": -1.87,
+        "oxygen": 5.14,
+        "biomass": 3.4,
+        "regolith": -3.2,
+        "alloy": 4.8,
         "quantumCore": 0,
-        "currency": 22.8,
-        "population": 0.28,
+        "currency": 6.7,
+        "population": 0.2,
         "knowledge": 0,
         "luxury": 0
       },
       "population": {
-        "total": 19.54,
-        "capacity": 72,
-        "availableCapacity": 52.46,
-        "net": 0.31,
-        "growthPotential": 0.31,
+        "total": 16.81,
+        "capacity": 48,
+        "availableCapacity": 31.19,
+        "net": 0.2,
+        "growthPotential": 0.2,
         "lifeSupportRatio": 1,
         "pressureDays": 0,
         "status": "stable"
       },
       "levels": {
-        "E1": 2,
-        "C1": 3,
+        "E1": 3,
+        "C1": 1,
         "K": 4,
         "B": 1,
         "E2": 1,
         "C2": 1,
         "F": 1,
-        "P": 2,
-        "R": 1,
-        "L": 2,
+        "P": 1,
+        "R": 0,
+        "L": 1,
         "H": 1,
-        "M": 1,
+        "M": 0,
         "S": 1,
         "E3": 0,
         "D": 0
       },
       "staffing": {
-        "E1": 8,
-        "C1": 0,
+        "E1": 0,
+        "C1": 4,
         "K": 0,
         "B": 0,
-        "E2": 4,
-        "C2": 0,
-        "F": 0,
-        "P": 7,
+        "E2": 0,
+        "C2": 4,
+        "F": 4,
+        "P": 0,
         "R": 0,
-        "L": 0,
+        "L": 4,
         "H": 0,
         "M": 0,
         "S": 0,
@@ -167,29 +167,19 @@
         "D": 0
       },
       "construction": {
-        "E1": {
-          "startedDay": 47,
-          "completeDay": 67,
-          "fromLevel": 2,
-          "toLevel": 3,
-          "cost": {
-            "regolith": 38.64,
-            "alloy": 19.32
-          }
-        },
         "C1": {
-          "startedDay": 48,
-          "completeDay": 68,
-          "fromLevel": 3,
-          "toLevel": 4,
+          "startedDay": 31,
+          "completeDay": 51,
+          "fromLevel": 1,
+          "toLevel": 2,
           "cost": {
-            "regolith": 51.52,
-            "alloy": 25.76
+            "regolith": 25.76,
+            "alloy": 12.88
           }
         },
         "E2": {
-          "startedDay": 35,
-          "completeDay": 55,
+          "startedDay": 46,
+          "completeDay": 66,
           "fromLevel": 1,
           "toLevel": 2,
           "cost": {
@@ -199,8 +189,8 @@
           }
         },
         "C2": {
-          "startedDay": 44,
-          "completeDay": 64,
+          "startedDay": 36,
+          "completeDay": 56,
           "fromLevel": 1,
           "toLevel": 2,
           "cost": {
@@ -209,8 +199,8 @@
           }
         },
         "F": {
-          "startedDay": 40,
-          "completeDay": 60,
+          "startedDay": 41,
+          "completeDay": 61,
           "fromLevel": 1,
           "toLevel": 2,
           "cost": {
@@ -221,13 +211,13 @@
         }
       },
       "cumulative": {
-        "started": 20,
-        "completed": 15,
+        "started": 14,
+        "completed": 10,
         "skippedForCost": 0,
-        "maxPopulation": 19.537000000000017,
-        "minWater": 0.11999999999999966,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": 0.0799999999999983,
+        "maxPopulation": 16.808500000000013,
+        "minWater": 0.3199999999999905,
+        "minOxygen": 0,
+        "minBiomass": 0,
         "capacityFullDays": 0,
         "strainedDays": 0
       }
@@ -235,67 +225,67 @@
     {
       "day": 100,
       "resources": {
-        "power": -48.19,
-        "water": 7.25,
-        "oxygen": 395.2,
-        "biomass": 7.79,
-        "regolith": 156.35,
-        "alloy": 15.86,
+        "power": 159.26,
+        "water": 6.35,
+        "oxygen": 130.93,
+        "biomass": 22.98,
+        "regolith": 42.52,
+        "alloy": 27.04,
         "quantumCore": 2,
-        "currency": 7.3,
-        "population": 35.76,
-        "knowledge": 14.19,
+        "currency": 116.22,
+        "population": 27.49,
+        "knowledge": 6,
         "luxury": 0
       },
       "dailyNet": {
-        "power": -48.19,
-        "water": 17.47,
-        "oxygen": -12.76,
-        "biomass": -12.19,
-        "regolith": 81.57,
-        "alloy": 22.95,
+        "power": 159.26,
+        "water": -24.02,
+        "oxygen": 21.83,
+        "biomass": 9.7,
+        "regolith": -20.38,
+        "alloy": 0,
         "quantumCore": 0,
-        "currency": 46.4,
-        "population": 0.36,
+        "currency": 43.2,
+        "population": 0.26,
         "knowledge": 0,
         "luxury": 0
       },
       "population": {
-        "total": 35.76,
-        "capacity": 88,
-        "availableCapacity": 52.24,
-        "net": 0.36,
-        "growthPotential": 0.36,
+        "total": 27.49,
+        "capacity": 64,
+        "availableCapacity": 36.51,
+        "net": 0.26,
+        "growthPotential": 0.26,
         "lifeSupportRatio": 1,
         "pressureDays": 0,
         "status": "stable"
       },
       "levels": {
         "E1": 4,
-        "C1": 5,
+        "C1": 4,
         "K": 6,
         "B": 2,
         "E2": 2,
         "C2": 3,
-        "F": 3,
+        "F": 2,
         "P": 2,
-        "R": 1,
-        "L": 2,
+        "R": 0,
+        "L": 1,
         "H": 1,
-        "M": 1,
+        "M": 0,
         "S": 1,
         "E3": 0,
         "D": 0
       },
       "staffing": {
-        "E1": 11,
-        "C1": 0,
+        "E1": 0,
+        "C1": 15,
         "K": 0,
-        "B": 8,
-        "E2": 8,
-        "C2": 0,
+        "B": 0,
+        "E2": 0,
+        "C2": 12,
         "F": 0,
-        "P": 8,
+        "P": 0,
         "R": 0,
         "L": 0,
         "H": 0,
@@ -306,8 +296,8 @@
       },
       "construction": {
         "E1": {
-          "startedDay": 89,
-          "completeDay": 109,
+          "startedDay": 84,
+          "completeDay": 104,
           "fromLevel": 4,
           "toLevel": 5,
           "cost": {
@@ -316,28 +306,18 @@
           }
         },
         "C1": {
-          "startedDay": 92,
-          "completeDay": 112,
-          "fromLevel": 5,
-          "toLevel": 6,
+          "startedDay": 93,
+          "completeDay": 113,
+          "fromLevel": 4,
+          "toLevel": 5,
           "cost": {
-            "regolith": 96.6,
-            "alloy": 48.3
-          }
-        },
-        "K": {
-          "startedDay": 96,
-          "completeDay": 116,
-          "fromLevel": 6,
-          "toLevel": 7,
-          "cost": {
-            "regolith": 72.44999999999999,
-            "alloy": 48.3
+            "regolith": 64.39999999999999,
+            "alloy": 32.199999999999996
           }
         },
         "E2": {
-          "startedDay": 81,
-          "completeDay": 101,
+          "startedDay": 98,
+          "completeDay": 118,
           "fromLevel": 2,
           "toLevel": 3,
           "cost": {
@@ -346,47 +326,26 @@
             "currency": 38.64
           }
         },
-        "C2": {
-          "startedDay": 86,
-          "completeDay": 106,
-          "fromLevel": 3,
-          "toLevel": 4,
-          "cost": {
-            "alloy": 77.28,
-            "currency": 77.28
-          }
-        },
         "F": {
-          "startedDay": 90,
-          "completeDay": 110,
-          "fromLevel": 3,
-          "toLevel": 4,
-          "cost": {
-            "regolith": 103.04,
-            "alloy": 77.28,
-            "currency": 51.52
-          }
-        },
-        "P": {
-          "startedDay": 100,
-          "completeDay": 120,
+          "startedDay": 89,
+          "completeDay": 109,
           "fromLevel": 2,
           "toLevel": 3,
           "cost": {
-            "water": 77.28,
-            "regolith": 57.96,
-            "alloy": 38.64
+            "regolith": 77.28,
+            "alloy": 57.96,
+            "currency": 38.64
           }
         }
       },
       "cumulative": {
-        "started": 34,
-        "completed": 27,
+        "started": 26,
+        "completed": 22,
         "skippedForCost": 0,
-        "maxPopulation": 35.755,
-        "minWater": 0.02279999999994331,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": 0.0799999999999983,
+        "maxPopulation": 27.493000000000066,
+        "minWater": -1.4256000000000562,
+        "minOxygen": 0,
+        "minBiomass": 0,
         "capacityFullDays": 0,
         "strainedDays": 0
       }
@@ -394,50 +353,337 @@
     {
       "day": 150,
       "resources": {
-        "power": -82.44,
-        "water": 26.26,
-        "oxygen": 490.75,
-        "biomass": 7.19,
-        "regolith": 241.42,
-        "alloy": 206.36,
+        "power": 254.78,
+        "water": 8.62,
+        "oxygen": 428.92,
+        "biomass": 31.34,
+        "regolith": 96.49,
+        "alloy": 33.19,
         "quantumCore": 2,
-        "currency": 155.8,
-        "population": 54.91,
-        "knowledge": 14.19,
+        "currency": 216.44,
+        "population": 41.16,
+        "knowledge": 6,
         "luxury": 0
       },
       "dailyNet": {
-        "power": -82.44,
-        "water": 25.94,
-        "oxygen": -22.1,
-        "biomass": -20.16,
-        "regolith": 129.44,
-        "alloy": 45.12,
+        "power": 254.78,
+        "water": -37.02,
+        "oxygen": 35.6,
+        "biomass": 15.4,
+        "regolith": -32.35,
+        "alloy": 0,
         "quantumCore": 0,
-        "currency": 76.8,
-        "population": 0.54,
+        "currency": 64,
+        "population": 0.31,
         "knowledge": 0,
         "luxury": 0
       },
       "population": {
-        "total": 54.91,
-        "capacity": 136,
-        "availableCapacity": 81.09,
-        "net": 0.54,
-        "growthPotential": 0.54,
+        "total": 41.16,
+        "capacity": 80,
+        "availableCapacity": 38.84,
+        "net": 0.31,
+        "growthPotential": 0.31,
+        "lifeSupportRatio": 1,
+        "pressureDays": 0,
+        "status": "stable"
+      },
+      "levels": {
+        "E1": 6,
+        "C1": 6,
+        "K": 8,
+        "B": 3,
+        "E2": 3,
+        "C2": 4,
+        "F": 3,
+        "P": 3,
+        "R": 0,
+        "L": 1,
+        "H": 1,
+        "M": 0,
+        "S": 1,
+        "E3": 0,
+        "D": 0
+      },
+      "staffing": {
+        "E1": 0,
+        "C1": 24,
+        "K": 0,
+        "B": 0,
+        "E2": 0,
+        "C2": 16,
+        "F": 1,
+        "P": 0,
+        "R": 0,
+        "L": 0,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 0,
+        "D": 0
+      },
+      "construction": {
+        "C1": {
+          "startedDay": 135,
+          "completeDay": 155,
+          "fromLevel": 6,
+          "toLevel": 7,
+          "cost": {
+            "regolith": 112.69999999999999,
+            "alloy": 56.349999999999994
+          }
+        },
+        "K": {
+          "startedDay": 143,
+          "completeDay": 163,
+          "fromLevel": 8,
+          "toLevel": 9,
+          "cost": {
+            "regolith": 93.14999999999999,
+            "alloy": 62.099999999999994
+          }
+        },
+        "E2": {
+          "startedDay": 148,
+          "completeDay": 168,
+          "fromLevel": 3,
+          "toLevel": 4,
+          "cost": {
+            "regolith": 77.28,
+            "alloy": 77.28,
+            "currency": 51.52
+          }
+        },
+        "P": {
+          "startedDay": 139,
+          "completeDay": 159,
+          "fromLevel": 3,
+          "toLevel": 4,
+          "cost": {
+            "water": 103.04,
+            "regolith": 77.28,
+            "alloy": 51.52
+          }
+        },
+        "H": {
+          "startedDay": 131,
+          "completeDay": 151,
+          "fromLevel": 1,
+          "toLevel": 2,
+          "cost": {
+            "biomass": 46,
+            "alloy": 55.199999999999996,
+            "currency": 18.4
+          }
+        }
+      },
+      "cumulative": {
+        "started": 38,
+        "completed": 33,
+        "skippedForCost": 0,
+        "maxPopulation": 41.161000000000115,
+        "minWater": -1.4256000000000562,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 0,
+        "strainedDays": 0
+      }
+    },
+    {
+      "day": 200,
+      "resources": {
+        "power": 400.51,
+        "water": 1.05,
+        "oxygen": 1050.26,
+        "biomass": 31.43,
+        "regolith": 87.09,
+        "alloy": 47.8,
+        "quantumCore": 2,
+        "currency": 497.75,
+        "population": 60.77,
+        "knowledge": 6,
+        "luxury": 0
+      },
+      "dailyNet": {
+        "power": 400.51,
+        "water": -59.03,
+        "oxygen": 61.07,
+        "biomass": 19.8,
+        "regolith": -45.5,
+        "alloy": 0,
+        "quantumCore": 0,
+        "currency": 96,
+        "population": 0.42,
+        "knowledge": 0,
+        "luxury": 0
+      },
+      "population": {
+        "total": 60.77,
+        "capacity": 112,
+        "availableCapacity": 51.23,
+        "net": 0.42,
+        "growthPotential": 0.42,
         "lifeSupportRatio": 1,
         "pressureDays": 0,
         "status": "stable"
       },
       "levels": {
         "E1": 7,
-        "C1": 7,
-        "K": 8,
+        "C1": 9,
+        "K": 10,
         "B": 3,
-        "E2": 5,
+        "E2": 4,
         "C2": 5,
         "F": 5,
-        "P": 3,
+        "P": 4,
+        "R": 1,
+        "L": 1,
+        "H": 2,
+        "M": 0,
+        "S": 1,
+        "E3": 0,
+        "D": 0
+      },
+      "staffing": {
+        "E1": 0,
+        "C1": 36,
+        "K": 0,
+        "B": 0,
+        "E2": 0,
+        "C2": 20,
+        "F": 4,
+        "P": 0,
+        "R": 0,
+        "L": 0,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 0,
+        "D": 0
+      },
+      "construction": {
+        "E1": {
+          "startedDay": 192,
+          "completeDay": 212,
+          "fromLevel": 7,
+          "toLevel": 8,
+          "cost": {
+            "regolith": 128.79999999999998,
+            "alloy": 64.39999999999999
+          }
+        },
+        "C1": {
+          "startedDay": 197,
+          "completeDay": 217,
+          "fromLevel": 9,
+          "toLevel": 10,
+          "cost": {
+            "regolith": 161,
+            "alloy": 80.5
+          }
+        },
+        "K": {
+          "startedDay": 185,
+          "completeDay": 205,
+          "fromLevel": 10,
+          "toLevel": 11,
+          "cost": {
+            "regolith": 170.77499999999998,
+            "alloy": 113.85
+          }
+        },
+        "E2": {
+          "startedDay": 190,
+          "completeDay": 210,
+          "fromLevel": 4,
+          "toLevel": 5,
+          "cost": {
+            "regolith": 96.6,
+            "alloy": 96.6,
+            "currency": 64.39999999999999
+          }
+        },
+        "L": {
+          "startedDay": 196,
+          "completeDay": 216,
+          "fromLevel": 1,
+          "toLevel": 2,
+          "cost": {
+            "alloy": 77.28,
+            "currency": 77.28
+          }
+        },
+        "H": {
+          "startedDay": 181,
+          "completeDay": 201,
+          "fromLevel": 2,
+          "toLevel": 3,
+          "cost": {
+            "biomass": 69,
+            "alloy": 82.8,
+            "currency": 27.599999999999998
+          }
+        }
+      },
+      "cumulative": {
+        "started": 52,
+        "completed": 46,
+        "skippedForCost": 0,
+        "maxPopulation": 60.770500000000155,
+        "minWater": -1.4256000000000562,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 0,
+        "strainedDays": 0
+      }
+    },
+    {
+      "day": 250,
+      "resources": {
+        "power": 637.54,
+        "water": 0.97,
+        "oxygen": 2307.79,
+        "biomass": 51.38,
+        "regolith": 12.05,
+        "alloy": 44.75,
+        "quantumCore": 2,
+        "currency": 200.31,
+        "population": 88.63,
+        "knowledge": 6,
+        "luxury": 0
+      },
+      "dailyNet": {
+        "power": 637.54,
+        "water": -79.67,
+        "oxygen": 100.28,
+        "biomass": 32.69,
+        "regolith": -0.36,
+        "alloy": 0,
+        "quantumCore": 0,
+        "currency": -35.19,
+        "population": 0.65,
+        "knowledge": 0,
+        "luxury": 0
+      },
+      "population": {
+        "total": 88.63,
+        "capacity": 168,
+        "availableCapacity": 79.37,
+        "net": 0.65,
+        "growthPotential": 0.65,
+        "lifeSupportRatio": 1,
+        "pressureDays": 0,
+        "status": "stable"
+      },
+      "levels": {
+        "E1": 9,
+        "C1": 11,
+        "K": 12,
+        "B": 3,
+        "E2": 6,
+        "C2": 6,
+        "F": 6,
+        "P": 5,
         "R": 1,
         "L": 2,
         "H": 3,
@@ -447,14 +693,14 @@
         "D": 0
       },
       "staffing": {
-        "E1": 22,
-        "C1": 0,
+        "E1": 0,
+        "C1": 44,
         "K": 0,
         "B": 0,
-        "E2": 20,
-        "C2": 0,
-        "F": 0,
-        "P": 12,
+        "E2": 0,
+        "C2": 24,
+        "F": 20,
+        "P": 0,
         "R": 0,
         "L": 0,
         "H": 0,
@@ -465,199 +711,71 @@
       },
       "construction": {
         "C1": {
-          "startedDay": 140,
-          "completeDay": 160,
-          "fromLevel": 7,
-          "toLevel": 8,
+          "startedDay": 237,
+          "completeDay": 257,
+          "fromLevel": 11,
+          "toLevel": 12,
           "cost": {
-            "regolith": 128.79999999999998,
-            "alloy": 64.39999999999999
+            "regolith": 289.79999999999995,
+            "alloy": 144.89999999999998
           }
         },
         "K": {
-          "startedDay": 138,
-          "completeDay": 158,
-          "fromLevel": 8,
-          "toLevel": 9,
+          "startedDay": 245,
+          "completeDay": 265,
+          "fromLevel": 12,
+          "toLevel": 13,
           "cost": {
-            "regolith": 93.14999999999999,
-            "alloy": 62.099999999999994
+            "regolith": 201.825,
+            "alloy": 134.54999999999998
           }
         },
-        "E2": {
-          "startedDay": 147,
-          "completeDay": 167,
-          "fromLevel": 5,
-          "toLevel": 6,
-          "cost": {
-            "regolith": 144.89999999999998,
-            "alloy": 144.89999999999998,
-            "currency": 96.6
-          }
-        },
-        "C2": {
-          "startedDay": 136,
-          "completeDay": 156,
-          "fromLevel": 5,
-          "toLevel": 6,
-          "cost": {
-            "alloy": 144.89999999999998,
-            "currency": 144.89999999999998
-          }
-        },
-        "F": {
-          "startedDay": 142,
-          "completeDay": 162,
-          "fromLevel": 5,
-          "toLevel": 6,
-          "cost": {
-            "regolith": 193.2,
-            "alloy": 144.89999999999998,
-            "currency": 96.6
-          }
-        },
-        "P": {
-          "startedDay": 133,
-          "completeDay": 153,
+        "B": {
+          "startedDay": 243,
+          "completeDay": 263,
           "fromLevel": 3,
           "toLevel": 4,
           "cost": {
-            "water": 103.04,
+            "water": 77.28,
             "regolith": 77.28,
             "alloy": 51.52
           }
-        }
-      },
-      "cumulative": {
-        "started": 51,
-        "completed": 45,
-        "skippedForCost": 0,
-        "maxPopulation": 54.90549999999996,
-        "minWater": -15.509200000000199,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": 0.06206249999999436,
-        "capacityFullDays": 0,
-        "strainedDays": 4
-      }
-    },
-    {
-      "day": 200,
-      "resources": {
-        "power": -136.85,
-        "water": 19.75,
-        "oxygen": 1333.48,
-        "biomass": 9.56,
-        "regolith": 556.68,
-        "alloy": 47.43,
-        "quantumCore": 2,
-        "currency": 359.83,
-        "population": 80.4,
-        "knowledge": 14.19,
-        "luxury": 0
-      },
-      "dailyNet": {
-        "power": -136.85,
-        "water": 19.41,
-        "oxygen": -28.04,
-        "biomass": -30.32,
-        "regolith": 95.81,
-        "alloy": 123.3,
-        "quantumCore": 0,
-        "currency": 116.8,
-        "population": 0.62,
-        "knowledge": 0,
-        "luxury": 0
-      },
-      "population": {
-        "total": 80.4,
-        "capacity": 160,
-        "availableCapacity": 79.6,
-        "net": 0.62,
-        "growthPotential": 0.62,
-        "lifeSupportRatio": 1,
-        "pressureDays": 0,
-        "status": "stable"
-      },
-      "levels": {
-        "E1": 9,
-        "C1": 10,
-        "K": 11,
-        "B": 5,
-        "E2": 6,
-        "C2": 7,
-        "F": 7,
-        "P": 5,
-        "R": 1,
-        "L": 3,
-        "H": 3,
-        "M": 1,
-        "S": 1,
-        "E3": 0,
-        "D": 0
-      },
-      "staffing": {
-        "E1": 36,
-        "C1": 0,
-        "K": 0,
-        "B": 0,
-        "E2": 24,
-        "C2": 0,
-        "F": 0,
-        "P": 20,
-        "R": 0,
-        "L": 0,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 0,
-        "D": 0
-      },
-      "construction": {
-        "C1": {
-          "startedDay": 200,
-          "completeDay": 220,
-          "fromLevel": 10,
-          "toLevel": 11,
-          "cost": {
-            "regolith": 265.65,
-            "alloy": 132.825
-          }
         },
-        "E2": {
-          "startedDay": 189,
-          "completeDay": 209,
+        "C2": {
+          "startedDay": 231,
+          "completeDay": 251,
           "fromLevel": 6,
           "toLevel": 7,
           "cost": {
-            "regolith": 169.04999999999998,
+            "alloy": 169.04999999999998,
+            "currency": 169.04999999999998
+          }
+        },
+        "F": {
+          "startedDay": 249,
+          "completeDay": 269,
+          "fromLevel": 6,
+          "toLevel": 7,
+          "cost": {
+            "regolith": 225.39999999999998,
             "alloy": 169.04999999999998,
             "currency": 112.69999999999999
           }
         },
-        "C2": {
-          "startedDay": 198,
-          "completeDay": 218,
-          "fromLevel": 7,
-          "toLevel": 8,
+        "R": {
+          "startedDay": 241,
+          "completeDay": 261,
+          "fromLevel": 1,
+          "toLevel": 2,
           "cost": {
-            "alloy": 193.2,
-            "currency": 193.2
-          }
-        },
-        "F": {
-          "startedDay": 194,
-          "completeDay": 214,
-          "fromLevel": 7,
-          "toLevel": 8,
-          "cost": {
-            "regolith": 257.59999999999997,
-            "alloy": 193.2,
-            "currency": 128.79999999999998
+            "water": 103.04,
+            "biomass": 103.04,
+            "alloy": 154.56
           }
         },
         "H": {
-          "startedDay": 184,
-          "completeDay": 204,
+          "startedDay": 235,
+          "completeDay": 255,
           "fromLevel": 3,
           "toLevel": 4,
           "cost": {
@@ -668,81 +786,250 @@
         }
       },
       "cumulative": {
-        "started": 68,
-        "completed": 63,
+        "started": 67,
+        "completed": 60,
         "skippedForCost": 0,
-        "maxPopulation": 80.39699999999993,
-        "minWater": -32.80700000000018,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": 0.06206249999999436,
+        "maxPopulation": 88.62500000000014,
+        "minWater": -12.520900000000509,
+        "minOxygen": 0,
+        "minBiomass": 0,
         "capacityFullDays": 0,
-        "strainedDays": 9
+        "strainedDays": 0
       }
     },
     {
-      "day": 250,
+      "day": 300,
       "resources": {
-        "power": -199.94,
-        "water": 0.43,
-        "oxygen": 2587.69,
-        "biomass": 15.97,
-        "regolith": 456.45,
-        "alloy": 451.59,
+        "power": 756.89,
+        "water": 9.03,
+        "oxygen": 3943.81,
+        "biomass": 63.49,
+        "regolith": 12.43,
+        "alloy": 195.34,
         "quantumCore": 2,
-        "currency": 168.49,
-        "population": 109.35,
-        "knowledge": 14.19,
+        "currency": 195.53,
+        "population": 123.02,
+        "knowledge": 9.46,
         "luxury": 0
       },
       "dailyNet": {
-        "power": -199.94,
-        "water": 91.31,
-        "oxygen": -43.24,
-        "biomass": -42.06,
-        "regolith": 233.33,
-        "alloy": 138.15,
+        "power": 756.89,
+        "water": -113.91,
+        "oxygen": 141.63,
+        "biomass": 43.02,
+        "regolith": -114.61,
+        "alloy": 41.28,
         "quantumCore": 0,
-        "currency": 34.05,
-        "population": 0.81,
+        "currency": 176,
+        "population": 0.94,
         "knowledge": 0,
         "luxury": 0
       },
       "population": {
-        "total": 109.35,
-        "capacity": 208,
-        "availableCapacity": 98.65,
-        "net": 0,
-        "growthPotential": 0.81,
-        "lifeSupportRatio": 0.86,
+        "total": 123.02,
+        "capacity": 240,
+        "availableCapacity": 116.98,
+        "net": 0.94,
+        "growthPotential": 0.94,
+        "lifeSupportRatio": 1,
         "pressureDays": 0,
-        "status": "strained"
+        "status": "stable"
       },
       "levels": {
         "E1": 10,
-        "C1": 12,
-        "K": 13,
-        "B": 6,
-        "E2": 9,
+        "C1": 13,
+        "K": 14,
+        "B": 5,
+        "E2": 8,
         "C2": 9,
-        "F": 9,
+        "F": 8,
         "P": 5,
-        "R": 1,
-        "L": 3,
+        "R": 2,
+        "L": 2,
         "H": 5,
-        "M": 1,
+        "M": 2,
         "S": 1,
         "E3": 0,
         "D": 0
       },
       "staffing": {
         "E1": 0,
-        "C1": 0,
+        "C1": 52,
         "K": 0,
         "B": 0,
-        "E2": 36,
+        "E2": 0,
         "C2": 36,
-        "F": 17,
-        "P": 20,
+        "F": 32,
+        "P": 0,
+        "R": 0,
+        "L": 3,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 0,
+        "D": 0
+      },
+      "construction": {
+        "E1": {
+          "startedDay": 300,
+          "completeDay": 320,
+          "fromLevel": 10,
+          "toLevel": 11,
+          "cost": {
+            "regolith": 265.65,
+            "alloy": 132.825
+          }
+        },
+        "C1": {
+          "startedDay": 285,
+          "completeDay": 305,
+          "fromLevel": 13,
+          "toLevel": 14,
+          "cost": {
+            "regolith": 338.09999999999997,
+            "alloy": 169.04999999999998
+          }
+        },
+        "K": {
+          "startedDay": 297,
+          "completeDay": 317,
+          "fromLevel": 14,
+          "toLevel": 15,
+          "cost": {
+            "regolith": 232.875,
+            "alloy": 155.25
+          }
+        },
+        "C2": {
+          "startedDay": 295,
+          "completeDay": 315,
+          "fromLevel": 9,
+          "toLevel": 10,
+          "cost": {
+            "alloy": 241.5,
+            "currency": 241.5
+          }
+        },
+        "F": {
+          "startedDay": 293,
+          "completeDay": 313,
+          "fromLevel": 8,
+          "toLevel": 9,
+          "cost": {
+            "regolith": 289.79999999999995,
+            "alloy": 217.34999999999997,
+            "currency": 144.89999999999998
+          }
+        },
+        "P": {
+          "startedDay": 281,
+          "completeDay": 301,
+          "fromLevel": 5,
+          "toLevel": 6,
+          "cost": {
+            "water": 193.2,
+            "regolith": 144.89999999999998,
+            "alloy": 96.6
+          }
+        },
+        "L": {
+          "startedDay": 289,
+          "completeDay": 309,
+          "fromLevel": 2,
+          "toLevel": 3,
+          "cost": {
+            "alloy": 115.92,
+            "currency": 115.92
+          }
+        },
+        "M": {
+          "startedDay": 289,
+          "completeDay": 309,
+          "fromLevel": 2,
+          "toLevel": 3,
+          "cost": {
+            "water": 176.64000000000001,
+            "regolith": 353.28000000000003,
+            "alloy": 397.44000000000005
+          }
+        }
+      },
+      "cumulative": {
+        "started": 86,
+        "completed": 78,
+        "skippedForCost": 0,
+        "maxPopulation": 123.02450000000023,
+        "minWater": -29.760900000000944,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 0,
+        "strainedDays": 0
+      }
+    },
+    {
+      "day": 350,
+      "resources": {
+        "power": 1029.89,
+        "water": 51.56,
+        "oxygen": 6049.02,
+        "biomass": 0.1,
+        "regolith": 12.12,
+        "alloy": 3402.17,
+        "quantumCore": 2,
+        "currency": 830.97,
+        "population": 172.85,
+        "knowledge": 12.97,
+        "luxury": 0
+      },
+      "dailyNet": {
+        "power": 1029.89,
+        "water": -36.09,
+        "oxygen": 61.71,
+        "biomass": -51.06,
+        "regolith": -79.02,
+        "alloy": 226.32,
+        "quantumCore": 0,
+        "currency": 255.36,
+        "population": 1.28,
+        "knowledge": 0,
+        "luxury": 0
+      },
+      "population": {
+        "total": 172.85,
+        "capacity": 288,
+        "availableCapacity": 115.15,
+        "net": 1.28,
+        "growthPotential": 1.28,
+        "lifeSupportRatio": 1,
+        "pressureDays": 0,
+        "status": "stable"
+      },
+      "levels": {
+        "E1": 12,
+        "C1": 15,
+        "K": 15,
+        "B": 6,
+        "E2": 10,
+        "C2": 11,
+        "F": 10,
+        "P": 7,
+        "R": 2,
+        "L": 4,
+        "H": 6,
+        "M": 3,
+        "S": 1,
+        "E3": 0,
+        "D": 0
+      },
+      "staffing": {
+        "E1": 0,
+        "C1": 36,
+        "K": 0,
+        "B": 24,
+        "E2": 0,
+        "C2": 44,
+        "F": 40,
+        "P": 28,
         "R": 0,
         "L": 0,
         "H": 0,
@@ -753,18 +1040,8 @@
       },
       "construction": {
         "E1": {
-          "startedDay": 238,
-          "completeDay": 258,
-          "fromLevel": 10,
-          "toLevel": 11,
-          "cost": {
-            "regolith": 265.65,
-            "alloy": 132.825
-          }
-        },
-        "C1": {
-          "startedDay": 242,
-          "completeDay": 262,
+          "startedDay": 344,
+          "completeDay": 364,
           "fromLevel": 12,
           "toLevel": 13,
           "cost": {
@@ -772,19 +1049,9 @@
             "alloy": 156.975
           }
         },
-        "K": {
-          "startedDay": 246,
-          "completeDay": 266,
-          "fromLevel": 13,
-          "toLevel": 14,
-          "cost": {
-            "regolith": 217.34999999999997,
-            "alloy": 144.89999999999998
-          }
-        },
         "B": {
-          "startedDay": 248,
-          "completeDay": 268,
+          "startedDay": 331,
+          "completeDay": 351,
           "fromLevel": 6,
           "toLevel": 7,
           "cost": {
@@ -794,168 +1061,8 @@
           }
         },
         "C2": {
-          "startedDay": 240,
-          "completeDay": 260,
-          "fromLevel": 9,
-          "toLevel": 10,
-          "cost": {
-            "alloy": 241.5,
-            "currency": 241.5
-          }
-        },
-        "F": {
-          "startedDay": 234,
-          "completeDay": 254,
-          "fromLevel": 9,
-          "toLevel": 10,
-          "cost": {
-            "regolith": 322,
-            "alloy": 241.5,
-            "currency": 161
-          }
-        },
-        "L": {
-          "startedDay": 244,
-          "completeDay": 264,
-          "fromLevel": 3,
-          "toLevel": 4,
-          "cost": {
-            "alloy": 154.56,
-            "currency": 154.56
-          }
-        },
-        "M": {
-          "startedDay": 236,
-          "completeDay": 256,
-          "fromLevel": 1,
-          "toLevel": 2,
-          "cost": {
-            "water": 117.75999999999999,
-            "regolith": 235.51999999999998,
-            "alloy": 264.96
-          }
-        }
-      },
-      "cumulative": {
-        "started": 86,
-        "completed": 78,
-        "skippedForCost": 0,
-        "maxPopulation": 109.34799999999998,
-        "minWater": -90.88680000000053,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -15.379787500000148,
-        "capacityFullDays": 0,
-        "strainedDays": 19
-      }
-    },
-    {
-      "day": 300,
-      "resources": {
-        "power": -299.36,
-        "water": 8.76,
-        "oxygen": 4821.16,
-        "biomass": 8.43,
-        "regolith": 249.34,
-        "alloy": 1319.8,
-        "quantumCore": 2,
-        "currency": 57.82,
-        "population": 147.41,
-        "knowledge": 5.36,
-        "luxury": 0
-      },
-      "dailyNet": {
-        "power": -299.36,
-        "water": 74.89,
-        "oxygen": -47.57,
-        "biomass": -56.88,
-        "regolith": 257.58,
-        "alloy": 262.7,
-        "quantumCore": 0,
-        "currency": 204.8,
-        "population": 1.06,
-        "knowledge": 0,
-        "luxury": 0
-      },
-      "population": {
-        "total": 147.41,
-        "capacity": 272,
-        "availableCapacity": 124.59,
-        "net": 0,
-        "growthPotential": 1.06,
-        "lifeSupportRatio": 0.46,
-        "pressureDays": 0,
-        "status": "strained"
-      },
-      "levels": {
-        "E1": 11,
-        "C1": 14,
-        "K": 15,
-        "B": 7,
-        "E2": 11,
-        "C2": 11,
-        "F": 12,
-        "P": 5,
-        "R": 1,
-        "L": 4,
-        "H": 5,
-        "M": 3,
-        "S": 1,
-        "E3": 0,
-        "D": 0
-      },
-      "staffing": {
-        "E1": 44,
-        "C1": 0,
-        "K": 0,
-        "B": 28,
-        "E2": 44,
-        "C2": 0,
-        "F": 11,
-        "P": 20,
-        "R": 0,
-        "L": 0,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 0,
-        "D": 0
-      },
-      "construction": {
-        "C1": {
-          "startedDay": 282,
-          "completeDay": 302,
-          "fromLevel": 14,
-          "toLevel": 15,
-          "cost": {
-            "regolith": 362.25,
-            "alloy": 181.125
-          }
-        },
-        "B": {
-          "startedDay": 300,
-          "completeDay": 320,
-          "fromLevel": 7,
-          "toLevel": 8,
-          "cost": {
-            "water": 193.2,
-            "regolith": 193.2,
-            "alloy": 128.79999999999998
-          }
-        },
-        "E2": {
-          "startedDay": 297,
-          "completeDay": 317,
-          "fromLevel": 11,
-          "toLevel": 12,
-          "cost": {
-            "regolith": 434.69999999999993,
-            "alloy": 434.69999999999993,
-            "currency": 289.79999999999995
-          }
-        },
-        "C2": {
-          "startedDay": 282,
-          "completeDay": 302,
+          "startedDay": 339,
+          "completeDay": 359,
           "fromLevel": 11,
           "toLevel": 12,
           "cost": {
@@ -964,137 +1071,8 @@
           }
         },
         "P": {
-          "startedDay": 294,
-          "completeDay": 314,
-          "fromLevel": 5,
-          "toLevel": 6,
-          "cost": {
-            "water": 193.2,
-            "regolith": 144.89999999999998,
-            "alloy": 96.6
-          }
-        },
-        "M": {
-          "startedDay": 288,
-          "completeDay": 308,
-          "fromLevel": 3,
-          "toLevel": 4,
-          "cost": {
-            "water": 235.51999999999998,
-            "regolith": 471.03999999999996,
-            "alloy": 529.92
-          }
-        }
-      },
-      "cumulative": {
-        "started": 100,
-        "completed": 94,
-        "skippedForCost": 0,
-        "maxPopulation": 147.411,
-        "minWater": -108.17880000000062,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -15.379787500000148,
-        "capacityFullDays": 0,
-        "strainedDays": 28
-      }
-    },
-    {
-      "day": 350,
-      "resources": {
-        "power": -326.94,
-        "water": 37.54,
-        "oxygen": 7084.87,
-        "biomass": 15.74,
-        "regolith": 502.97,
-        "alloy": 9742.73,
-        "quantumCore": 2,
-        "currency": 897.32,
-        "population": 204.4,
-        "knowledge": 81.27,
-        "luxury": 0
-      },
-      "dailyNet": {
-        "power": -326.94,
-        "water": 37.38,
-        "oxygen": 29.73,
-        "biomass": 14.96,
-        "regolith": 281.5,
-        "alloy": 320.25,
-        "quantumCore": 0,
-        "currency": 397.02,
-        "population": 1.49,
-        "knowledge": 0,
-        "luxury": 0
-      },
-      "population": {
-        "total": 204.4,
-        "capacity": 336,
-        "availableCapacity": 131.6,
-        "net": 1.49,
-        "growthPotential": 1.49,
-        "lifeSupportRatio": 1,
-        "pressureDays": 0,
-        "status": "stable"
-      },
-      "levels": {
-        "E1": 13,
-        "C1": 15,
-        "K": 15,
-        "B": 9,
-        "E2": 12,
-        "C2": 12,
-        "F": 12,
-        "P": 7,
-        "R": 1,
-        "L": 5,
-        "H": 6,
-        "M": 5,
-        "S": 1,
-        "E3": 0,
-        "D": 0
-      },
-      "staffing": {
-        "E1": 52,
-        "C1": 0,
-        "K": 0,
-        "B": 0,
-        "E2": 48,
-        "C2": 48,
-        "F": 48,
-        "P": 8,
-        "R": 0,
-        "L": 0,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 0,
-        "D": 0
-      },
-      "construction": {
-        "E1": {
-          "startedDay": 347,
-          "completeDay": 367,
-          "fromLevel": 13,
-          "toLevel": 14,
-          "cost": {
-            "regolith": 338.09999999999997,
-            "alloy": 169.04999999999998
-          }
-        },
-        "B": {
-          "startedDay": 341,
-          "completeDay": 361,
-          "fromLevel": 9,
-          "toLevel": 10,
-          "cost": {
-            "water": 241.5,
-            "regolith": 241.5,
-            "alloy": 161
-          }
-        },
-        "P": {
-          "startedDay": 336,
-          "completeDay": 356,
+          "startedDay": 337,
+          "completeDay": 357,
           "fromLevel": 7,
           "toLevel": 8,
           "cost": {
@@ -1103,14 +1081,25 @@
             "alloy": 128.79999999999998
           }
         },
-        "L": {
-          "startedDay": 334,
-          "completeDay": 354,
-          "fromLevel": 5,
-          "toLevel": 6,
+        "R": {
+          "startedDay": 335,
+          "completeDay": 355,
+          "fromLevel": 2,
+          "toLevel": 3,
           "cost": {
-            "alloy": 289.79999999999995,
-            "currency": 289.79999999999995
+            "water": 154.56,
+            "biomass": 154.56,
+            "alloy": 231.84
+          }
+        },
+        "L": {
+          "startedDay": 331,
+          "completeDay": 351,
+          "fromLevel": 4,
+          "toLevel": 5,
+          "cost": {
+            "alloy": 193.2,
+            "currency": 193.2
           }
         },
         "H": {
@@ -1125,63 +1114,224 @@
           }
         },
         "M": {
-          "startedDay": 343,
-          "completeDay": 363,
-          "fromLevel": 5,
-          "toLevel": 6,
+          "startedDay": 341,
+          "completeDay": 361,
+          "fromLevel": 3,
+          "toLevel": 4,
           "cost": {
-            "water": 441.59999999999997,
-            "regolith": 883.1999999999999,
-            "alloy": 993.5999999999999
+            "water": 235.51999999999998,
+            "regolith": 471.03999999999996,
+            "alloy": 529.92
           }
         }
       },
       "cumulative": {
-        "started": 113,
-        "completed": 107,
+        "started": 104,
+        "completed": 96,
         "skippedForCost": 0,
-        "maxPopulation": 204.4035000000001,
-        "minWater": -120.70720000000037,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -46.566887499999815,
+        "maxPopulation": 172.85150000000039,
+        "minWater": -41.65490000000132,
+        "minOxygen": 0,
+        "minBiomass": 0,
         "capacityFullDays": 0,
-        "strainedDays": 39
+        "strainedDays": 2
       }
     },
     {
       "day": 400,
       "resources": {
-        "power": -469.58,
-        "water": 0.71,
-        "oxygen": 10625.75,
-        "biomass": 120.64,
-        "regolith": 4022.01,
-        "alloy": 19228.87,
-        "quantumCore": 108.84,
-        "currency": 2592.52,
-        "population": 292.64,
-        "knowledge": 1369.92,
-        "luxury": 1.8
+        "power": 1422.29,
+        "water": 0.48,
+        "oxygen": 9120.96,
+        "biomass": 104.46,
+        "regolith": 36.77,
+        "alloy": 10015.42,
+        "quantumCore": 50.98,
+        "currency": 1239.4,
+        "population": 244.18,
+        "knowledge": 53.95,
+        "luxury": 8.1
       },
       "dailyNet": {
-        "power": -469.58,
-        "water": -0.12,
-        "oxygen": 111.02,
-        "biomass": 68.6,
-        "regolith": 259.73,
-        "alloy": 290.78,
-        "quantumCore": 7.75,
-        "currency": 267.01,
-        "population": 2.04,
-        "knowledge": 237.06,
+        "power": 1422.29,
+        "water": -85.15,
+        "oxygen": 137.42,
+        "biomass": 4.17,
+        "regolith": -145.04,
+        "alloy": 281.4,
+        "quantumCore": 2.18,
+        "currency": 401.51,
+        "population": 1.77,
+        "knowledge": 39.27,
         "luxury": 1.8
       },
       "population": {
-        "total": 292.64,
-        "capacity": 416,
-        "availableCapacity": 123.36,
-        "net": 2.04,
-        "growthPotential": 2.04,
+        "total": 244.18,
+        "capacity": 352,
+        "availableCapacity": 107.82,
+        "net": 1.77,
+        "growthPotential": 1.77,
+        "lifeSupportRatio": 1,
+        "pressureDays": 0,
+        "status": "stable"
+      },
+      "levels": {
+        "E1": 14,
+        "C1": 15,
+        "K": 15,
+        "B": 9,
+        "E2": 12,
+        "C2": 12,
+        "F": 11,
+        "P": 10,
+        "R": 4,
+        "L": 7,
+        "H": 7,
+        "M": 5,
+        "S": 1,
+        "E3": 0,
+        "D": 0
+      },
+      "staffing": {
+        "E1": 0,
+        "C1": 60,
+        "K": 0,
+        "B": 28,
+        "E2": 0,
+        "C2": 48,
+        "F": 40,
+        "P": 40,
+        "R": 0,
+        "L": 28,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 0,
+        "D": 0
+      },
+      "construction": {
+        "E1": {
+          "startedDay": 386,
+          "completeDay": 406,
+          "fromLevel": 14,
+          "toLevel": 15,
+          "cost": {
+            "regolith": 362.25,
+            "alloy": 181.125
+          }
+        },
+        "B": {
+          "startedDay": 393,
+          "completeDay": 413,
+          "fromLevel": 9,
+          "toLevel": 10,
+          "cost": {
+            "water": 241.5,
+            "regolith": 241.5,
+            "alloy": 161
+          }
+        },
+        "P": {
+          "startedDay": 397,
+          "completeDay": 416,
+          "fromLevel": 10,
+          "toLevel": 11,
+          "cost": {
+            "water": 531.3,
+            "regolith": 398.47499999999997,
+            "alloy": 265.65
+          }
+        },
+        "R": {
+          "startedDay": 389,
+          "completeDay": 409,
+          "fromLevel": 4,
+          "toLevel": 5,
+          "cost": {
+            "water": 257.59999999999997,
+            "biomass": 257.59999999999997,
+            "alloy": 386.4
+          }
+        },
+        "L": {
+          "startedDay": 391,
+          "completeDay": 411,
+          "fromLevel": 7,
+          "toLevel": 8,
+          "cost": {
+            "alloy": 386.4,
+            "currency": 386.4
+          }
+        },
+        "H": {
+          "startedDay": 383,
+          "completeDay": 403,
+          "fromLevel": 7,
+          "toLevel": 8,
+          "cost": {
+            "biomass": 230,
+            "alloy": 276,
+            "currency": 92
+          }
+        },
+        "D": {
+          "startedDay": 389,
+          "completeDay": 409,
+          "fromLevel": 0,
+          "toLevel": 1,
+          "cost": {
+            "alloy": 515.2,
+            "quantumCore": 12.88,
+            "currency": 25.76
+          }
+        }
+      },
+      "cumulative": {
+        "started": 123,
+        "completed": 116,
+        "skippedForCost": 0,
+        "maxPopulation": 244.1750000000003,
+        "minWater": -49.73990000000131,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 0,
+        "strainedDays": 4
+      }
+    },
+    {
+      "day": 450,
+      "resources": {
+        "power": 1058.5,
+        "water": 26.79,
+        "oxygen": 13770.81,
+        "biomass": 181.59,
+        "regolith": 283.84,
+        "alloy": 13156.01,
+        "quantumCore": 82.22,
+        "currency": 1591.69,
+        "population": 332.85,
+        "knowledge": 8378.32,
+        "luxury": 2072.7
+      },
+      "dailyNet": {
+        "power": 1058.5,
+        "water": 26.37,
+        "oxygen": 63.05,
+        "biomass": -13.74,
+        "regolith": -1.54,
+        "alloy": 349.36,
+        "quantumCore": 0,
+        "currency": 603.04,
+        "population": 1.97,
+        "knowledge": 198.18,
+        "luxury": 81
+      },
+      "population": {
+        "total": 332.85,
+        "capacity": 400,
+        "availableCapacity": 67.15,
+        "net": 1.97,
+        "growthPotential": 1.97,
         "lifeSupportRatio": 1,
         "pressureDays": 0,
         "status": "stable"
@@ -1190,30 +1340,30 @@
         "E1": 15,
         "C1": 15,
         "K": 15,
-        "B": 11,
+        "B": 12,
         "E2": 12,
         "C2": 12,
         "F": 12,
-        "P": 10,
-        "R": 2,
-        "L": 8,
-        "H": 8,
-        "M": 7,
+        "P": 12,
+        "R": 7,
+        "L": 10,
+        "H": 10,
+        "M": 5,
         "S": 1,
-        "E3": 0,
-        "D": 0
+        "E3": 2,
+        "D": 3
       },
       "staffing": {
-        "E1": 56,
+        "E1": 40,
         "C1": 60,
         "K": 0,
-        "B": 0,
-        "E2": 48,
+        "B": 48,
+        "E2": 0,
         "C2": 48,
         "F": 48,
-        "P": 0,
+        "P": 48,
         "R": 0,
-        "L": 32,
+        "L": 40,
         "H": 0,
         "M": 0,
         "S": 0,
@@ -1221,129 +1371,118 @@
         "D": 0
       },
       "construction": {
-        "B": {
-          "startedDay": 381,
-          "completeDay": 401,
-          "fromLevel": 11,
-          "toLevel": 12,
-          "cost": {
-            "water": 434.69999999999993,
-            "regolith": 434.69999999999993,
-            "alloy": 289.79999999999995
-          }
-        },
-        "P": {
-          "startedDay": 396,
-          "completeDay": 413,
-          "fromLevel": 10,
-          "toLevel": 11,
-          "cost": {
-            "water": 504.73499999999996,
-            "regolith": 378.55125,
-            "alloy": 252.36749999999998
-          }
-        },
         "R": {
-          "startedDay": 387,
-          "completeDay": 406,
-          "fromLevel": 2,
-          "toLevel": 3,
-          "cost": {
-            "water": 154.56,
-            "biomass": 154.56,
-            "alloy": 231.84
-          }
-        },
-        "L": {
-          "startedDay": 394,
-          "completeDay": 411,
-          "fromLevel": 8,
-          "toLevel": 9,
-          "cost": {
-            "alloy": 412.9649999999999,
-            "currency": 412.9649999999999
-          }
-        },
-        "H": {
-          "startedDay": 390,
-          "completeDay": 407,
-          "fromLevel": 8,
-          "toLevel": 9,
-          "cost": {
-            "biomass": 258.74999999999994,
-            "alloy": 310.49999999999994,
-            "currency": 103.49999999999999
-          }
-        },
-        "M": {
-          "startedDay": 386,
-          "completeDay": 405,
+          "startedDay": 446,
+          "completeDay": 463,
           "fromLevel": 7,
           "toLevel": 8,
           "cost": {
-            "water": 588.8,
-            "regolith": 1177.6,
-            "alloy": 1324.8
+            "water": 489.4399999999999,
+            "biomass": 489.4399999999999,
+            "alloy": 734.1599999999999
+          }
+        },
+        "L": {
+          "startedDay": 447,
+          "completeDay": 464,
+          "fromLevel": 10,
+          "toLevel": 11,
+          "cost": {
+            "alloy": 757.1025,
+            "currency": 757.1025
+          }
+        },
+        "H": {
+          "startedDay": 440,
+          "completeDay": 457,
+          "fromLevel": 10,
+          "toLevel": 11,
+          "cost": {
+            "biomass": 450.6562499999999,
+            "alloy": 540.7874999999999,
+            "currency": 180.26249999999996
+          }
+        },
+        "M": {
+          "startedDay": 438,
+          "completeDay": 455,
+          "fromLevel": 5,
+          "toLevel": 6,
+          "cost": {
+            "water": 419.5199999999999,
+            "regolith": 839.0399999999998,
+            "alloy": 943.9199999999998
           }
         },
         "E3": {
-          "startedDay": 389,
-          "completeDay": 408,
-          "fromLevel": 0,
-          "toLevel": 1,
+          "startedDay": 441,
+          "completeDay": 458,
+          "fromLevel": 2,
+          "toLevel": 3,
           "cost": {
-            "alloy": 29.439999999999998,
-            "quantumCore": 7.359999999999999,
-            "currency": 22.08
+            "alloy": 83.904,
+            "quantumCore": 20.976,
+            "currency": 62.928
+          }
+        },
+        "D": {
+          "startedDay": 443,
+          "completeDay": 460,
+          "fromLevel": 3,
+          "toLevel": 4,
+          "cost": {
+            "alloy": 1957.7600000000002,
+            "quantumCore": 48.944,
+            "currency": 97.888
           }
         }
       },
       "cumulative": {
-        "started": 129,
-        "completed": 122,
+        "started": 143,
+        "completed": 137,
         "skippedForCost": 0,
-        "maxPopulation": 292.64200000000034,
-        "minWater": -120.70720000000037,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -46.566887499999815,
+        "maxPopulation": 332.8470000000002,
+        "minWater": -91.64241400000202,
+        "minOxygen": 0,
+        "minBiomass": 0,
         "capacityFullDays": 0,
-        "strainedDays": 41
+        "strainedDays": 6
       }
     },
     {
-      "day": 450,
+      "day": 500,
       "resources": {
-        "power": 179.18,
-        "water": 0.32,
-        "oxygen": 18897.99,
-        "biomass": 864.28,
-        "regolith": 8454.79,
-        "alloy": 25727.03,
-        "quantumCore": 418.46,
-        "currency": 4260.29,
-        "population": 407.87,
-        "knowledge": 15228.67,
-        "luxury": 956.7
+        "power": 1358.91,
+        "water": 8.47,
+        "oxygen": 20098.64,
+        "biomass": 1324.41,
+        "regolith": 12.67,
+        "alloy": 3973.54,
+        "quantumCore": 182.73,
+        "currency": 343.07,
+        "population": 443.99,
+        "knowledge": 25935.12,
+        "luxury": 6933.6
       },
       "dailyNet": {
-        "power": 179.18,
-        "water": -7.92,
-        "oxygen": 221.65,
-        "biomass": 93.94,
-        "regolith": 210.47,
-        "alloy": 317.08,
-        "quantumCore": 13.33,
-        "currency": 339.06,
-        "population": 2.55,
-        "knowledge": 407.96,
-        "luxury": 40.5
+        "power": 1358.91,
+        "water": 1.33,
+        "oxygen": 233.85,
+        "biomass": 53.53,
+        "regolith": -4.82,
+        "alloy": 277,
+        "quantumCore": 16.64,
+        "currency": 393.12,
+        "population": 2.41,
+        "knowledge": 509.13,
+        "luxury": 116.1
       },
       "population": {
-        "total": 407.87,
-        "capacity": 536,
-        "availableCapacity": 128.13,
-        "net": 2.55,
-        "growthPotential": 2.55,
+        "total": 443.99,
+        "capacity": 504,
+        "availableCapacity": 60.01,
+        "net": 2.41,
+        "growthPotential": 2.41,
         "lifeSupportRatio": 1,
         "pressureDays": 0,
         "status": "stable"
@@ -1357,35 +1496,35 @@
         "C2": 12,
         "F": 12,
         "P": 12,
-        "R": 5,
-        "L": 11,
-        "H": 11,
-        "M": 10,
+        "R": 10,
+        "L": 13,
+        "H": 12,
+        "M": 8,
         "S": 1,
-        "E3": 3,
-        "D": 0
+        "E3": 5,
+        "D": 6
       },
       "staffing": {
-        "E1": 43,
+        "E1": 60,
         "C1": 60,
         "K": 0,
         "B": 56,
-        "E2": 48,
+        "E2": 27,
         "C2": 48,
         "F": 48,
         "P": 48,
         "R": 0,
-        "L": 44,
+        "L": 52,
         "H": 0,
         "M": 0,
         "S": 0,
-        "E3": 12,
-        "D": 0
+        "E3": 20,
+        "D": 24
       },
       "construction": {
         "B": {
-          "startedDay": 438,
-          "completeDay": 455,
+          "startedDay": 487,
+          "completeDay": 504,
           "fromLevel": 14,
           "toLevel": 15,
           "cost": {
@@ -1394,933 +1533,98 @@
             "alloy": 344.1375
           }
         },
-        "R": {
-          "startedDay": 449,
-          "completeDay": 466,
+        "L": {
+          "startedDay": 498,
+          "completeDay": 515,
+          "fromLevel": 13,
+          "toLevel": 14,
+          "cost": {
+            "alloy": 963.5849999999998,
+            "currency": 963.5849999999998
+          }
+        },
+        "M": {
+          "startedDay": 500,
+          "completeDay": 517,
+          "fromLevel": 8,
+          "toLevel": 9,
+          "cost": {
+            "water": 629.28,
+            "regolith": 1258.56,
+            "alloy": 1415.8799999999999
+          }
+        },
+        "E3": {
+          "startedDay": 493,
+          "completeDay": 510,
           "fromLevel": 5,
           "toLevel": 6,
           "cost": {
-            "water": 367.08,
-            "biomass": 367.08,
-            "alloy": 550.62
+            "alloy": 209.75999999999996,
+            "quantumCore": 52.43999999999999,
+            "currency": 157.31999999999996
           }
         },
-        "L": {
-          "startedDay": 446,
-          "completeDay": 463,
-          "fromLevel": 11,
-          "toLevel": 12,
-          "cost": {
-            "alloy": 825.9299999999998,
-            "currency": 825.9299999999998
-          }
-        },
-        "H": {
-          "startedDay": 442,
-          "completeDay": 459,
-          "fromLevel": 11,
-          "toLevel": 12,
-          "cost": {
-            "biomass": 491.62499999999994,
-            "alloy": 589.9499999999999,
-            "currency": 196.64999999999998
-          }
-        },
-        "E3": {
-          "startedDay": 443,
-          "completeDay": 460,
-          "fromLevel": 3,
-          "toLevel": 4,
-          "cost": {
-            "alloy": 111.87199999999999,
-            "quantumCore": 27.967999999999996,
-            "currency": 83.904
-          }
-        }
-      },
-      "cumulative": {
-        "started": 147,
-        "completed": 142,
-        "skippedForCost": 0,
-        "maxPopulation": 407.8680000000001,
-        "minWater": -120.70720000000037,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -46.566887499999815,
-        "capacityFullDays": 0,
-        "strainedDays": 42
-      }
-    },
-    {
-      "day": 500,
-      "resources": {
-        "power": 1196.77,
-        "water": 0.47,
-        "oxygen": 31946.1,
-        "biomass": 3804.72,
-        "regolith": 13599.68,
-        "alloy": 37678.48,
-        "quantumCore": 1014.72,
-        "currency": 12420.13,
-        "population": 538.16,
-        "knowledge": 38785.53,
-        "luxury": 5949
-      },
-      "dailyNet": {
-        "power": 1196.77,
-        "water": -0.52,
-        "oxygen": 238.99,
-        "biomass": 40.89,
-        "regolith": 105.68,
-        "alloy": 284.11,
-        "quantumCore": 19.51,
-        "currency": 254.11,
-        "population": 2.62,
-        "knowledge": 597.1,
-        "luxury": 157.5
-      },
-      "population": {
-        "total": 538.16,
-        "capacity": 552,
-        "availableCapacity": 13.84,
-        "net": 2.62,
-        "growthPotential": 2.62,
-        "lifeSupportRatio": 1,
-        "pressureDays": 0,
-        "status": "stable"
-      },
-      "levels": {
-        "E1": 15,
-        "C1": 15,
-        "K": 15,
-        "B": 15,
-        "E2": 12,
-        "C2": 12,
-        "F": 12,
-        "P": 12,
-        "R": 6,
-        "L": 14,
-        "H": 12,
-        "M": 10,
-        "S": 1,
-        "E3": 6,
-        "D": 0
-      },
-      "staffing": {
-        "E1": 60,
-        "C1": 60,
-        "K": 0,
-        "B": 60,
-        "E2": 48,
-        "C2": 48,
-        "F": 48,
-        "P": 48,
-        "R": 24,
-        "L": 56,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 24,
-        "D": 0
-      },
-      "construction": {
-        "L": {
-          "startedDay": 497,
-          "completeDay": 514,
-          "fromLevel": 14,
-          "toLevel": 15,
-          "cost": {
-            "alloy": 1032.4125,
-            "currency": 1032.4125
-          }
-        },
-        "E3": {
-          "startedDay": 494,
-          "completeDay": 511,
+        "D": {
+          "startedDay": 495,
+          "completeDay": 512,
           "fromLevel": 6,
           "toLevel": 7,
           "cost": {
-            "alloy": 244.71999999999994,
-            "quantumCore": 61.179999999999986,
-            "currency": 183.53999999999996
+            "alloy": 4282.599999999999,
+            "quantumCore": 107.06499999999998,
+            "currency": 214.12999999999997
           }
         }
       },
       "cumulative": {
-        "started": 153,
-        "completed": 151,
+        "started": 161,
+        "completed": 156,
         "skippedForCost": 0,
-        "maxPopulation": 538.1560000000005,
-        "minWater": -120.70720000000037,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -46.566887499999815,
+        "maxPopulation": 443.9930000000002,
+        "minWater": -91.64241400000202,
+        "minOxygen": 0,
+        "minBiomass": 0,
         "capacityFullDays": 0,
-        "strainedDays": 42
+        "strainedDays": 7
       }
     },
     {
       "day": 550,
       "resources": {
-        "power": 1409.34,
-        "water": 0.16,
-        "oxygen": 44533.67,
-        "biomass": 5447.46,
-        "regolith": 18883.85,
-        "alloy": 52475.85,
-        "quantumCore": 1466.43,
-        "currency": 27380.07,
-        "population": 552,
-        "knowledge": 66921.74,
-        "luxury": 14547.6
+        "power": 1235.45,
+        "water": -167.03,
+        "oxygen": 17685.23,
+        "biomass": 26.39,
+        "regolith": 76.54,
+        "alloy": 1573.88,
+        "quantumCore": 62.38,
+        "currency": 721.8,
+        "population": 500.52,
+        "knowledge": 45745.16,
+        "luxury": 14456.7
       },
       "dailyNet": {
-        "power": 1409.34,
-        "water": -0.7,
-        "oxygen": 224.51,
-        "biomass": 32.39,
-        "regolith": 105.68,
-        "alloy": 271.83,
-        "quantumCore": 21.82,
-        "currency": 230.91,
-        "population": 0,
-        "knowledge": 667.57,
-        "luxury": 172.8
-      },
-      "population": {
-        "total": 552,
-        "capacity": 552,
-        "availableCapacity": 0,
-        "net": 0,
-        "growthPotential": 2.62,
-        "lifeSupportRatio": 1,
-        "pressureDays": 44,
-        "status": "full"
-      },
-      "levels": {
-        "E1": 15,
-        "C1": 15,
-        "K": 15,
-        "B": 15,
-        "E2": 12,
-        "C2": 12,
-        "F": 12,
-        "P": 12,
-        "R": 6,
-        "L": 15,
-        "H": 12,
-        "M": 10,
-        "S": 1,
-        "E3": 9,
-        "D": 0
-      },
-      "staffing": {
-        "E1": 60,
-        "C1": 60,
-        "K": 0,
-        "B": 60,
-        "E2": 48,
-        "C2": 48,
-        "F": 48,
-        "P": 48,
-        "R": 24,
-        "L": 60,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 36,
-        "D": 0
-      },
-      "construction": {
-        "E3": {
-          "startedDay": 545,
-          "completeDay": 562,
-          "fromLevel": 9,
-          "toLevel": 10,
-          "cost": {
-            "alloy": 349.59999999999997,
-            "quantumCore": 87.39999999999999,
-            "currency": 262.2
-          }
-        }
-      },
-      "cumulative": {
-        "started": 156,
-        "completed": 155,
-        "skippedForCost": 0,
-        "maxPopulation": 552,
-        "minWater": -120.70720000000037,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -46.566887499999815,
-        "capacityFullDays": 45,
-        "strainedDays": 42
-      }
-    },
-    {
-      "day": 600,
-      "resources": {
-        "power": 1511.15,
-        "water": 0.15,
-        "oxygen": 55759.14,
-        "biomass": 7067.19,
-        "regolith": 24168.02,
-        "alloy": 66067.22,
-        "quantumCore": 2557.23,
-        "currency": 38815.5,
-        "population": 552,
-        "knowledge": 100300.22,
-        "luxury": 23187.6
-      },
-      "dailyNet": {
-        "power": 1511.15,
-        "water": -0.7,
-        "oxygen": 224.51,
-        "biomass": 32.39,
-        "regolith": 105.68,
-        "alloy": 271.83,
-        "quantumCore": 21.82,
-        "currency": 230.91,
-        "population": 0,
-        "knowledge": 667.57,
-        "luxury": 172.8
-      },
-      "population": {
-        "total": 552,
-        "capacity": 552,
-        "availableCapacity": 0,
-        "net": 0,
-        "growthPotential": 2.62,
-        "lifeSupportRatio": 1,
-        "pressureDays": 94,
-        "status": "full"
-      },
-      "levels": {
-        "E1": 15,
-        "C1": 15,
-        "K": 15,
-        "B": 15,
-        "E2": 12,
-        "C2": 12,
-        "F": 12,
-        "P": 12,
-        "R": 6,
-        "L": 15,
-        "H": 12,
-        "M": 10,
-        "S": 1,
-        "E3": 10,
-        "D": 0
-      },
-      "staffing": {
-        "E1": 60,
-        "C1": 60,
-        "K": 0,
-        "B": 60,
-        "E2": 48,
-        "C2": 48,
-        "F": 48,
-        "P": 48,
-        "R": 24,
-        "L": 60,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 40,
-        "D": 0
-      },
-      "construction": {},
-      "cumulative": {
-        "started": 156,
-        "completed": 156,
-        "skippedForCost": 0,
-        "maxPopulation": 552,
-        "minWater": -120.70720000000037,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -46.566887499999815,
-        "capacityFullDays": 95,
-        "strainedDays": 42
-      }
-    },
-    {
-      "day": 650,
-      "resources": {
-        "power": 1511.15,
-        "water": 0.15,
-        "oxygen": 66984.61,
-        "biomass": 8686.92,
-        "regolith": 29452.19,
-        "alloy": 79658.59,
-        "quantumCore": 3648.03,
-        "currency": 50250.93,
-        "population": 552,
-        "knowledge": 133678.7,
-        "luxury": 31827.6
-      },
-      "dailyNet": {
-        "power": 1511.15,
-        "water": -0.7,
-        "oxygen": 224.51,
-        "biomass": 32.39,
-        "regolith": 105.68,
-        "alloy": 271.83,
-        "quantumCore": 21.82,
-        "currency": 230.91,
-        "population": 0,
-        "knowledge": 667.57,
-        "luxury": 172.8
-      },
-      "population": {
-        "total": 552,
-        "capacity": 552,
-        "availableCapacity": 0,
-        "net": 0,
-        "growthPotential": 2.62,
-        "lifeSupportRatio": 1,
-        "pressureDays": 144,
-        "status": "full"
-      },
-      "levels": {
-        "E1": 15,
-        "C1": 15,
-        "K": 15,
-        "B": 15,
-        "E2": 12,
-        "C2": 12,
-        "F": 12,
-        "P": 12,
-        "R": 6,
-        "L": 15,
-        "H": 12,
-        "M": 10,
-        "S": 1,
-        "E3": 10,
-        "D": 0
-      },
-      "staffing": {
-        "E1": 60,
-        "C1": 60,
-        "K": 0,
-        "B": 60,
-        "E2": 48,
-        "C2": 48,
-        "F": 48,
-        "P": 48,
-        "R": 24,
-        "L": 60,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 40,
-        "D": 0
-      },
-      "construction": {},
-      "cumulative": {
-        "started": 156,
-        "completed": 156,
-        "skippedForCost": 0,
-        "maxPopulation": 552,
-        "minWater": -120.70720000000037,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -46.566887499999815,
-        "capacityFullDays": 145,
-        "strainedDays": 42
-      }
-    },
-    {
-      "day": 700,
-      "resources": {
-        "power": 1449.74,
-        "water": 0.14,
-        "oxygen": 78130.07,
-        "biomass": 10306.65,
-        "regolith": 34736.36,
-        "alloy": 91701.63,
-        "quantumCore": 4702.12,
-        "currency": 61612.94,
-        "population": 552,
-        "knowledge": 167057.18,
-        "luxury": 40467.6
-      },
-      "dailyNet": {
-        "power": 1449.74,
-        "water": -0.7,
-        "oxygen": 184.51,
-        "biomass": 32.39,
-        "regolith": 105.68,
-        "alloy": 231.83,
-        "quantumCore": 21.82,
-        "currency": 230.91,
-        "population": 0,
-        "knowledge": 667.57,
-        "luxury": 172.8
-      },
-      "population": {
-        "total": 552,
-        "capacity": 552,
-        "availableCapacity": 0,
-        "net": 0,
-        "growthPotential": 2.62,
-        "lifeSupportRatio": 1,
-        "pressureDays": 194,
-        "status": "full"
-      },
-      "levels": {
-        "E1": 15,
-        "C1": 15,
-        "K": 15,
-        "B": 15,
-        "E2": 12,
-        "C2": 12,
-        "F": 12,
-        "P": 12,
-        "R": 6,
-        "L": 15,
-        "H": 12,
-        "M": 10,
-        "S": 1,
-        "E3": 10,
-        "D": 1
-      },
-      "staffing": {
-        "E1": 60,
-        "C1": 60,
-        "K": 0,
-        "B": 60,
-        "E2": 48,
-        "C2": 48,
-        "F": 48,
-        "P": 48,
-        "R": 24,
-        "L": 60,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 40,
-        "D": 4
-      },
-      "construction": {
-        "D": {
-          "startedDay": 698,
-          "completeDay": 715,
-          "fromLevel": 1,
-          "toLevel": 2,
-          "cost": {
-            "alloy": 978.8800000000001,
-            "quantumCore": 24.472,
-            "currency": 48.944
-          }
-        }
-      },
-      "cumulative": {
-        "started": 158,
-        "completed": 157,
-        "skippedForCost": 0,
-        "maxPopulation": 552,
-        "minWater": -120.70720000000037,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -46.566887499999815,
-        "capacityFullDays": 195,
-        "strainedDays": 42
-      }
-    },
-    {
-      "day": 750,
-      "resources": {
-        "power": 1236.04,
-        "water": 0.13,
-        "oxygen": 84958.74,
-        "biomass": 11926.38,
-        "regolith": 40020.53,
-        "alloy": 95022.92,
-        "quantumCore": 5646.09,
-        "currency": 72754.71,
-        "population": 552,
-        "knowledge": 200435.66,
-        "luxury": 49107.6
-      },
-      "dailyNet": {
-        "power": 1236.04,
-        "water": -8.7,
-        "oxygen": 45.31,
-        "biomass": 32.39,
-        "regolith": 105.68,
-        "alloy": 92.63,
-        "quantumCore": 21.82,
-        "currency": 256.11,
-        "population": 0,
-        "knowledge": 667.57,
-        "luxury": 172.8
-      },
-      "population": {
-        "total": 552,
-        "capacity": 552,
-        "availableCapacity": 0,
-        "net": 0,
-        "growthPotential": 2.62,
-        "lifeSupportRatio": 1,
-        "pressureDays": 244,
-        "status": "full"
-      },
-      "levels": {
-        "E1": 15,
-        "C1": 15,
-        "K": 15,
-        "B": 15,
-        "E2": 12,
-        "C2": 12,
-        "F": 12,
-        "P": 12,
-        "R": 6,
-        "L": 15,
-        "H": 12,
-        "M": 10,
-        "S": 1,
-        "E3": 10,
-        "D": 4
-      },
-      "staffing": {
-        "E1": 60,
-        "C1": 60,
-        "K": 0,
-        "B": 60,
-        "E2": 48,
-        "C2": 48,
-        "F": 48,
-        "P": 48,
-        "R": 24,
-        "L": 60,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 40,
-        "D": 16
-      },
-      "construction": {
-        "D": {
-          "startedDay": 749,
-          "completeDay": 766,
-          "fromLevel": 4,
-          "toLevel": 5,
-          "cost": {
-            "alloy": 2447.1999999999994,
-            "quantumCore": 61.179999999999986,
-            "currency": 122.35999999999997
-          }
-        }
-      },
-      "cumulative": {
-        "started": 161,
-        "completed": 160,
-        "skippedForCost": 0,
-        "maxPopulation": 552,
-        "minWater": -120.70720000000037,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -46.566887499999815,
-        "capacityFullDays": 245,
-        "strainedDays": 42
-      }
-    },
-    {
-      "day": 800,
-      "resources": {
-        "power": 1110.46,
-        "water": 0.12,
-        "oxygen": 86821.01,
-        "biomass": 10762.12,
-        "regolith": 38344.7,
-        "alloy": 96467.09,
-        "quantumCore": 6736.89,
-        "currency": 84190.14,
-        "population": 552,
-        "knowledge": 233814.14,
-        "luxury": 57747.6
-      },
-      "dailyNet": {
-        "power": 1110.46,
-        "water": -0.7,
-        "oxygen": 224.51,
-        "biomass": -431.61,
-        "regolith": -1054.32,
-        "alloy": -192.17,
-        "quantumCore": 21.82,
-        "currency": 230.91,
-        "population": 0,
-        "knowledge": 667.57,
-        "luxury": 172.8
-      },
-      "population": {
-        "total": 552,
-        "capacity": 552,
-        "availableCapacity": 0,
-        "net": 0,
-        "growthPotential": 2.62,
-        "lifeSupportRatio": 1,
-        "pressureDays": 294,
-        "status": "full"
-      },
-      "levels": {
-        "E1": 15,
-        "C1": 15,
-        "K": 15,
-        "B": 15,
-        "E2": 12,
-        "C2": 12,
-        "F": 12,
-        "P": 12,
-        "R": 6,
-        "L": 15,
-        "H": 12,
-        "M": 10,
-        "S": 1,
-        "E3": 10,
-        "D": 5
-      },
-      "staffing": {
-        "E1": 60,
-        "C1": 60,
-        "K": 0,
-        "B": 60,
-        "E2": 48,
-        "C2": 48,
-        "F": 48,
-        "P": 48,
-        "R": 24,
-        "L": 60,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 40,
-        "D": 20
-      },
-      "construction": {},
-      "cumulative": {
-        "started": 161,
-        "completed": 161,
-        "skippedForCost": 0,
-        "maxPopulation": 552,
-        "minWater": -120.70720000000037,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -46.566887499999815,
-        "capacityFullDays": 295,
-        "strainedDays": 42
-      }
-    },
-    {
-      "day": 850,
-      "resources": {
-        "power": 1110.46,
-        "water": 0.11,
-        "oxygen": 98046.47,
-        "biomass": 0.85,
-        "regolith": 12.86,
-        "alloy": 86858.46,
-        "quantumCore": 7827.69,
-        "currency": 6674.48,
-        "population": 552,
-        "knowledge": 267192.62,
-        "luxury": 66387.6
-      },
-      "dailyNet": {
-        "power": 1110.46,
-        "water": -0.7,
-        "oxygen": 224.51,
-        "biomass": 0.39,
-        "regolith": 0.68,
-        "alloy": -192.17,
-        "quantumCore": 21.82,
-        "currency": -4359.09,
-        "population": 0,
-        "knowledge": 667.57,
-        "luxury": 172.8
-      },
-      "population": {
-        "total": 552,
-        "capacity": 552,
-        "availableCapacity": 0,
-        "net": 0,
-        "growthPotential": 2.62,
-        "lifeSupportRatio": 1,
-        "pressureDays": 344,
-        "status": "full"
-      },
-      "levels": {
-        "E1": 15,
-        "C1": 15,
-        "K": 15,
-        "B": 15,
-        "E2": 12,
-        "C2": 12,
-        "F": 12,
-        "P": 12,
-        "R": 6,
-        "L": 15,
-        "H": 12,
-        "M": 10,
-        "S": 1,
-        "E3": 10,
-        "D": 5
-      },
-      "staffing": {
-        "E1": 60,
-        "C1": 60,
-        "K": 0,
-        "B": 60,
-        "E2": 48,
-        "C2": 48,
-        "F": 48,
-        "P": 48,
-        "R": 24,
-        "L": 60,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 40,
-        "D": 20
-      },
-      "construction": {},
-      "cumulative": {
-        "started": 161,
-        "completed": 161,
-        "skippedForCost": 0,
-        "maxPopulation": 552,
-        "minWater": -120.70720000000037,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -46.566887499999815,
-        "capacityFullDays": 345,
-        "strainedDays": 42
-      }
-    },
-    {
-      "day": 900,
-      "resources": {
-        "power": 28.08,
-        "water": -1190.43,
-        "oxygen": 99486.97,
-        "biomass": -1955.4,
-        "regolith": -2790.65,
-        "alloy": 72178.32,
-        "quantumCore": 7631.73,
-        "currency": 69.95,
-        "population": 527.5,
-        "knowledge": 271106.24,
-        "luxury": 67361.69
-      },
-      "dailyNet": {
-        "power": 28.08,
-        "water": -15.99,
-        "oxygen": 4.19,
-        "biomass": -17.82,
-        "regolith": 3.79,
-        "alloy": -14.2,
-        "quantumCore": -0.02,
-        "currency": 12.03,
-        "population": -0.1,
-        "knowledge": 8.34,
-        "luxury": 3.01
-      },
-      "population": {
-        "total": 527.5,
-        "capacity": 552,
-        "availableCapacity": 24.5,
-        "net": -5,
-        "growthPotential": 2.62,
-        "lifeSupportRatio": 0,
-        "pressureDays": 394,
-        "status": "strained"
-      },
-      "levels": {
-        "E1": 15,
-        "C1": 15,
-        "K": 15,
-        "B": 15,
-        "E2": 12,
-        "C2": 12,
-        "F": 12,
-        "P": 12,
-        "R": 6,
-        "L": 15,
-        "H": 12,
-        "M": 10,
-        "S": 1,
-        "E3": 10,
-        "D": 7
-      },
-      "staffing": {
-        "E1": 60,
-        "C1": 60,
-        "K": 0,
-        "B": 60,
-        "E2": 48,
-        "C2": 48,
-        "F": 48,
-        "P": 48,
-        "R": 24,
-        "L": 60,
-        "H": 0,
-        "M": 0,
-        "S": 0,
-        "E3": 40,
-        "D": 28
-      },
-      "construction": {
-        "D": {
-          "startedDay": 895,
-          "completeDay": 912,
-          "fromLevel": 7,
-          "toLevel": 8,
-          "cost": {
-            "alloy": 4894.399999999999,
-            "quantumCore": 122.35999999999997,
-            "currency": 244.71999999999994
-          }
-        }
-      },
-      "cumulative": {
-        "started": 164,
-        "completed": 163,
-        "skippedForCost": 0,
-        "maxPopulation": 552,
-        "minWater": -1190.4263712000006,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -1955.398437199865,
-        "capacityFullDays": 346,
-        "strainedDays": 91
-      }
-    },
-    {
-      "day": 950,
-      "resources": {
-        "power": 20.19,
-        "water": -1299.6,
-        "oxygen": 99697.63,
-        "biomass": -1865.9,
-        "regolith": -2591.46,
-        "alloy": 66941.45,
-        "quantumCore": 7494.02,
-        "currency": 277.89,
-        "population": 522.5,
-        "knowledge": 271523.47,
-        "luxury": 67509.74
-      },
-      "dailyNet": {
-        "power": 20.19,
-        "water": -0.69,
-        "oxygen": 4.23,
-        "biomass": 3.06,
-        "regolith": 4.29,
-        "alloy": 6.64,
+        "power": 1235.45,
+        "water": 0.27,
+        "oxygen": -95.2,
+        "biomass": 0.33,
+        "regolith": -0.01,
+        "alloy": 225.68,
         "quantumCore": 0,
-        "currency": 7.59,
-        "population": -0.1,
-        "knowledge": 8.34,
-        "luxury": 2.92
+        "currency": -1.29,
+        "population": -5,
+        "knowledge": 408.89,
+        "luxury": 152.1
       },
       "population": {
-        "total": 522.5,
-        "capacity": 552,
-        "availableCapacity": 29.5,
+        "total": 500.52,
+        "capacity": 528,
+        "availableCapacity": 27.48,
         "net": -5,
-        "growthPotential": 2.62,
-        "lifeSupportRatio": 0,
-        "pressureDays": 444,
+        "growthPotential": 2.52,
+        "lifeSupportRatio": 0.05,
+        "pressureDays": 3,
         "status": "strained"
       },
       "levels": {
@@ -2332,80 +1636,80 @@
         "C2": 12,
         "F": 12,
         "P": 12,
-        "R": 6,
+        "R": 10,
         "L": 15,
         "H": 12,
-        "M": 10,
+        "M": 9,
         "S": 1,
-        "E3": 10,
-        "D": 9
+        "E3": 8,
+        "D": 8
       },
       "staffing": {
         "E1": 60,
         "C1": 60,
         "K": 0,
         "B": 60,
-        "E2": 38,
+        "E2": 48,
         "C2": 48,
         "F": 48,
         "P": 48,
-        "R": 24,
+        "R": 36,
         "L": 60,
         "H": 0,
         "M": 0,
         "S": 0,
-        "E3": 40,
-        "D": 36
+        "E3": 32,
+        "D": 0
       },
       "construction": {},
       "cumulative": {
         "started": 165,
         "completed": 165,
         "skippedForCost": 0,
-        "maxPopulation": 552,
-        "minWater": -1299.6029312000007,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -2008.8495037998646,
-        "capacityFullDays": 346,
-        "strainedDays": 141
+        "maxPopulation": 528,
+        "minWater": -176.2636980000019,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 6,
+        "strainedDays": 17
       }
     },
     {
-      "day": 1000,
+      "day": 600,
       "resources": {
-        "power": 703.54,
-        "water": -1342.82,
-        "oxygen": 100119.68,
-        "biomass": -1558.76,
-        "regolith": -2131.81,
-        "alloy": 61480.45,
-        "quantumCore": 7341.07,
-        "currency": 641.4,
-        "population": 512.6,
-        "knowledge": 272349.59,
-        "luxury": 67791.76
+        "power": 1235.45,
+        "water": -167.62,
+        "oxygen": 25849.36,
+        "biomass": 26.32,
+        "regolith": 76.41,
+        "alloy": 15596.86,
+        "quantumCore": 62.38,
+        "currency": 721.8,
+        "population": 506,
+        "knowledge": 66189.48,
+        "luxury": 21562.2
       },
       "dailyNet": {
-        "power": 703.54,
-        "water": 1.98,
-        "oxygen": 213.66,
-        "biomass": 155.75,
-        "regolith": 237.23,
-        "alloy": 331.82,
+        "power": 1235.45,
+        "water": -0.73,
+        "oxygen": -94.2,
+        "biomass": 0.33,
+        "regolith": -0.01,
+        "alloy": 225.68,
         "quantumCore": 0,
-        "currency": 264.16,
-        "population": -5,
-        "knowledge": 417.23,
-        "luxury": 141.3
+        "currency": -0.99,
+        "population": 0,
+        "knowledge": 408.89,
+        "luxury": 152.1
       },
       "population": {
-        "total": 512.6,
-        "capacity": 552,
-        "availableCapacity": 39.4,
+        "total": 506,
+        "capacity": 528,
+        "availableCapacity": 22,
         "net": -5,
-        "growthPotential": 2.62,
-        "lifeSupportRatio": 0,
-        "pressureDays": 494,
+        "growthPotential": 2.52,
+        "lifeSupportRatio": 0.05,
+        "pressureDays": 2,
         "status": "strained"
       },
       "levels": {
@@ -2417,20 +1721,700 @@
         "C2": 12,
         "F": 12,
         "P": 12,
-        "R": 6,
+        "R": 10,
         "L": 15,
         "H": 12,
-        "M": 10,
+        "M": 9,
         "S": 1,
-        "E3": 10,
-        "D": 10
+        "E3": 8,
+        "D": 8
       },
       "staffing": {
         "E1": 60,
         "C1": 60,
         "K": 0,
         "B": 60,
-        "E2": 24,
+        "E2": 48,
+        "C2": 48,
+        "F": 48,
+        "P": 48,
+        "R": 40,
+        "L": 60,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 32,
+        "D": 1
+      },
+      "construction": {},
+      "cumulative": {
+        "started": 165,
+        "completed": 165,
+        "skippedForCost": 0,
+        "maxPopulation": 528,
+        "minWater": -176.2636980000019,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 6,
+        "strainedDays": 55
+      }
+    },
+    {
+      "day": 650,
+      "resources": {
+        "power": 1235.45,
+        "water": -166.72,
+        "oxygen": 34378.26,
+        "biomass": 26.23,
+        "regolith": 76.63,
+        "alloy": 29716.81,
+        "quantumCore": 62.38,
+        "currency": 722.55,
+        "population": 500.72,
+        "knowledge": 86633.8,
+        "luxury": 28665.9
+      },
+      "dailyNet": {
+        "power": 1235.45,
+        "water": 0.27,
+        "oxygen": -95.2,
+        "biomass": 0.33,
+        "regolith": -0.01,
+        "alloy": 225.68,
+        "quantumCore": 0,
+        "currency": -0.99,
+        "population": -5,
+        "knowledge": 408.89,
+        "luxury": 152.1
+      },
+      "population": {
+        "total": 500.72,
+        "capacity": 528,
+        "availableCapacity": 27.28,
+        "net": -5,
+        "growthPotential": 2.52,
+        "lifeSupportRatio": 0.05,
+        "pressureDays": 3,
+        "status": "strained"
+      },
+      "levels": {
+        "E1": 15,
+        "C1": 15,
+        "K": 15,
+        "B": 15,
+        "E2": 12,
+        "C2": 12,
+        "F": 12,
+        "P": 12,
+        "R": 10,
+        "L": 15,
+        "H": 12,
+        "M": 9,
+        "S": 1,
+        "E3": 8,
+        "D": 8
+      },
+      "staffing": {
+        "E1": 60,
+        "C1": 60,
+        "K": 0,
+        "B": 60,
+        "E2": 48,
+        "C2": 48,
+        "F": 48,
+        "P": 48,
+        "R": 36,
+        "L": 60,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 32,
+        "D": 0
+      },
+      "construction": {},
+      "cumulative": {
+        "started": 165,
+        "completed": 165,
+        "skippedForCost": 0,
+        "maxPopulation": 528,
+        "minWater": -176.2636980000019,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 6,
+        "strainedDays": 93
+      }
+    },
+    {
+      "day": 700,
+      "resources": {
+        "power": 1271.47,
+        "water": -165.87,
+        "oxygen": 42423.67,
+        "biomass": 0.02,
+        "regolith": 12.06,
+        "alloy": 43688.16,
+        "quantumCore": 62.38,
+        "currency": 719.21,
+        "population": 498.69,
+        "knowledge": 107078.12,
+        "luxury": 35779.5
+      },
+      "dailyNet": {
+        "power": 1271.47,
+        "water": -0.98,
+        "oxygen": 23.12,
+        "biomass": -0.59,
+        "regolith": -0.27,
+        "alloy": 254.76,
+        "quantumCore": 0,
+        "currency": -1.3,
+        "population": -5,
+        "knowledge": 408.89,
+        "luxury": 150.3
+      },
+      "population": {
+        "total": 498.69,
+        "capacity": 528,
+        "availableCapacity": 29.31,
+        "net": -5,
+        "growthPotential": 2.52,
+        "lifeSupportRatio": 0.05,
+        "pressureDays": 3,
+        "status": "strained"
+      },
+      "levels": {
+        "E1": 15,
+        "C1": 15,
+        "K": 15,
+        "B": 15,
+        "E2": 12,
+        "C2": 12,
+        "F": 12,
+        "P": 12,
+        "R": 10,
+        "L": 15,
+        "H": 12,
+        "M": 9,
+        "S": 1,
+        "E3": 8,
+        "D": 8
+      },
+      "staffing": {
+        "E1": 60,
+        "C1": 60,
+        "K": 0,
+        "B": 60,
+        "E2": 48,
+        "C2": 48,
+        "F": 48,
+        "P": 48,
+        "R": 34,
+        "L": 60,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 32,
+        "D": 0
+      },
+      "construction": {},
+      "cumulative": {
+        "started": 165,
+        "completed": 165,
+        "skippedForCost": 0,
+        "maxPopulation": 528,
+        "minWater": -176.2636980000019,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 6,
+        "strainedDays": 132
+      }
+    },
+    {
+      "day": 750,
+      "resources": {
+        "power": 1341.03,
+        "water": -164.18,
+        "oxygen": 51134.54,
+        "biomass": 0.9,
+        "regolith": 12.43,
+        "alloy": 57850.08,
+        "quantumCore": 62.38,
+        "currency": 710.41,
+        "population": 493.56,
+        "knowledge": 127522.44,
+        "luxury": 42877.8
+      },
+      "dailyNet": {
+        "power": 1341.03,
+        "water": 2.31,
+        "oxygen": 100.69,
+        "biomass": 0.02,
+        "regolith": 0.23,
+        "alloy": 270.87,
+        "quantumCore": 0,
+        "currency": -9.6,
+        "population": -5,
+        "knowledge": 408.89,
+        "luxury": 145.8
+      },
+      "population": {
+        "total": 493.56,
+        "capacity": 528,
+        "availableCapacity": 34.44,
+        "net": -5,
+        "growthPotential": 2.52,
+        "lifeSupportRatio": 0.05,
+        "pressureDays": 4,
+        "status": "strained"
+      },
+      "levels": {
+        "E1": 15,
+        "C1": 15,
+        "K": 15,
+        "B": 15,
+        "E2": 12,
+        "C2": 12,
+        "F": 12,
+        "P": 12,
+        "R": 10,
+        "L": 15,
+        "H": 12,
+        "M": 9,
+        "S": 1,
+        "E3": 8,
+        "D": 8
+      },
+      "staffing": {
+        "E1": 60,
+        "C1": 60,
+        "K": 0,
+        "B": 60,
+        "E2": 48,
+        "C2": 48,
+        "F": 48,
+        "P": 48,
+        "R": 29,
+        "L": 60,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 32,
+        "D": 0
+      },
+      "construction": {},
+      "cumulative": {
+        "started": 165,
+        "completed": 165,
+        "skippedForCost": 0,
+        "maxPopulation": 528,
+        "minWater": -176.2636980000019,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 6,
+        "strainedDays": 170
+      }
+    },
+    {
+      "day": 800,
+      "resources": {
+        "power": 1313.21,
+        "water": -164.74,
+        "oxygen": 59566.13,
+        "biomass": 0.43,
+        "regolith": 12.98,
+        "alloy": 71937.65,
+        "quantumCore": 62.38,
+        "currency": 716.16,
+        "population": 495.69,
+        "knowledge": 147966.76,
+        "luxury": 49977.9
+      },
+      "dailyNet": {
+        "power": 1313.21,
+        "water": 2.8,
+        "oxygen": 163.86,
+        "biomass": -25.42,
+        "regolith": -63.97,
+        "alloy": 264.43,
+        "quantumCore": 0,
+        "currency": -7.24,
+        "population": -5,
+        "knowledge": 408.89,
+        "luxury": 147.6
+      },
+      "population": {
+        "total": 495.69,
+        "capacity": 528,
+        "availableCapacity": 32.31,
+        "net": -5,
+        "growthPotential": 2.52,
+        "lifeSupportRatio": 0.05,
+        "pressureDays": 4,
+        "status": "strained"
+      },
+      "levels": {
+        "E1": 15,
+        "C1": 15,
+        "K": 15,
+        "B": 15,
+        "E2": 12,
+        "C2": 12,
+        "F": 12,
+        "P": 12,
+        "R": 10,
+        "L": 15,
+        "H": 12,
+        "M": 9,
+        "S": 1,
+        "E3": 8,
+        "D": 8
+      },
+      "staffing": {
+        "E1": 60,
+        "C1": 60,
+        "K": 0,
+        "B": 60,
+        "E2": 48,
+        "C2": 48,
+        "F": 48,
+        "P": 48,
+        "R": 31,
+        "L": 60,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 32,
+        "D": 0
+      },
+      "construction": {},
+      "cumulative": {
+        "started": 165,
+        "completed": 165,
+        "skippedForCost": 0,
+        "maxPopulation": 528,
+        "minWater": -176.2636980000019,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 6,
+        "strainedDays": 206
+      }
+    },
+    {
+      "day": 850,
+      "resources": {
+        "power": 1341.03,
+        "water": -164.11,
+        "oxygen": 67562.29,
+        "biomass": 0.39,
+        "regolith": 12.7,
+        "alloy": 85918.66,
+        "quantumCore": 62.38,
+        "currency": 711.95,
+        "population": 493.65,
+        "knowledge": 168411.08,
+        "luxury": 57088.8
+      },
+      "dailyNet": {
+        "power": 1341.03,
+        "water": 2.31,
+        "oxygen": 99.69,
+        "biomass": 0.02,
+        "regolith": 0.23,
+        "alloy": 270.87,
+        "quantumCore": 0,
+        "currency": -6.75,
+        "population": -5,
+        "knowledge": 408.89,
+        "luxury": 145.8
+      },
+      "population": {
+        "total": 493.65,
+        "capacity": 528,
+        "availableCapacity": 34.35,
+        "net": -5,
+        "growthPotential": 2.52,
+        "lifeSupportRatio": 0.05,
+        "pressureDays": 4,
+        "status": "strained"
+      },
+      "levels": {
+        "E1": 15,
+        "C1": 15,
+        "K": 15,
+        "B": 15,
+        "E2": 12,
+        "C2": 12,
+        "F": 12,
+        "P": 12,
+        "R": 10,
+        "L": 15,
+        "H": 12,
+        "M": 9,
+        "S": 1,
+        "E3": 8,
+        "D": 8
+      },
+      "staffing": {
+        "E1": 60,
+        "C1": 60,
+        "K": 0,
+        "B": 60,
+        "E2": 48,
+        "C2": 48,
+        "F": 48,
+        "P": 48,
+        "R": 29,
+        "L": 60,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 32,
+        "D": 0
+      },
+      "construction": {},
+      "cumulative": {
+        "started": 165,
+        "completed": 165,
+        "skippedForCost": 0,
+        "maxPopulation": 528,
+        "minWater": -176.2636980000019,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 6,
+        "strainedDays": 245
+      }
+    },
+    {
+      "day": 900,
+      "resources": {
+        "power": 1313.21,
+        "water": -164.7,
+        "oxygen": 75931.22,
+        "biomass": 0.03,
+        "regolith": 12.85,
+        "alloy": 99993.35,
+        "quantumCore": 62.38,
+        "currency": 715.19,
+        "population": 495.88,
+        "knowledge": 188855.4,
+        "luxury": 64192.5
+      },
+      "dailyNet": {
+        "power": 1313.21,
+        "water": 2.8,
+        "oxygen": 165.86,
+        "biomass": -26.42,
+        "regolith": -63.97,
+        "alloy": 264.43,
+        "quantumCore": 0,
+        "currency": -7.59,
+        "population": -5,
+        "knowledge": 408.89,
+        "luxury": 147.6
+      },
+      "population": {
+        "total": 495.88,
+        "capacity": 528,
+        "availableCapacity": 32.12,
+        "net": -5,
+        "growthPotential": 2.52,
+        "lifeSupportRatio": 0.05,
+        "pressureDays": 4,
+        "status": "strained"
+      },
+      "levels": {
+        "E1": 15,
+        "C1": 15,
+        "K": 15,
+        "B": 15,
+        "E2": 12,
+        "C2": 12,
+        "F": 12,
+        "P": 12,
+        "R": 10,
+        "L": 15,
+        "H": 12,
+        "M": 9,
+        "S": 1,
+        "E3": 8,
+        "D": 8
+      },
+      "staffing": {
+        "E1": 60,
+        "C1": 60,
+        "K": 0,
+        "B": 60,
+        "E2": 48,
+        "C2": 48,
+        "F": 48,
+        "P": 48,
+        "R": 31,
+        "L": 60,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 32,
+        "D": 0
+      },
+      "construction": {},
+      "cumulative": {
+        "started": 165,
+        "completed": 165,
+        "skippedForCost": 0,
+        "maxPopulation": 528,
+        "minWater": -176.2636980000019,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 6,
+        "strainedDays": 282
+      }
+    },
+    {
+      "day": 950,
+      "resources": {
+        "power": 1396.68,
+        "water": -161.29,
+        "oxygen": 84303.15,
+        "biomass": 0.67,
+        "regolith": 13,
+        "alloy": 114068.04,
+        "quantumCore": 62.38,
+        "currency": 706.32,
+        "population": 489.55,
+        "knowledge": 209299.71,
+        "luxury": 71296.2
+      },
+      "dailyNet": {
+        "power": 1396.68,
+        "water": 3.34,
+        "oxygen": 162.35,
+        "biomass": -0.09,
+        "regolith": 0.63,
+        "alloy": 283.76,
+        "quantumCore": 0,
+        "currency": -6.19,
+        "population": -5,
+        "knowledge": 408.89,
+        "luxury": 142.2
+      },
+      "population": {
+        "total": 489.55,
+        "capacity": 528,
+        "availableCapacity": 38.45,
+        "net": -5,
+        "growthPotential": 2.52,
+        "lifeSupportRatio": 0.05,
+        "pressureDays": 5,
+        "status": "strained"
+      },
+      "levels": {
+        "E1": 15,
+        "C1": 15,
+        "K": 15,
+        "B": 15,
+        "E2": 12,
+        "C2": 12,
+        "F": 12,
+        "P": 12,
+        "R": 10,
+        "L": 15,
+        "H": 12,
+        "M": 9,
+        "S": 1,
+        "E3": 8,
+        "D": 8
+      },
+      "staffing": {
+        "E1": 60,
+        "C1": 60,
+        "K": 0,
+        "B": 60,
+        "E2": 48,
+        "C2": 48,
+        "F": 48,
+        "P": 48,
+        "R": 25,
+        "L": 60,
+        "H": 0,
+        "M": 0,
+        "S": 0,
+        "E3": 32,
+        "D": 0
+      },
+      "construction": {},
+      "cumulative": {
+        "started": 165,
+        "completed": 165,
+        "skippedForCost": 0,
+        "maxPopulation": 528,
+        "minWater": -176.2636980000019,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 6,
+        "strainedDays": 321
+      }
+    },
+    {
+      "day": 1000,
+      "resources": {
+        "power": 1410.6,
+        "water": -161.63,
+        "oxygen": 92367.96,
+        "biomass": 0.52,
+        "regolith": 12.13,
+        "alloy": 128061.93,
+        "quantumCore": 62.38,
+        "currency": 703.34,
+        "population": 488.66,
+        "knowledge": 229744.03,
+        "luxury": 78403.5
+      },
+      "dailyNet": {
+        "power": 1410.6,
+        "water": 1.6,
+        "oxygen": 182.26,
+        "biomass": -0.37,
+        "regolith": -0.27,
+        "alloy": 286.98,
+        "quantumCore": 0,
+        "currency": -8.59,
+        "population": -5,
+        "knowledge": 408.89,
+        "luxury": 141.3
+      },
+      "population": {
+        "total": 488.66,
+        "capacity": 528,
+        "availableCapacity": 39.34,
+        "net": -5,
+        "growthPotential": 2.52,
+        "lifeSupportRatio": 0.05,
+        "pressureDays": 5,
+        "status": "strained"
+      },
+      "levels": {
+        "E1": 15,
+        "C1": 15,
+        "K": 15,
+        "B": 15,
+        "E2": 12,
+        "C2": 12,
+        "F": 12,
+        "P": 12,
+        "R": 10,
+        "L": 15,
+        "H": 12,
+        "M": 9,
+        "S": 1,
+        "E3": 8,
+        "D": 8
+      },
+      "staffing": {
+        "E1": 60,
+        "C1": 60,
+        "K": 0,
+        "B": 60,
+        "E2": 48,
         "C2": 48,
         "F": 48,
         "P": 48,
@@ -2439,59 +2423,59 @@
         "H": 0,
         "M": 0,
         "S": 0,
-        "E3": 40,
-        "D": 40
+        "E3": 32,
+        "D": 0
       },
       "construction": {},
       "cumulative": {
-        "started": 166,
-        "completed": 166,
+        "started": 165,
+        "completed": 165,
         "skippedForCost": 0,
-        "maxPopulation": 552,
-        "minWater": -1344.7950400000004,
-        "minOxygen": 0.10000000000000053,
-        "minBiomass": -2008.8495037998646,
-        "capacityFullDays": 346,
-        "strainedDays": 191
+        "maxPopulation": 528,
+        "minWater": -176.2636980000019,
+        "minOxygen": 0,
+        "minBiomass": 0,
+        "capacityFullDays": 6,
+        "strainedDays": 359
       }
     }
   ],
   "final": {
     "day": 1000,
     "resources": {
-      "power": 703.54,
-      "water": -1342.82,
-      "oxygen": 100119.68,
-      "biomass": -1558.76,
-      "regolith": -2131.81,
-      "alloy": 61480.45,
-      "quantumCore": 7341.07,
-      "currency": 641.4,
-      "population": 512.6,
-      "knowledge": 272349.59,
-      "luxury": 67791.76
+      "power": 1410.6,
+      "water": -161.63,
+      "oxygen": 92367.96,
+      "biomass": 0.52,
+      "regolith": 12.13,
+      "alloy": 128061.93,
+      "quantumCore": 62.38,
+      "currency": 703.34,
+      "population": 488.66,
+      "knowledge": 229744.03,
+      "luxury": 78403.5
     },
     "dailyNet": {
-      "power": 703.54,
-      "water": 1.98,
-      "oxygen": 213.66,
-      "biomass": 155.75,
-      "regolith": 237.23,
-      "alloy": 331.82,
+      "power": 1410.6,
+      "water": 1.6,
+      "oxygen": 182.26,
+      "biomass": -0.37,
+      "regolith": -0.27,
+      "alloy": 286.98,
       "quantumCore": 0,
-      "currency": 264.16,
+      "currency": -8.59,
       "population": -5,
-      "knowledge": 417.23,
+      "knowledge": 408.89,
       "luxury": 141.3
     },
     "population": {
-      "total": 512.6,
-      "capacity": 552,
-      "availableCapacity": 39.4,
+      "total": 488.66,
+      "capacity": 528,
+      "availableCapacity": 39.34,
       "net": -5,
-      "growthPotential": 2.62,
-      "lifeSupportRatio": 0,
-      "pressureDays": 494,
+      "growthPotential": 2.52,
+      "lifeSupportRatio": 0.05,
+      "pressureDays": 5,
       "status": "strained"
     },
     "levels": {
@@ -2503,20 +2487,20 @@
       "C2": 12,
       "F": 12,
       "P": 12,
-      "R": 6,
+      "R": 10,
       "L": 15,
       "H": 12,
-      "M": 10,
+      "M": 9,
       "S": 1,
-      "E3": 10,
-      "D": 10
+      "E3": 8,
+      "D": 8
     },
     "staffing": {
       "E1": 60,
       "C1": 60,
       "K": 0,
       "B": 60,
-      "E2": 24,
+      "E2": 48,
       "C2": 48,
       "F": 48,
       "P": 48,
@@ -2525,32 +2509,32 @@
       "H": 0,
       "M": 0,
       "S": 0,
-      "E3": 40,
-      "D": 40
+      "E3": 32,
+      "D": 0
     },
     "construction": {},
     "cumulative": {
-      "started": 166,
-      "completed": 166,
+      "started": 165,
+      "completed": 165,
       "skippedForCost": 0,
-      "maxPopulation": 552,
-      "minWater": -1344.7950400000004,
-      "minOxygen": 0.10000000000000053,
-      "minBiomass": -2008.8495037998646,
-      "capacityFullDays": 346,
-      "strainedDays": 191
+      "maxPopulation": 528,
+      "minWater": -176.2636980000019,
+      "minOxygen": 0,
+      "minBiomass": 0,
+      "capacityFullDays": 6,
+      "strainedDays": 359
     }
   },
   "findings": [
-    "Without random events, final population is 512.6/552, meeting the 500 target.",
+    "Without random events, final population is 488.66/528, below the 500 target.",
     "Built facilities: E1, C1, K, B, E2, C2, F, P, R, L, H, M, S, E3, D. Auto-purchase protection is on; starport buys alloy/regolith on credit when below reserve floors.",
-    "The optimizer started 166 projects and completed 166.",
-    "Minimum life-support stocks: water -1344.8, oxygen 0.1, biomass -2008.85.",
-    "Population is still growing at day 1000: net -5/day with 39.4 spare housing capacity.",
-    "Capacity-full days: 346; strained life-support days: 191.",
+    "The optimizer started 165 projects and completed 165.",
+    "Minimum life-support stocks: water -176.26, oxygen 0, biomass 0.",
+    "Population is still growing at day 1000: net -5/day with 39.34 spare housing capacity.",
+    "Capacity-full days: 6; strained life-support days: 359.",
     "Completed techs: TE1-0, TE1-1, TE1-2, TE2-0, TE3-0, TC1-0, TC1-1, TC2-0, TC2-1, TC2-2, TB-0, TB-1, TB-2, TF-0, TF-1, TP-0, TP-1, TR-0, TS-0, TK-0, TL-0, TL-1, TL-2, TL-3, TH-0, TM-0, TD-0, TD-1, TD-2, TS-1, TS-2, TS-3, TG-1, TG-2, TG-3, TG-4.",
-    "Diagnosable expansion candidates: E1 {\"regolith\":319.2,\"alloy\":159.6}; C1 {\"regolith\":319.2,\"alloy\":159.6}; K {\"regolith\":205.2,\"alloy\":136.79999999999998}; B {\"water\":478.79999999999995,\"regolith\":478.79999999999995,\"alloy\":319.2}; E2 {\"regolith\":389.025,\"alloy\":389.025,\"currency\":259.34999999999997}; C2 {\"alloy\":389.025,\"currency\":389.025}; F {\"regolith\":518.6999999999999,\"alloy\":389.025,\"currency\":259.34999999999997}; P {\"water\":518.6999999999999,\"regolith\":389.025,\"alloy\":259.34999999999997}; R {\"water\":372.4,\"biomass\":372.4,\"alloy\":558.5999999999999}; L {\"alloy\":957.5999999999999,\"currency\":957.5999999999999}; H {\"biomass\":463.125,\"alloy\":555.75,\"currency\":185.25}; M {\"water\":1003.1999999999999,\"regolith\":2006.3999999999999,\"alloy\":2257.2}; S {}; E3 {\"alloy\":501.59999999999997,\"quantumCore\":125.39999999999999,\"currency\":376.2}; D {\"alloy\":8778,\"quantumCore\":219.45,\"currency\":438.9}.",
-    "Ship victory achieved at day 903 (target: 800)."
+    "Diagnosable expansion candidates: E1 {\"regolith\":319.2,\"alloy\":159.6}; C1 {\"regolith\":319.2,\"alloy\":159.6}; K {\"regolith\":205.2,\"alloy\":136.79999999999998}; B {\"water\":478.79999999999995,\"regolith\":478.79999999999995,\"alloy\":319.2}; E2 {\"regolith\":389.025,\"alloy\":389.025,\"currency\":259.34999999999997}; C2 {\"alloy\":389.025,\"currency\":389.025}; F {\"regolith\":518.6999999999999,\"alloy\":389.025,\"currency\":259.34999999999997}; P {\"water\":518.6999999999999,\"regolith\":389.025,\"alloy\":259.34999999999997}; R {\"water\":877.8,\"biomass\":877.8,\"alloy\":1316.6999999999998}; L {\"alloy\":957.5999999999999,\"currency\":957.5999999999999}; H {\"biomass\":463.125,\"alloy\":555.75,\"currency\":185.25}; M {\"water\":608,\"regolith\":1216,\"alloy\":1368}; S {}; E3 {\"alloy\":273.59999999999997,\"quantumCore\":68.39999999999999,\"currency\":205.2}; D {\"alloy\":4788,\"quantumCore\":119.69999999999999,\"currency\":239.39999999999998}.",
+    "Ship not completed by day 1000 (D level 8)."
   ],
-  "shipWinDay": 903
+  "shipWinDay": 0
 }

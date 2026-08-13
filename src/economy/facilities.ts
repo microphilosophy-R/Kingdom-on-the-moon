@@ -70,7 +70,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '本地月面采掘设施。静海采掘署位于月面尘壤盆地，承担前期水与月壤资源采掘任务。',
     productionMethods: [
-      { id: 'MC1-1', name: '静海月面采掘', input: { power: 1 }, output: { water: 0.8, regolith: 2.2 }, note: '本地月面开采。消耗电力，产出水与月壤。' },
+      { id: 'MC1-1', name: '静海月面采掘', input: { power: 1 }, output: { water: 1.2, regolith: 1.6 }, note: '本地月面开采。消耗电力，产出水与月壤。' },
     ],
   },
   C2: {
@@ -88,8 +88,8 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '小行星带远征采掘设施。西海采掘署负责太渊引力阱内小行星带资源的远征采掘，为中期水、月壤与合金资源的主要来源。',
     productionMethods: [
-      { id: 'MC2-1', name: '西海小行星带采掘', input: { power: 1.4, water: 0.3, oxygen: 0.4, biomass: 0.2 }, output: { water: 0.8, regolith: 2.2, alloy: 1.2 }, note: '小行星带开采。远征采掘需额外消耗水、氧气和生物质以维持补给，产出水、月壤与合金。' },
-      { id: 'MC2-2', name: '生态行星资源采集', input: { power: 1.4 }, output: { water: 0.6, regolith: 1.4, alloy: 0.8 }, unlockedBy: 'TC2-2', note: 'TC2-2 外星科技解锁后启用。经坐标导航确认宜居生态行星，远征采掘不再消耗生命维持补给。' },
+      { id: 'MC2-1', name: '西海小行星带采掘', input: { power: 1.4, water: 0.3, oxygen: 0.4, biomass: 0.2 }, output: { water: 1.2, regolith: 1.6, alloy: 1.2 }, note: '小行星带开采。远征采掘需额外消耗水、氧气和生物质以维持补给，产出水、月壤与合金。' },
+      { id: 'MC2-2', name: '生态行星资源采集', input: { power: 1.4 }, output: { water: 1.0, regolith: 0.8, alloy: 0.8 }, unlockedBy: 'TC2-2', note: 'TC2-2 外星科技解锁后启用。经坐标导航确认宜居生态行星，远征采掘不再消耗生命维持补给。' },
     ],
   },
   B: {
@@ -164,9 +164,9 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '特殊设施页展示四阶段工程进度、投入与回报。',
     note: '投资型项目：前期吸收多余资源，中期集中投入，后期释放产出。',
     productionMethods: [
-      { id: 'MR-1', name: '气候改造装置建设', input: { power: 10 }, output: {}, condition: '默认阶段', note: '第一阶段：消耗电力运行；按进度投入水、氧、生物质、月壤与合金（阶段总量见 ecologyRingPhases）。' },
-      { id: 'MR-2', name: '大气改造', input: {}, output: {}, condition: '阶段推进', autoSelect: false, note: '第二阶段：按进度投入氧气。' },
-      { id: 'MR-3', name: '生态改造', input: {}, output: {}, condition: '阶段推进', autoSelect: false, note: '第三阶段：按进度投入水、月壤与生物质。' },
+      { id: 'MR-1', name: '气候改造装置建设', input: { power: 10, water: 1.2, oxygen: 2.4, biomass: 2.2, regolith: 2.8, alloy: 2.2 }, output: {}, condition: '默认阶段', note: '第一阶段：消耗电力运行，并每日投入水、氧、生物质、月壤与合金（阶段总量见 ecologyRingPhases）。' },
+      { id: 'MR-2', name: '大气改造', input: { oxygen: 3 }, output: {}, condition: '阶段推进', autoSelect: false, note: '第二阶段：每日投入氧气。' },
+      { id: 'MR-3', name: '生态改造', input: { water: 3.6, regolith: 2.4, biomass: 2 }, output: {}, condition: '阶段推进', autoSelect: false, note: '第三阶段：每日投入水、月壤与生物质。' },
       { id: 'MR-4', name: '回报阶段', input: {}, output: { water: 1.2, oxygen: 1.2, biomass: 1.0 }, condition: '阶段推进', autoSelect: false, note: '回报阶段：无消耗，持续产出水、氧气与生物质。' },
     ],
     phaseNotes: [
@@ -297,9 +297,9 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示御座号项目进度、三阶段物资供应、人力供应与胜利条件。',
     note: '胜利目标建筑。冠冕星舰坞承担御座号远洋星舰建造项目，按阶段完成舰体装配，为殖民胜利目标。',
     productionMethods: [
-      { id: 'MD-1', name: '龙骨与生命舱', input: { power: 16 }, output: {}, note: '第一阶段：消耗电力运行船坞；按进度投入合金与氧气（阶段总量见 shipProjectStages）。' },
-      { id: 'MD-2', name: '远航壳层与循环农场', input: { power: 18 }, output: {}, unlockedBy: 'TD-1', note: '第二阶段：消耗电力运行船坞；按进度投入合金、月壤与生物质。' },
-      { id: 'MD-3', name: '王座核心与深空储备', input: { power: 11 }, output: {}, unlockedBy: 'TD-2', note: '第三阶段：消耗电力运行船坞；按进度投入量子核心、合金、水与生物质。' },
+      { id: 'MD-1', name: '龙骨与生命舱', input: { power: 16, alloy: 10, oxygen: 10 }, output: {}, note: '第一阶段：消耗电力运行，并每日投入合金与氧气（阶段总量见 shipProjectStages）。' },
+      { id: 'MD-2', name: '远航壳层与循环农场', input: { power: 18, alloy: 20, regolith: 50, biomass: 20 }, output: {}, unlockedBy: 'TD-1', note: '第二阶段：消耗电力运行，并每日投入合金、月壤与生物质。' },
+      { id: 'MD-3', name: '王座核心与深空储备', input: { power: 11, quantumCore: 0.0267, alloy: 30, water: 20, biomass: 30 }, output: {}, unlockedBy: 'TD-2', note: '第三阶段：消耗电力运行，并每日投入量子核心、合金、水与生物质。' },
     ],
     phaseNotes: [
       { name: '第一阶段：龙骨与生命舱', note: '投入合金、氧气和电力，完成星舰基础结构与维生舱段。' },

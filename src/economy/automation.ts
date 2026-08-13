@@ -3,10 +3,10 @@ import { ecologyRingPhases, facilityEconomySpecs, facilityOrder, shipProjectStag
 import { canAfford, applyBundle, defaultReserveFloors, emptyResources, resourceMeta, resourceOrder, resourceWeights, weightedValue } from './resources'
 import { canBuildFacility, canUseProductionMethod, estimateTechnologyValue, hasTech, hasTechnologyPrerequisites, selectProductionMethod, technologyCatalog } from './technologies'
 import { difficultyConfigs, type Difficulty } from './difficulty'
-import { estimateResourceDeficitPremium, estimateTradePremium, planAutoTradesForCost, resourceDebtLimits } from './trade'
+import { emergencyCreditDebtLimit, estimateResourceDeficitPremium, estimateTradePremium, planAutoTradesForCost, resourceDebtLimits } from './trade'
 import { projectFacilityCost, projectFacilityNet, projectTechnologyCost } from './production'
 import { eventChains, getCurrentGameEra } from '../events'
-import type { AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, MethodAutomationAction, PopulationProjection, ProductionMethod, ProductionMethodId, Resources, StaffingAction, TechnologyAutomationAction, TechnologySpec } from './types'
+import type { AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, MethodAutomationAction, PopulationProjection, ProductionMethod, ProductionMethodId, ResourceKey, Resources, StaffingAction, TechnologyAutomationAction, TechnologySpec } from './types'
 const mergeBundles = (...bundles: Partial<Resources>[]) => {
   const total = emptyResources()
   bundles.forEach(bundle => {
@@ -35,6 +35,15 @@ const scaleGain = (gain: Partial<Resources>, factor: number): Partial<Resources>
 // 当盈余价值 >= 阶段投入总价值时，给到最高分，表示可以「全力冲刺」。
 const MAX_SINK_GAIN = 300
 
+/** 扩建成本摊销天数：按约 3 个王月（90 御日）回收，避免 horizon=360 把成本摊薄到趋近 0。 */
+const COST_AMORTIZATION_DAYS = 90
+
+/** 维生跌破储备线的惩罚系数：扩建若让水/氧/生物质一年内跌破储备线，重罚。 */
+const LIFE_SUPPORT_SAFETY_PENALTY = 6
+
+/** D/R 材料「盈余加分」权重：盈余比例越高，加分越高（与材料消耗减分独立加权，不做符号翻转）。 */
+const SURPLUS_SINK_BONUS_WEIGHT = 1
+
 const projectSinkGain = (
   id: FacilityId,
   currentLevel: number,
@@ -59,6 +68,129 @@ const projectSinkGain = (
   return Math.min(MAX_SINK_GAIN, MAX_SINK_GAIN * ratio * ratio)
 }
 
+type StaffingRating = {
+  id: FacilityId
+  capacity: number
+  perJobNet: Partial<Resources>
+  score: number
+}
+
+type StaffingRatingInput = {
+  resources: Resources
+  levels: Record<FacilityId, number>
+  staffing: Partial<Record<FacilityId, number>>
+  techs: string[]
+  productionMethods: Partial<Record<FacilityId, ProductionMethodId>>
+  modifiers: Partial<Record<FacilityId, FacilityModifiers>>
+  reserveFloors: Resources
+  sinkStageInputs: Partial<Record<'D' | 'R', Partial<Resources>>>
+}
+
+/**
+ * 人力分配的唯一评分口径：按每岗净值 + 电力裕度 + 赤字溢价 + D/R 盈余加分，
+ * 计算各生产设施在给定库存/等级/科技/生产方式下的排序结果。
+ * 扩建评估（projectStaffing）与每日实际分配（rebalanceStaffing）共用此函数，避免两套口径漂移。
+ */
+function rateStaffingFacilities(input: StaffingRatingInput): StaffingRating[] {
+  const { resources, levels, staffing, techs, productionMethods, modifiers, reserveFloors, sinkStageInputs } = input
+  const rated: StaffingRating[] = []
+  const totalNet = emptyResources()
+  let powerConsumption = 0
+
+  facilityOrder.forEach(id => {
+    const spec = facilityEconomySpecs[id]
+    if (isHousingFacility(id) || isFixedFacility(id)) return
+    const level = levels[id] ?? 0
+    const capacity = getFacilityWorkCapacity(id, level)
+    if (capacity <= 0) return
+    const method = selectProductionMethod(spec.productionMethods, techs, productionMethods[id])
+    const perJobNet = projectFacilityNet(spec, 1, modifiers[id], techs, method.id, level)
+    rated.push({ id, capacity, perJobNet, score: 0 })
+    const assigned = Math.min(capacity, staffing[id] ?? 0)
+    if (assigned > 0) {
+      resourceOrder.forEach(key => {
+        totalNet[key] += (perJobNet[key] ?? 0) * assigned
+      })
+      if ((perJobNet.power ?? 0) < 0) {
+        powerConsumption += -(perJobNet.power ?? 0) * assigned
+      }
+    }
+  })
+
+  // 赤字权重：库存低于储备线，或净产出为负且逼近储备线时，抬升该资源的边际价值（电力单独按裕度处理）。
+  const deficitWeights: Partial<Resources> = {}
+  resourceOrder.forEach(key => {
+    if (key === 'population' || key === 'knowledge' || key === 'luxury' || key === 'power') return
+    const floor = reserveFloors[key] ?? 0
+    const stock = resources[key] ?? 0
+    const net = totalNet[key] ?? 0
+    let weight = 0
+    if (stock < floor) {
+      weight = Math.min(3, 1 + (floor - stock) / Math.max(1, floor))
+    } else if (net < 0) {
+      const daysToFloor = (stock - floor) / Math.abs(net)
+      if (daysToFloor < 10) weight = Math.max(0.2, 1 - daysToFloor / 10)
+    }
+    if (weight > 0) deficitWeights[key] = weight
+  })
+
+  // 电力裕度评分：基于「净电力 / 绝对消耗」的连续权重，消除 0/1 阶跃导致的震荡。
+  const powerMargin = totalNet.power ?? 0
+  const powerScale = Math.max(1, powerConsumption)
+  const powerWeight = Math.max(0, Math.min(3, 1 - powerMargin / powerScale))
+
+  rated.forEach(item => {
+    const isSink = isProjectSinkFacility(item.id)
+    let score = 0
+    resourceOrder.forEach(key => {
+      const netValue = item.perJobNet[key] ?? 0
+      const baseWeight = key === 'power' ? powerWeight : resourceWeights[key]
+      // 基础分：产出价值 + 材料/电力消耗减分
+      score += netValue * baseWeight
+    })
+    // D/R 整体盈余加分：盈余价值相对当前阶段总投入的比例，连续、无翻转、无二值封锁。
+    if (isSink) {
+      const stageInput = sinkStageInputs[item.id as 'D' | 'R']
+      if (stageInput) {
+        let surplusValue = 0
+        let stageCost = 0
+        let materialValue = 0
+        resourceOrder.forEach(key => {
+          if (key === 'power' || key === 'population' || key === 'knowledge' || key === 'luxury') return
+          const w = resourceWeights[key] ?? 0
+          const stock = resources[key] ?? 0
+          const floor = reserveFloors[key] ?? 0
+          surplusValue += Math.max(0, stock - floor) * w
+          stageCost += (stageInput[key] ?? 0) * w
+          const netValue = item.perJobNet[key] ?? 0
+          if (netValue < 0) materialValue += netValue * w
+        })
+        const ratio = stageCost > 0 ? Math.min(1, surplusValue / stageCost) : 0
+        if (ratio > 0) score += (-materialValue) * ratio * SURPLUS_SINK_BONUS_WEIGHT
+      }
+    }
+    resourceOrder.forEach(key => {
+      const weight = deficitWeights[key] ?? 0
+      if (weight > 0) score += (item.perJobNet[key] ?? 0) * resourceWeights[key] * weight
+    })
+    item.score = score
+  })
+
+  return rated.sort((a, b) => b.score - a.score)
+}
+
+/** 按评分贪心分配全部可用人口，返回各设施最终在岗数。 */
+function assignStaffingByRating(rated: StaffingRating[], population: number): Record<FacilityId, number> {
+  const next = Object.fromEntries(facilityOrder.map(id => [id, 0])) as Record<FacilityId, number>
+  let workers = Math.max(0, Math.floor(population))
+  for (const item of rated) {
+    const assign = Math.min(item.capacity, workers)
+    next[item.id] = assign
+    workers -= assign
+  }
+  return next
+}
+
 export type PlanInput = {
   resources: Resources
   facilities: FacilityState[]
@@ -68,6 +200,8 @@ export type PlanInput = {
   modifiers?: Partial<Record<FacilityId, FacilityModifiers>>
   globalBonus?: Partial<Resources>
   reserveFloors?: Partial<Resources>
+  /** D/R 当前阶段所需材料总量（用于整体盈余比例评分） */
+  sinkStageInputs?: Partial<Record<'D' | 'R', Partial<Resources>>>
   weights?: Partial<Resources>
   techs?: string[]
   productionMethods?: Partial<Record<FacilityId, ProductionMethodId>>
@@ -83,6 +217,7 @@ export type PlanInput = {
 export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   const reserveFloors = { ...defaultReserveFloors, ...input.reserveFloors } as Resources
   const weights = { ...resourceWeights, ...input.weights } as Resources
+  const sinkStageInputs = input.sinkStageInputs ?? {}
   const horizon = input.capitalHorizonYears ?? 5
   const year = input.year ?? 0
   const difficulty = input.difficulty ?? 'normal'
@@ -173,9 +308,6 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   // 后期星舰战略加成：殖民地已稳固，全力推进御座号（难度差异由星舰阶段资源倍率体现）
   const lateGameVictoryBonus = (id: FacilityId) => {
     if (!isLateGame()) return 0
-    if (id === 'D') {
-      return 40 + overstockTechnologyBonus() * 3
-    }
     if (id === 'L' && (stateById.D?.level ?? 0) > 0) return 5
     return 0
   }
@@ -183,81 +315,23 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   const deficitPremium = (resources: Resources) =>
     estimateResourceDeficitPremium(resources, reserveFloors, Object.values(stateById), workingTechs, weights)
 
-  // 以“当前总人口”为唯一约束的人力投影：人口可随时重分配，按每岗净值 + 赤字溢价
-  // 贪心分配全部人口，返回候选设施在目标等级下实际能分到多少在岗人口。
+  // 以“当前总人口”为唯一约束的人力投影：与每日实际分配的 rebalanceStaffing 共用同一评分口径，
+  // 返回候选设施在目标等级下按该口径能分到多少在岗人口。
   const projectStaffing = (candidateId: FacilityId, candidateLevel: number): number => {
     const projectionLevels = Object.fromEntries(
       facilityOrder.map(fid => [fid, fid === candidateId ? candidateLevel : (stateById[fid]?.level ?? 0)]),
     ) as Record<FacilityId, number>
-
-    type RatedFacility = { id: FacilityId; capacity: number; perJobNet: Partial<Resources>; score: number }
-    const rated: RatedFacility[] = []
-    const totalNet = emptyResources()
-    let powerConsumption = 0
-
-    facilityOrder.forEach(fid => {
-      const facilitySpec = facilityEconomySpecs[fid]
-      if (isHousingFacility(fid) || isFixedFacility(fid)) return
-      const level = projectionLevels[fid] ?? 0
-      const capacity = getFacilityWorkCapacity(fid, level)
-      if (capacity <= 0) return
-      const method = selectProductionMethod(facilitySpec.productionMethods, workingTechs, workingMethods[fid])
-      const perJobNet = projectFacilityNet(facilitySpec, 1, input.modifiers?.[fid], workingTechs, method.id, level)
-      rated.push({ id: fid, capacity, perJobNet, score: 0 })
-      const assigned = Math.min(capacity, input.staffing?.[fid] ?? 0)
-      if (assigned > 0) {
-        resourceOrder.forEach(key => {
-          totalNet[key] += (perJobNet[key] ?? 0) * assigned
-        })
-        if ((perJobNet.power ?? 0) < 0) {
-          powerConsumption += -(perJobNet.power ?? 0) * assigned
-        }
-      }
+    const rated = rateStaffingFacilities({
+      resources: workingResources,
+      levels: projectionLevels,
+      staffing: input.staffing ?? {},
+      techs: workingTechs,
+      productionMethods: workingMethods,
+      modifiers: input.modifiers ?? {},
+      reserveFloors,
+      sinkStageInputs,
     })
-
-    const deficitWeights: Partial<Resources> = {}
-    resourceOrder.forEach(key => {
-      if (key === 'population' || key === 'knowledge' || key === 'luxury' || key === 'power') return
-      const floor = reserveFloors[key] ?? 0
-      const stock = workingResources[key] ?? 0
-      const net = totalNet[key] ?? 0
-      let weight = 0
-      if (stock < floor) {
-        weight = Math.min(3, 1 + (floor - stock) / Math.max(1, floor))
-      } else if (net < 0) {
-        const daysToFloor = (stock - floor) / Math.abs(net)
-        if (daysToFloor < 10) weight = Math.max(0.2, 1 - daysToFloor / 10)
-      }
-      if (weight > 0) deficitWeights[key] = weight
-    })
-
-    // 电力裕度评分：基于「净电力 / 绝对消耗」的连续权重，消除 0/1 阶跃导致的震荡。
-    const powerMargin = totalNet.power ?? 0
-    const powerScale = Math.max(1, powerConsumption)
-    const powerWeight = Math.max(0, Math.min(3, 1 - powerMargin / powerScale))
-    rated.forEach(item => {
-      let score = 0
-      resourceOrder.forEach(key => {
-        const baseWeight = key === 'power' ? powerWeight : resourceWeights[key]
-        score += (item.perJobNet[key] ?? 0) * baseWeight
-      })
-      resourceOrder.forEach(key => {
-        const weight = deficitWeights[key] ?? 0
-        if (weight > 0) score += (item.perJobNet[key] ?? 0) * resourceWeights[key] * weight
-      })
-      item.score = score
-    })
-
-    rated.sort((a, b) => b.score - a.score)
-
-    let workers = Math.max(0, Math.floor(workingResources.population ?? 0))
-    let result = 0
-    for (const item of rated) {
-      const take = Math.min(item.capacity, workers)
-      if (item.id === candidateId) result = take
-      workers -= take
-    }
-    return result
+    return assignStaffingByRating(rated, workingResources.population)[candidateId] ?? 0
   }
 
   const evaluate = (id: FacilityId) => {
@@ -308,21 +382,19 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     const annualGain = mergeBundles(upgradedNet)
     resourceOrder.forEach(key => {
       annualGain[key] = (upgradedNet[key] ?? 0) - (presentNet[key] ?? 0)
-      if (workingResources[key] < reserveFloors[key] && annualGain[key] > 0) {
-        strategicBonus += annualGain[key] * weights[key] * 3
-      }
-      if (workingResources[key] < reserveFloors[key] && annualGain[key] < 0) {
-        strategicBonus += annualGain[key] * weights[key] * 2
-      }
     })
     if (isHousingFacility(id)) {
-      if ((input.population?.lifeSupportRatio ?? 1) < 1) return null
       const presentCapacity = input.population?.capacity ?? (['K', 'H', 'M'] as FacilityId[]).reduce((sum, facilityId) => sum + getHousingCapacity(facilityId, stateById[facilityId]?.level ?? 0), 0)
       const addedCapacity = getHousingCapacity(id, current.level + 1) - getHousingCapacity(id, current.level)
       const vacancy = presentCapacity - input.resources.population
       housingCapacityPressure = vacancy <= 0
       const potentialMigrants = Math.min(addedCapacity, Math.max(0, (input.population?.growthPotential ?? 0.5) * horizon - vacancy))
       annualGain.population = potentialMigrants / Math.min(horizon, 120)
+      // 新增人口的维生消耗计入扩建收益，避免住房在维生不足时被过度扩建
+      const residentInput = spec.productionMethods[0].input
+      for (const key of ['water', 'oxygen', 'biomass'] as ResourceKey[]) {
+        annualGain[key] -= (residentInput[key] ?? 0) * potentialMigrants
+      }
       if (vacancy <= (input.population?.growthPotential ?? 0.5) * 90) {
         strategicBonus += addedCapacity * weights.population / 80 + overstockTechnologyBonus()
       }
@@ -332,19 +404,36 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     }
 
     const projectedResources = applyBundle(tradePlan.resources, cost, -1)
+    // 施工扣费不得跌破物质资源债务上限或货币信贷上限
+    const breachesDebtLimit = resourceOrder.some(key => {
+      const limit = resourceDebtLimits[key]
+      return limit !== undefined && (projectedResources[key] ?? 0) < limit
+    })
+    if (breachesDebtLimit || projectedResources.currency < emergencyCreditDebtLimit) return null
     const nextYearProjection = applyBundle(projectedResources, upgradedNet)
 
+    // 维生安全：扩建后一年内水/氧/生物质不应跌破储备线（前瞻约束）
+    let lifeSupportSafetyPenalty = 0
+    for (const key of ['water', 'oxygen', 'biomass'] as ResourceKey[]) {
+      const projected = nextYearProjection[key] ?? 0
+      const floor = reserveFloors[key] ?? 0
+      if (projected < floor) {
+        lifeSupportSafetyPenalty += (floor - projected) * weights[key] * LIFE_SUPPORT_SAFETY_PENALTY
+      }
+    }
+
     const normalGain = weightedValue(annualGain, weights)
-    const weightedGain = Math.max(normalGain, projectSinkGain(id, current.level, workingResources, reserveFloors))
+    const weightedGain = normalGain + projectSinkGain(id, current.level, workingResources, reserveFloors)
     const tradePremium = tradePlan.trades.reduce((sum, trade) => sum + estimateTradePremium(trade, weights), 0)
     const currentDeficitPremium = deficitPremium(workingResources)
     const immediateDeficitPremium = deficitPremium(projectedResources)
     const nextDeficitPremium = deficitPremium(nextYearProjection)
     const deficitPremiumDelta = Math.max(immediateDeficitPremium, nextDeficitPremium) - currentDeficitPremium
     const deficitRelief = Math.max(0, currentDeficitPremium - Math.min(immediateDeficitPremium, nextDeficitPremium))
-    const weightedCost = (weightedValue(cost, weights) + tradePremium) / horizon + Math.max(0, deficitPremiumDelta)
+    const weightedCost = (weightedValue(cost, weights) + tradePremium) / COST_AMORTIZATION_DAYS + Math.max(0, deficitPremiumDelta)
     let score = weightedGain - weightedCost + spec.priority * 0.01 + strategicBonus + lateGameVictoryBonus(id)
     score += deficitRelief * 1.5
+    score -= lifeSupportSafetyPenalty
     if (housingCapacityPressure) score = Math.max(score, 6)
     if (!Number.isFinite(score)) return null
 
@@ -677,78 +766,19 @@ export function rebalanceStaffing(
   productionMethods: Partial<Record<FacilityId, ProductionMethodId>>,
   modifiers: Partial<Record<FacilityId, FacilityModifiers>> = {},
   reserveFloors: Partial<Resources> = defaultReserveFloors,
+  sinkStageInputs: Partial<Record<'D' | 'R', Partial<Resources>>> = {},
 ): Record<FacilityId, number> {
   const floors = { ...defaultReserveFloors, ...reserveFloors } as Resources
   const levels = Object.fromEntries(facilities.map(item => [item.id, item.level])) as Record<FacilityId, number>
-
-  type RatedFacility = { id: FacilityId; capacity: number; perJobNet: Partial<Resources>; score: number }
-  const rated: RatedFacility[] = []
-  const totalNet = emptyResources()
-  let powerConsumption = 0
-
-  facilityOrder.forEach(id => {
-    const spec = facilityEconomySpecs[id]
-    if (isHousingFacility(id) || isFixedFacility(id)) return
-    const level = levels[id] ?? 0
-    const capacity = getFacilityWorkCapacity(id, level)
-    if (capacity <= 0) return
-    const method = selectProductionMethod(spec.productionMethods, techs, productionMethods[id])
-    const perJobNet = projectFacilityNet(spec, 1, modifiers[id], techs, method.id, level)
-    rated.push({ id, capacity, perJobNet, score: 0 })
-    const assigned = Math.min(capacity, staffing[id] ?? 0)
-    if (assigned > 0) {
-      resourceOrder.forEach(key => {
-        totalNet[key] += (perJobNet[key] ?? 0) * assigned
-      })
-      if ((perJobNet.power ?? 0) < 0) {
-        powerConsumption += -(perJobNet.power ?? 0) * assigned
-      }
-    }
+  const rated = rateStaffingFacilities({
+    resources,
+    levels,
+    staffing,
+    techs,
+    productionMethods,
+    modifiers,
+    reserveFloors: floors,
+    sinkStageInputs,
   })
-
-  // 赤字权重：库存低于储备线，或净产出为负且逼近储备线时，抬升该资源的边际价值（电力单独按裕度处理）。
-  const deficitWeights: Partial<Resources> = {}
-  resourceOrder.forEach(key => {
-    if (key === 'population' || key === 'knowledge' || key === 'luxury' || key === 'power') return
-    const floor = floors[key] ?? 0
-    const stock = resources[key] ?? 0
-    const net = totalNet[key] ?? 0
-    let weight = 0
-    if (stock < floor) {
-      weight = Math.min(3, 1 + (floor - stock) / Math.max(1, floor))
-    } else if (net < 0) {
-      const daysToFloor = (stock - floor) / Math.abs(net)
-      if (daysToFloor < 10) weight = Math.max(0.2, 1 - daysToFloor / 10)
-    }
-    if (weight > 0) deficitWeights[key] = weight
-  })
-
-  // 电力裕度评分：基于「净电力 / 绝对消耗」的连续权重，消除 0/1 阶跃导致的震荡。
-  const powerMargin = totalNet.power ?? 0
-  const powerScale = Math.max(1, powerConsumption)
-  const powerWeight = Math.max(0, Math.min(3, 1 - powerMargin / powerScale))
-  rated.forEach(item => {
-    let score = 0
-    resourceOrder.forEach(key => {
-      const baseWeight = key === 'power' ? powerWeight : resourceWeights[key]
-      score += (item.perJobNet[key] ?? 0) * baseWeight
-    })
-    resourceOrder.forEach(key => {
-      const weight = deficitWeights[key] ?? 0
-      if (weight > 0) score += (item.perJobNet[key] ?? 0) * resourceWeights[key] * weight
-    })
-    item.score = score
-  })
-
-  rated.sort((a, b) => b.score - a.score)
-
-  const next = Object.fromEntries(facilityOrder.map(id => [id, 0])) as Record<FacilityId, number>
-  let workers = Math.max(0, Math.floor(resources.population))
-  rated.forEach(item => {
-    const assign = Math.min(item.capacity, workers)
-    next[item.id] = assign
-    workers -= assign
-  })
-
-  return next
+  return assignStaffingByRating(rated, resources.population)
 }

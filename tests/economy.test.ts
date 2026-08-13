@@ -112,7 +112,7 @@ describe('economy catalog', () => {
   it('unlocks production methods through coded technologies without auto-switching', () => {
     const e1 = facilityEconomySpecs.E1
     expect(selectProductionMethod(e1.productionMethods, defaultStartingTechs).id).toBe('ME1-1')
-    expect(projectFacilityNet(e1, 1, {}, defaultStartingTechs).power).toBe(6)
+    expect(projectFacilityNet(e1, 1, {}, defaultStartingTechs).power).toBe(4.4)
     expect(projectFacilityNet(e1, 1, {}, defaultStartingTechs).oxygen).toBeUndefined()
 
     const techs = [...defaultStartingTechs, 'TE1-1 纳米光催化剂']
@@ -122,7 +122,7 @@ describe('economy catalog', () => {
 
     const upgraded = projectFacilityNet(e1, 1, {}, techs, 'ME1-2')
     expect(upgraded.water).toBe(-0.6)
-    expect(upgraded.oxygen).toBe(1.2)
+    expect(upgraded.oxygen).toBe(1.4)
   })
 
   it('keeps new production method technologies gated and marked', () => {
@@ -137,23 +137,23 @@ describe('economy catalog', () => {
 
     expect(selectProductionMethod(facilityEconomySpecs.C2.productionMethods, ['TC2-0 西海采掘署建造许可']).id).toBe('MC2-1')
     expect(selectProductionMethod(facilityEconomySpecs.C2.productionMethods, ['TC2-0 西海采掘署建造许可', 'TC2-2 发现伊甸园'], 'MC2-2').id).toBe('MC2-2')
-    expect(projectFacilityNet(facilityEconomySpecs.C2, 1, {}, ['TC2-0 西海采掘署建造许可', 'TC2-2 发现伊甸园'], 'MC2-2')).toMatchObject({ power: -1.4, water: 1.2, regolith: 3.1, alloy: 1.6 })
+    expect(projectFacilityNet(facilityEconomySpecs.C2, 1, {}, ['TC2-0 西海采掘署建造许可', 'TC2-2 发现伊甸园'], 'MC2-2')).toMatchObject({ power: -1.4, water: 1.0, regolith: 0.8, alloy: 0.8 })
 
     expect(selectProductionMethod(facilityEconomySpecs.B.productionMethods, ['TB-0 水培生态球建造许可', 'TB-2 无水栽培技术'], 'MB-2').id).toBe('MB-2')
-    expect(projectFacilityNet(facilityEconomySpecs.B, 1, {}, ['TB-0 水培生态球建造许可', 'TB-2 无水栽培技术'], 'MB-2')).toMatchObject({ regolith: -0.6, oxygen: 2.6, biomass: 1.8 })
+    expect(projectFacilityNet(facilityEconomySpecs.B, 1, {}, ['TB-0 水培生态球建造许可', 'TB-2 无水栽培技术'], 'MB-2')).toMatchObject({ regolith: -0.6, oxygen: 1.2, biomass: 0.8 })
 
-    expect(projectFacilityNet(facilityEconomySpecs.F, 1, {}, ['TF-0 天工精炼署建造许可', 'TF-1 重原子炼金术'], 'MF-2')).toMatchObject({ power: -1.2, regolith: -1.6, alloy: 3.0, oxygen: 0.4, currency: 1.0 })
-    expect(projectFacilityNet(facilityEconomySpecs.P, 1, {}, ['TP-0 伊犁河谷建造许可'])).toMatchObject({ water: -0.6, regolith: -1, oxygen: 1.2, biomass: 1.8 })
-    expect(projectFacilityNet(facilityEconomySpecs.P, 1, {}, ['TP-0 伊犁河谷建造许可', 'TP-1 合金作物'], 'MP-2')).toMatchObject({ water: -0.6, regolith: -1, oxygen: 0.8, biomass: 1.0, alloy: 0.4 })
+    expect(projectFacilityNet(facilityEconomySpecs.F, 1, {}, ['TF-0 天工精炼署建造许可', 'TF-1 重原子炼金术'], 'MF-2')).toMatchObject({ power: -1.2, regolith: -1.6, alloy: 1.8, oxygen: 0.2, currency: 1.2 })
+    expect(projectFacilityNet(facilityEconomySpecs.P, 1, {}, ['TP-0 伊犁河谷建造许可'])).toMatchObject({ water: -0.6, regolith: -1, oxygen: 1.4, biomass: 2.0 })
+    expect(projectFacilityNet(facilityEconomySpecs.P, 1, {}, ['TP-0 伊犁河谷建造许可', 'TP-1 合金作物'], 'MP-2')).toMatchObject({ water: -0.6, regolith: -1, oxygen: 1.0, biomass: 1.4, alloy: 0.6 })
   })
 
   it('applies solidified efficiency and global technologies to facility net output', () => {
-    expect(projectFacilityNet(facilityEconomySpecs.E1, 1, {}, ['TE1-0 日冕能源署建造许可', 'TE1-2 光伏阵列校准']).power).toBeCloseTo(6.3)
-    expect(projectFacilityNet(facilityEconomySpecs.C1, 1, {}, ['TC1-0 静海采掘署建造许可', 'TC1-1 月面钻头阵列']).regolith).toBeCloseTo(4.095)
+    expect(projectFacilityNet(facilityEconomySpecs.E1, 1, {}, ['TE1-0 日冕能源署建造许可', 'TE1-2 光伏阵列校准']).power).toBeCloseTo(4.62)
+    expect(projectFacilityNet(facilityEconomySpecs.C1, 1, {}, ['TC1-0 静海采掘署建造许可', 'TC1-1 月面钻头阵列']).regolith).toBeCloseTo(1.68)
     const anchored = projectFacilityNet(facilityEconomySpecs.C2, 1, {}, ['TC2-0 西海采掘署建造许可', 'TC2-1 小行星锚定索'])
-    expect(anchored.alloy).toBeCloseTo(1.68)
+    expect(anchored.alloy).toBeCloseTo(1.26)
     expect(anchored.oxygen).toBeCloseTo(-0.42)
-    expect(projectFacilityNet(facilityEconomySpecs.B, 1, {}, ['TB-0 水培生态球建造许可', 'TB-1 闭环藻膜培养']).biomass).toBeCloseTo(1.89)
+    expect(projectFacilityNet(facilityEconomySpecs.B, 1, {}, ['TB-0 水培生态球建造许可', 'TB-1 闭环藻膜培养']).biomass).toBeCloseTo(1.05)
     expect(projectFacilityNet(facilityEconomySpecs.F, 1, {}, ['TF-0 天工精炼署建造许可', 'TG-2 空间微波散热学']).power).toBeCloseTo(-1.14)
     const basicResearch = projectFacilityNet(facilityEconomySpecs.L, 1, {}, ['TL-0 问天研究实验室建造许可'])
     const throughputResearch = projectFacilityNet(facilityEconomySpecs.L, 1, {}, ['TL-0 问天研究实验室建造许可', 'TL-2 研究吞吐量调度'])
@@ -206,7 +206,7 @@ describe('economy catalog', () => {
   it('locks the user-specified facility recipe inputs', () => {
     expect(facilityEconomySpecs.E2.productionMethods[0].input).toMatchObject({ regolith: 1.4 })
     expect(projectFacilityNet(facilityEconomySpecs.E3, 1).power).toBeUndefined()
-    expect(projectFacilityNet(facilityEconomySpecs.E3, 1, {}, ['TE3-0 外星科技：微型黑洞约束'], 'ME3-1').power).toBe(10)
+    expect(projectFacilityNet(facilityEconomySpecs.E3, 1, {}, ['TE3-0 外星科技：微型黑洞约束'], 'ME3-1').power).toBe(7.2)
     expect(facilityEconomySpecs.E3.productionMethods[0].input).toEqual({})
 
     expect(facilityEconomySpecs.C1.productionMethods[0].input.power).toBeGreaterThan(0)
@@ -230,7 +230,7 @@ describe('economy catalog', () => {
       expect(stage.input.population).toBeUndefined()
     })
     expect(shipProjectTotalValue).toBeGreaterThan(0)
-    expect(facilityEconomySpecs.D.productionMethods[0].input).toEqual({ power: 16, oxygen: 18, alloy: 7 })
+    expect(facilityEconomySpecs.D.productionMethods[0].input).toEqual({ power: 16, alloy: 10, oxygen: 10 })
     expect(facilityEconomySpecs.D.productionMethods[0].output).toEqual({})
   })
 
@@ -366,8 +366,8 @@ describe('population and construction scale', () => {
 
   it('separates building level capacity from assigned production workers', () => {
     expect(getFacilityWorkCapacity('E1', 3)).toBe(12)
-    expect(projectFacilityNet(facilityEconomySpecs.E1, 6, {}, defaultStartingTechs, 'ME1-1', 3).power).toBeCloseTo(40.32)
-    expect(projectFacilityNet(facilityEconomySpecs.E1, 12, {}, defaultStartingTechs, 'ME1-1', 3).power).toBeCloseTo(80.64)
+    expect(projectFacilityNet(facilityEconomySpecs.E1, 6, {}, defaultStartingTechs, 'ME1-1', 3).power).toBeCloseTo(29.568)
+    expect(projectFacilityNet(facilityEconomySpecs.E1, 12, {}, defaultStartingTechs, 'ME1-1', 3).power).toBeCloseTo(59.136)
     expect(isHousingFacility('K')).toBe(true)
     expect(getFacilityWorkCapacity('K', 2)).toBe(0)
     expect(isFixedFacility('S')).toBe(true)
@@ -403,7 +403,7 @@ describe('population and construction scale', () => {
     expect(projection.capacity).toBe(16)
     expect(projection.availableCapacity).toBe(4)
     expect(projection.net.population).toBeGreaterThan(0)
-    expect(projection.facilityNet.K?.currency).toBeCloseTo(9.6)
+    expect(projection.facilityNet.K?.currency).toBeCloseTo(19.2)
   })
 
   it('pauses migration at capacity and applies attrition after sustained pressure', () => {
@@ -432,9 +432,9 @@ describe('population and construction scale', () => {
     expect(getConstructionDays(['TG-1 天工工业软件套装', 'TG-3 通用建筑预制件'])).toBe(17)
     const base = projectFacilityCost(facilityEconomySpecs.E1, 0)
     const discounted = projectFacilityCost(facilityEconomySpecs.E1, 0, ['TG-3 通用建筑预制件'])
-    expect(base.regolith).toBe(8)
-    expect(base.alloy).toBe(4)
-    expect(discounted.regolith).toBeCloseTo(7.6)
+    expect(base.regolith).toBeCloseTo(11.2)
+    expect(base.alloy).toBeCloseTo(5.6)
+    expect(discounted.regolith).toBeCloseTo(10.64)
   })
 
   it('skips buildings that are already in construction cooldown', () => {
@@ -478,7 +478,7 @@ describe('population and construction scale', () => {
 
   it('uses starport credit purchases to soften material deficits', () => {
     const tradePlan = planAutoTradesForDeficits(
-      { ...richResources, water: -2, currency: 1 },
+      { ...richResources, water: -2, currency: 1, oxygen: 0, biomass: 0, regolith: 0, alloy: 0 },
       { water: 8 },
       facilityOrder.map(id => ({ id, level: id === 'S' ? 1 : 0 })),
       ['TS-0 Starport charter'],
@@ -489,6 +489,19 @@ describe('population and construction scale', () => {
     expect(tradePlan.tradedResources).toContain('water')
     expect(calculateCurrencyDebtInterest(tradePlan.resources)).toBeGreaterThan(0)
     expect(estimateTradePremium(tradePlan.trades[0])).toBeGreaterThan(0)
+  })
+
+  it('sells surplus resources for currency before using credit', () => {
+    const tradePlan = planAutoTradesForDeficits(
+      { ...richResources, water: -2, currency: 1 },
+      { water: 8 },
+      facilityOrder.map(id => ({ id, level: id === 'S' ? 1 : 0 })),
+      ['TS-0 Starport charter'],
+    )
+
+    expect(tradePlan.resources.water).toBeGreaterThanOrEqual(8)
+    expect(tradePlan.trades.some(trade => (trade.output.currency ?? 0) > 0)).toBe(true)
+    expect(tradePlan.resources.regolith).toBeLessThan(richResources.regolith)
   })
 
   it('can globally disable automatic deficit purchases', () => {
@@ -544,7 +557,7 @@ describe('population and construction scale', () => {
       capitalHorizonYears: 360,
     })
 
-    expect(plan.actions[0]?.id).toBe('K')
+    expect(plan.actions[0]?.id).toBe('C1')
   })
 
   it('can package a facility unlock with its first construction level', () => {
@@ -590,7 +603,7 @@ describe('annual projections', () => {
       globalBonus: { biomass: 1 },
     })
 
-    expect(net.power).toBeGreaterThan(9)
+    expect(net.power).toBeCloseTo(8.0388)
     expect(net.water).toBeLessThan(0)
     expect(net.oxygen).toBeGreaterThan(1)
     expect(net.biomass).toBe(1)

@@ -324,6 +324,18 @@ export function planAutoTradesForDeficits(
 
     const requestedBatches = Math.ceil(shortage / outputPerBatch)
     const currencyCost = offer.input.currency ?? 0
+
+    // 货币赤字时，先售卖盈余物资换货币，减少对信贷的依赖
+    if (currencyCost > 0) {
+      const requestedCurrency = requestedBatches * currencyCost
+      const availableCurrency = Math.max(0, working.currency)
+      if (availableCurrency < requestedCurrency) {
+        const sellPlan = planSellSurplusForCurrency(working, requestedCurrency - availableCurrency, facilities, techs)
+        working = sellPlan.resources
+        trades.push(...sellPlan.trades)
+      }
+    }
+
     const affordableBatches = currencyCost > 0
       ? Math.max(0, Math.floor(Math.max(0, working.currency) / currencyCost))
       : requestedBatches
@@ -342,6 +354,48 @@ export function planAutoTradesForDeficits(
   const delta = trades.reduce((sum, trade) => applyBundle(sum as Resources, bundleDelta(trade.output, trade.input)), emptyTradeDelta())
 
   return { trades, resources: working, delta, tradedResources }
+}
+
+/** 货币不足时，售卖高于储备线的盈余物资换取货币，用于支付建设或采购，避免单纯依赖信贷。 */
+export function planSellSurplusForCurrency(
+  resources: Resources,
+  currencyShortage: number,
+  facilities: FacilityState[],
+  techs: string[] = [],
+  reserveFloors: Partial<Resources> = defaultReserveFloors,
+): { trades: AutoTrade[]; resources: Resources } {
+  if (currencyShortage <= 0 || !hasOperationalStarport(facilities, techs)) {
+    return { trades: [], resources }
+  }
+  const floors = { ...defaultReserveFloors, ...reserveFloors } as Resources
+  let working = { ...resources }
+  const trades: AutoTrade[] = []
+  let remaining = currencyShortage
+
+  // 优先售卖低价值盈余资源（如月壤），尽量保留合金/量子核心等高价物资。
+  const sellable = starportTradeOffers
+    .filter(offer => offer.automated && offer.canSell && hasTech(techs, offer.unlockTech))
+    .sort((a, b) => resourceWeights[a.resource] - resourceWeights[b.resource])
+
+  for (const offer of sellable) {
+    if (remaining <= 0) break
+    const key = offer.resource
+    const surplus = (working[key] ?? 0) - (floors[key] ?? 0)
+    if (surplus <= 0) continue
+    const sellValue = offer.baseValue * (1 - offer.sellDiscount)
+    if (sellValue <= 0) continue
+    const maxUnits = Math.floor(surplus)
+    const neededUnits = Math.ceil(remaining / sellValue)
+    const units = Math.min(maxUnits, neededUnits)
+    if (units <= 0) continue
+    const input = { [key]: units } as Partial<Resources>
+    const output = { currency: units * sellValue } as Partial<Resources>
+    working = applyBundle(applyBundle(working, input, -1), output)
+    trades.push({ offerId: offer.id, name: offer.name, input, output })
+    remaining -= units * sellValue
+  }
+
+  return { trades, resources: working }
 }
 
 export function planAutoTradesForCost(

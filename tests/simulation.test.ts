@@ -28,7 +28,6 @@ import {
   resourceOrder,
   selectProductionMethod,
   ecologyRingPhases,
-  shipProjectStages,
   technologyCatalog,
   type Difficulty,
   type FacilityId,
@@ -97,7 +96,7 @@ const initialResources: Resources = {
   regolith: 80,
   alloy: 60,
   quantumCore: 2,
-  currency: 5000,
+  currency: 1000,
   population: 10,
   knowledge: 0,
   luxury: 0,
@@ -254,19 +253,20 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
       productionMethods,
       globalBonus: policy === 'ration' ? { biomass: 1 } : {},
     })
-    // 星舰阶段材料投入：每日按「阶段总量 / cycleDays」比例投入，随岗位规模缩放；消耗库存并累计进度。
+    // 星舰阶段材料投入：材料已计入 MD 生产方式的 input（projectDailyNet 已消耗），这里累计进度并记录每日材料需求。
+    const shipMaterialDaily = emptyResources()
     if (shipStageIndex < shipStages.length) {
       const shipStage = shipStages[shipStageIndex]
-      const baseStage = shipProjectStages[shipStageIndex]
+      const dMethodSpec = facilityEconomySpecs.D.productionMethods[shipStageIndex]
       const dAssigned = Math.min(getFacilityWorkCapacity('D', levels.D), staffing.D ?? 0)
       const dLevelScale = dAssigned * (1 + Math.max(0, levels.D - 1) * facilityEconomySpecs.D.yieldGrowth)
       resourceOrder.forEach(key => {
-        const total = shipStage.input[key] ?? 0
-        if (total <= 0) return
-        const baseTotal = baseStage.input[key] ?? 0
-        const daily = (baseTotal / baseStage.cycleDays) * dLevelScale
-        productionNet[key] -= daily
-        shipStageProgress[key] += daily
+        if (key === 'power') return
+        const daily = (dMethodSpec.input[key] ?? 0) * dLevelScale
+        if (daily > 0) {
+          shipStageProgress[key] += daily
+          shipMaterialDaily[key] += daily
+        }
       })
       const shipStageDone = resourceOrder.every(key => {
         const total = shipStage.input[key] ?? 0
@@ -279,17 +279,20 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
         }
       }
     }
-    // 月穹生态环阶段材料投入（前三个阶段积累进度；回报阶段由 MR-4 产出）
+    // 月穹生态环阶段材料投入：材料已计入 MR 生产方式的 input（projectDailyNet 已消耗），这里累计进度并记录每日材料需求。
+    const ringMaterialDaily = emptyResources()
     if (rPhaseIndex < ecologyRingPhases.length - 1) {
       const rPhase = ecologyRingPhases[rPhaseIndex]
+      const rMethodSpec = facilityEconomySpecs.R.productionMethods[rPhaseIndex]
       const rAssigned = Math.min(getFacilityWorkCapacity('R', levels.R), staffing.R ?? 0)
       const rLevelScale = rAssigned * (1 + Math.max(0, levels.R - 1) * facilityEconomySpecs.R.yieldGrowth)
       resourceOrder.forEach(key => {
-        const total = rPhase.input[key] ?? 0
-        if (total <= 0) return
-        const daily = (total / rPhase.cycleDays) * rLevelScale
-        productionNet[key] -= daily
-        rPhaseProgress[key] += daily
+        if (key === 'power') return
+        const daily = (rMethodSpec.input[key] ?? 0) * rLevelScale
+        if (daily > 0) {
+          rPhaseProgress[key] += daily
+          ringMaterialDaily[key] += daily
+        }
       })
       const rPhaseDone = resourceOrder.every(key => {
         const total = rPhase.input[key] ?? 0
@@ -300,6 +303,10 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
         resourceOrder.forEach(key => { rPhaseProgress[key] = 0 })
       }
     }
+    const sinkStageInputs = {
+      D: shipStageIndex < shipStages.length ? shipStages[shipStageIndex].input : {},
+      R: rPhaseIndex < ecologyRingPhases.length - 1 ? ecologyRingPhases[rPhaseIndex].input : {},
+    }
     const afterProductionResources = settleDailyResources(resources, productionNet)
     const preliminaryPopulationProjection = projectPopulationSystem({
       resources: afterProductionResources,
@@ -309,12 +316,12 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
       pressureDays: populationPressureDays,
     })
     const autoTradeTargets = {
-      water: preliminaryPopulationProjection.lifeSupportCost.water ?? 0,
-      oxygen: preliminaryPopulationProjection.lifeSupportCost.oxygen ?? 0,
-      biomass: preliminaryPopulationProjection.lifeSupportCost.biomass ?? 0,
-      regolith: defaultReserveFloors.regolith,
-      alloy: 0,
-      quantumCore: 0,
+      water: (preliminaryPopulationProjection.lifeSupportCost.water ?? 0) + (shipMaterialDaily.water ?? 0) + (ringMaterialDaily.water ?? 0),
+      oxygen: (preliminaryPopulationProjection.lifeSupportCost.oxygen ?? 0) + (shipMaterialDaily.oxygen ?? 0) + (ringMaterialDaily.oxygen ?? 0),
+      biomass: (preliminaryPopulationProjection.lifeSupportCost.biomass ?? 0) + (shipMaterialDaily.biomass ?? 0) + (ringMaterialDaily.biomass ?? 0),
+      regolith: defaultReserveFloors.regolith + (shipMaterialDaily.regolith ?? 0) + (ringMaterialDaily.regolith ?? 0),
+      alloy: (shipMaterialDaily.alloy ?? 0) + (ringMaterialDaily.alloy ?? 0),
+      quantumCore: (shipMaterialDaily.quantumCore ?? 0) + (ringMaterialDaily.quantumCore ?? 0),
       luxury: 0,
     }
     const autoTradePlan = planAutoTradesForDeficits(
@@ -348,6 +355,8 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
       techs,
       productionMethods,
       modifiers,
+      defaultReserveFloors,
+      sinkStageInputs,
     )
     Object.assign(staffing, rebalancedStaffing)
     populationPressureDays = populationProjection.nextPressureDays
@@ -395,6 +404,7 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
       modifiers,
       globalBonus: policy === 'ration' ? { biomass: 1 } : {},
       reserveFloors: defaultReserveFloors,
+      sinkStageInputs,
       techs,
       productionMethods,
       year: day,
