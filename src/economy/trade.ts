@@ -178,7 +178,7 @@ export const canExecuteStarportTrade = (resources: Resources, input: Partial<Res
   canAfford(resources, input) || isCurrencyOnlyTradeInput(input)
 
 export const currencyDebtInterestRate = 0.002
-export const emergencyCreditDebtLimit = -240
+export const emergencyCreditDebtLimit = -2000
 export const emergencyCreditBatchLimit = 12
 
 /** 物质资源债务上限 —— 资源不得跌破此值。触及后全设施产出等比衰减。 */

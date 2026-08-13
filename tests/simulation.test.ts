@@ -20,6 +20,7 @@ import {
   projectDailyNet,
   projectFacilityCost,
   projectPopulationSystem,
+  rebalanceStaffing,
   planAutoTradesForDeficits,
   resourceDebtLimits,
   settleDailyResources,
@@ -35,7 +36,7 @@ import {
   type Resources,
   type TechnologyId,
 } from '../src/economy'
-import { autoCorrectStaffing, crownStewardOptimizer } from '../src/optimizers'
+import { crownStewardOptimizer } from '../src/optimizers'
 
 type ConstructionProject = {
   startedDay: number
@@ -87,14 +88,14 @@ type SimulationResult = {
 
 const initialResources: Resources = {
   power: 24,
-  water: 12,
-  oxygen: 14,
-  biomass: 10,
-  regolith: 40,
-  alloy: 30,
+  water: 20,
+  oxygen: 24,
+  biomass: 16,
+  regolith: 80,
+  alloy: 60,
   quantumCore: 2,
-  currency: 20,
-  population: 8,
+  currency: 100,
+  population: 10,
   knowledge: 0,
   luxury: 0,
 }
@@ -282,17 +283,16 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
     resources = settleDailyResources(resources, constraintResult.constrainedNet)
     const dailyNet = constraintResult.constrainedNet
 
-    // L1 人力重分配：资源已跌破债务上限时，撤走最大消费者的人力并重分
-    const correction = autoCorrectStaffing(
+    // L1 人力重分配：按当前资源赤字重新平衡生产比例（人力是随时可调的杠杆）
+    const rebalancedStaffing = rebalanceStaffing(
       resources,
       facilityOrder.map(id => ({ id, level: levels[id] })),
       staffing,
       techs,
       productionMethods,
+      modifiers,
     )
-    if (correction.releasedWorkers > 0) {
-      Object.assign(staffing, correction.adjustedStaffing)
-    }
+    Object.assign(staffing, rebalancedStaffing)
     populationPressureDays = populationProjection.nextPressureDays
 
     Object.entries(construction).forEach(([id, project]) => {

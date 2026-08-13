@@ -644,3 +644,85 @@ export function autoCorrectStaffing(
 
   return { adjustedStaffing: adjusted, releasedWorkers: released }
 }
+
+/**
+ * 人力再平衡 —— 将人力视为随时可调的生产比例杠杆。
+ * 每个御日根据当前库存与净产出，把劳动力按“基础价值 + 赤字溢价”重新分配到各生产设施，
+ * 使赤字资源的生产者获得更高优先级、赤字资源的消费者被压低优先级，从而在赤字出现时及时纠偏，
+ * 而不是等到跌破债务上限才被动撤人。
+ */
+export function rebalanceStaffing(
+  resources: Resources,
+  facilities: { id: FacilityId; level: number }[],
+  staffing: Record<FacilityId, number>,
+  techs: string[],
+  productionMethods: Partial<Record<FacilityId, ProductionMethodId>>,
+  modifiers: Partial<Record<FacilityId, FacilityModifiers>> = {},
+  reserveFloors: Partial<Resources> = defaultReserveFloors,
+): Record<FacilityId, number> {
+  const floors = { ...defaultReserveFloors, ...reserveFloors } as Resources
+  const levels = Object.fromEntries(facilities.map(item => [item.id, item.level])) as Record<FacilityId, number>
+
+  type RatedFacility = { id: FacilityId; capacity: number; perJobNet: Partial<Resources>; score: number }
+  const rated: RatedFacility[] = []
+  const totalNet = emptyResources()
+
+  facilityOrder.forEach(id => {
+    const spec = facilityEconomySpecs[id]
+    if (isHousingFacility(id) || isFixedFacility(id)) return
+    const level = levels[id] ?? 0
+    const capacity = getFacilityWorkCapacity(id, level)
+    if (capacity <= 0) return
+    const method = selectProductionMethod(spec.productionMethods, techs, productionMethods[id])
+    const perJobNet = projectFacilityNet(spec, 1, modifiers[id], techs, method.id, level)
+    rated.push({ id, capacity, perJobNet, score: 0 })
+    const assigned = Math.min(capacity, staffing[id] ?? 0)
+    if (assigned > 0) {
+      resourceOrder.forEach(key => {
+        totalNet[key] += (perJobNet[key] ?? 0) * assigned
+      })
+    }
+  })
+
+  // 赤字权重：库存低于储备线，或净产出为负且逼近储备线时，抬升该资源的边际价值
+  const deficitWeights: Partial<Resources> = {}
+  resourceOrder.forEach(key => {
+    if (key === 'population' || key === 'knowledge' || key === 'luxury') return
+    const floor = floors[key] ?? 0
+    const stock = resources[key] ?? 0
+    const net = totalNet[key] ?? 0
+    let weight = 0
+    if (key === 'power') {
+      if (net < 0) weight = Math.min(3, 1 + Math.abs(net) / Math.max(1, floor))
+    } else {
+      if (stock < floor) {
+        weight = Math.min(3, 1 + (floor - stock) / Math.max(1, floor))
+      } else if (net < 0) {
+        const daysToFloor = (stock - floor) / Math.abs(net)
+        if (daysToFloor < 10) weight = Math.max(0.2, 1 - daysToFloor / 10)
+      }
+    }
+    if (weight > 0) deficitWeights[key] = weight
+  })
+
+  rated.forEach(item => {
+    let score = weightedValue(item.perJobNet, resourceWeights)
+    resourceOrder.forEach(key => {
+      const weight = deficitWeights[key] ?? 0
+      if (weight > 0) score += (item.perJobNet[key] ?? 0) * resourceWeights[key] * weight
+    })
+    item.score = score
+  })
+
+  rated.sort((a, b) => b.score - a.score)
+
+  const next = Object.fromEntries(facilityOrder.map(id => [id, 0])) as Record<FacilityId, number>
+  let workers = Math.max(0, Math.floor(resources.population))
+  rated.forEach(item => {
+    const assign = Math.min(item.capacity, workers)
+    next[item.id] = assign
+    workers -= assign
+  })
+
+  return next
+}
