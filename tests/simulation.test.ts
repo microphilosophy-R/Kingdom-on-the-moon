@@ -257,12 +257,14 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
     // 星舰阶段材料投入：每日按「阶段总量 / cycleDays」比例投入，随岗位规模缩放；消耗库存并累计进度。
     if (shipStageIndex < shipStages.length) {
       const shipStage = shipStages[shipStageIndex]
+      const baseStage = shipProjectStages[shipStageIndex]
       const dAssigned = Math.min(getFacilityWorkCapacity('D', levels.D), staffing.D ?? 0)
       const dLevelScale = dAssigned * (1 + Math.max(0, levels.D - 1) * facilityEconomySpecs.D.yieldGrowth)
       resourceOrder.forEach(key => {
         const total = shipStage.input[key] ?? 0
         if (total <= 0) return
-        const daily = (total / shipStage.cycleDays) * dLevelScale
+        const baseTotal = baseStage.input[key] ?? 0
+        const daily = (baseTotal / baseStage.cycleDays) * dLevelScale
         productionNet[key] -= daily
         shipStageProgress[key] += daily
       })

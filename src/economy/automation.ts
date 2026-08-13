@@ -1,5 +1,5 @@
 import { getFacilityWorkCapacity, getHousingCapacity, isFixedFacility, isHousingFacility } from './calendar'
-import { facilityEconomySpecs, facilityOrder } from './facilities'
+import { ecologyRingPhases, facilityEconomySpecs, facilityOrder, shipProjectStages } from './facilities'
 import { canAfford, applyBundle, defaultReserveFloors, emptyResources, resourceMeta, resourceOrder, resourceWeights, weightedValue } from './resources'
 import { canBuildFacility, canUseProductionMethod, estimateTechnologyValue, hasTech, hasTechnologyPrerequisites, selectProductionMethod, technologyCatalog } from './technologies'
 import { difficultyConfigs, type Difficulty } from './difficulty'
@@ -22,27 +22,6 @@ const reserveBreach = (resources: Resources, floors: Resources) =>
 
 const isProjectSinkFacility = (id: FacilityId) => id === 'R' || id === 'D'
 
-const projectSinkTargets = (id: FacilityId, reserveFloors: Resources): Partial<Resources> => {
-  if (id === 'D') {
-    return {
-      power: reserveFloors.power * 120,
-      water: reserveFloors.water * 120,
-      oxygen: reserveFloors.oxygen * 180,
-      biomass: reserveFloors.biomass * 180,
-      regolith: reserveFloors.regolith * 180,
-      alloy: reserveFloors.alloy * 80,
-    }
-  }
-  return {
-    power: reserveFloors.power * 160,
-    water: reserveFloors.water * 300,
-    oxygen: reserveFloors.oxygen * 260,
-    biomass: reserveFloors.biomass * 260,
-    regolith: reserveFloors.regolith * 250,
-    alloy: reserveFloors.alloy * 120,
-  }
-}
-
 const scaleGain = (gain: Partial<Resources>, factor: number): Partial<Resources> => {
   const scaled: Partial<Resources> = {}
   resourceOrder.forEach(key => {
@@ -52,44 +31,32 @@ const scaleGain = (gain: Partial<Resources>, factor: number): Partial<Resources>
   return scaled
 }
 
+// D/R 蓄水池加分：盈余资源价值越高、越接近覆盖整个阶段投入，加分越高（非线性）。
+// 当盈余价值 >= 阶段投入总价值时，给到最高分，表示可以「全力冲刺」。
+const MAX_SINK_GAIN = 300
+
 const projectSinkGain = (
   id: FacilityId,
   currentLevel: number,
   resources: Resources,
-  deltaNet: Resources,
   reserveFloors: Resources,
-  weights: Resources,
 ) => {
   if (!isProjectSinkFacility(id)) return 0
   if (id === 'D' && currentLevel >= facilityEconomySpecs.D.maxLevel) return 0
-  const targets = projectSinkTargets(id, reserveFloors)
-  const consumedMaterialKeys = resourceOrder.filter(key => {
-    if (key === 'power' || key === 'population' || key === 'currency' || key === 'knowledge' || key === 'luxury') return false
-    return (deltaNet[key] ?? 0) < 0
-  })
-  const hasSafeStocksForAllInputs = consumedMaterialKeys.every(key => {
-    const target = targets[key] ?? 0
-    return target > 0 && resources[key] >= target * 0.8
-  })
-  if (!hasSafeStocksForAllInputs) return 0
+  if (id === 'R' && currentLevel >= facilityEconomySpecs.R.maxLevel) return 0
 
-  const materialPressures = resourceOrder.map(key => {
-    if (key === 'power' || key === 'population' || key === 'currency' || key === 'knowledge' || key === 'luxury') return 0
-    const target = targets[key] ?? 0
-    if (!target) return 0
-    return Math.min(1, Math.max(0, (resources[key] - target) / target))
-  })
-  const pressuredMaterials = materialPressures.filter(value => value > 0.15).length
-  if (pressuredMaterials < 2) return 0
+  const stage = id === 'D' ? shipProjectStages[0] : ecologyRingPhases[0]
+  const stageTotalValue = weightedValue(stage.input, resourceWeights)
+  if (stageTotalValue <= 0) return 0
 
-  return resourceOrder.reduce((sum, key) => {
-    const consumedByUpgrade = Math.max(0, -(deltaNet[key] ?? 0))
-    const target = targets[key] ?? 0
-    if (!consumedByUpgrade || !target) return sum
-    const rawPressure = Math.min(1, Math.max(0, (resources[key] - target) / target))
-    const pressure = key === 'power' ? Math.min(0.5, rawPressure) : rawPressure
-    return sum + consumedByUpgrade * weights[key] * pressure * 1.35
+  const surplusValue = resourceOrder.reduce((sum, key) => {
+    const surplus = (resources[key] ?? 0) - (reserveFloors[key] ?? 0)
+    return surplus > 0 ? sum + surplus * resourceWeights[key] : sum
   }, 0)
+
+  const ratio = surplusValue / stageTotalValue
+  if (ratio <= 0) return 0
+  return Math.min(MAX_SINK_GAIN, MAX_SINK_GAIN * ratio * ratio)
 }
 
 export type PlanInput = {
@@ -203,12 +170,11 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     return avgCoreLevel >= levelThreshold
   }
 
-  // 后期星舰战略加成：殖民地已稳固，全力推进御座号（难度越高加成越强）
+  // 后期星舰战略加成：殖民地已稳固，全力推进御座号（难度差异由星舰阶段资源倍率体现）
   const lateGameVictoryBonus = (id: FacilityId) => {
     if (!isLateGame()) return 0
     if (id === 'D') {
-      const base = difficulty === 'easy' ? 30 : difficulty === 'normal' ? 40 : difficulty === 'hard' ? 45 : 60
-      return base + overstockTechnologyBonus() * 3
+      return 40 + overstockTechnologyBonus() * 3
     }
     if (id === 'L' && (stateById.D?.level ?? 0) > 0) return 5
     return 0
@@ -369,7 +335,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     const nextYearProjection = applyBundle(projectedResources, upgradedNet)
 
     const normalGain = weightedValue(annualGain, weights)
-    const weightedGain = Math.max(normalGain, projectSinkGain(id, current.level, projectedResources, annualGain, reserveFloors, weights))
+    const weightedGain = Math.max(normalGain, projectSinkGain(id, current.level, workingResources, reserveFloors))
     const tradePremium = tradePlan.trades.reduce((sum, trade) => sum + estimateTradePremium(trade, weights), 0)
     const currentDeficitPremium = deficitPremium(workingResources)
     const immediateDeficitPremium = deficitPremium(projectedResources)
