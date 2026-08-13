@@ -6,7 +6,7 @@ import { difficultyConfigs, type Difficulty } from './difficulty'
 import type { AnnualContext, FacilityEconomySpec, FacilityId, FacilityModifiers, ProductionMethodId, Resources, TechnologySpec } from './types'
 export const shipProjectTotalValue = shipProjectStages.reduce((sum, stage) => sum + weightedValue(stage.input), 0)
 
-/** 人均利润基数：生产建筑产出缩放因子。默认 1（基础配方值）。 */
+/** 人均利润基数：配方产出已按最终值固化，此基数保持 1。 */
 export const profitBase = Number(process.env.PROFIT_BASE ?? 1)
 
 export function projectFacilityFlow(
@@ -34,9 +34,7 @@ export function projectFacilityFlow(
   const levelScale = assignedPopulation * (1 + Math.max(0, builtLevel - 1) * spec.yieldGrowth)
 
   resourceOrder.forEach(key => {
-    // 电力是无输入产出的标尺（numéraire）：产量固定为基础值，不随人均利润基数缩放。
-    const outputScale = key === 'power' ? 1 : profitBase
-    const produced = (adjustedMethod.output[key] ?? 0) * levelScale * outputMultiplier * outputScale
+    const produced = (adjustedMethod.output[key] ?? 0) * levelScale * outputMultiplier * profitBase
     const consumed = (adjustedMethod.input[key] ?? 0) * levelScale * upkeepMultiplier
     if (produced) flow.production[key] += produced
     if (consumed) flow.consumption[key] += consumed

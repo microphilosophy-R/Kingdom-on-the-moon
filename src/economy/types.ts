@@ -206,5 +206,17 @@ export type ShipProjectStage = {
   id: 1 | 2 | 3
   name: string
   input: Partial<Resources>
+  /** 该阶段在 1 个岗位下的参考完成天数（每日投入 = input / cycleDays） */
+  cycleDays: number
+  note: string
+}
+
+export type EcologyRingPhase = {
+  id: 1 | 2 | 3 | 4
+  name: string
+  input: Partial<Resources>
+  output: Partial<Resources>
+  /** 该阶段在 1 个岗位下的参考完成天数（每日投入 = input / cycleDays） */
+  cycleDays: number
   note: string
 }

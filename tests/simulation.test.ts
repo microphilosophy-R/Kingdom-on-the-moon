@@ -14,6 +14,7 @@ import {
   facilityOrder,
   gameCalendar,
   getConstructionDays,
+  getDifficultyShipStages,
   getFacilityWorkCapacity,
   hasTech,
   isHousingFacility,
@@ -26,6 +27,8 @@ import {
   settleDailyResources,
   resourceOrder,
   selectProductionMethod,
+  ecologyRingPhases,
+  shipProjectStages,
   technologyCatalog,
   type Difficulty,
   type FacilityId,
@@ -152,7 +155,12 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
   const autoTradeProtectionEnabled = true
   const autoTradeEnabled: Partial<Record<ResourceKey, boolean>> = {}
   const snapshots: Snapshot[] = []
-  let shipWinDay = 0 // D 达到 Lv6 且资源满足星舰阶段需求的御日
+  let shipWinDay = 0 // 三阶段全部完成且具备 TD-1 的御日
+  let shipStageIndex = 0
+  const shipStageProgress = emptyResources()
+  const shipStages = getDifficultyShipStages(difficulty)
+  let rPhaseIndex = 0
+  const rPhaseProgress = emptyResources()
   const cumulative = {
     started: 0,
     completed: 0,
@@ -235,6 +243,9 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
       id,
       buildFacilityModifiers(levels.M, policy, 1),
     ]))
+    // 星舰坞 / 月穹生态环按当前阶段切换生产方式
+    productionMethods.D = facilityEconomySpecs.D.productionMethods[Math.min(shipStageIndex, shipStages.length - 1)].id
+    productionMethods.R = facilityEconomySpecs.R.productionMethods[rPhaseIndex].id
     const productionNet = projectDailyNet({
       facilities: facilityStates,
       facilityLevels,
@@ -243,6 +254,50 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
       productionMethods,
       globalBonus: policy === 'ration' ? { biomass: 1 } : {},
     })
+    // 星舰阶段材料投入：每日按「阶段总量 / cycleDays」比例投入，随岗位规模缩放；消耗库存并累计进度。
+    if (shipStageIndex < shipStages.length) {
+      const shipStage = shipStages[shipStageIndex]
+      const dAssigned = Math.min(getFacilityWorkCapacity('D', levels.D), staffing.D ?? 0)
+      const dLevelScale = dAssigned * (1 + Math.max(0, levels.D - 1) * facilityEconomySpecs.D.yieldGrowth)
+      resourceOrder.forEach(key => {
+        const total = shipStage.input[key] ?? 0
+        if (total <= 0) return
+        const daily = (total / shipStage.cycleDays) * dLevelScale
+        productionNet[key] -= daily
+        shipStageProgress[key] += daily
+      })
+      const shipStageDone = resourceOrder.every(key => {
+        const total = shipStage.input[key] ?? 0
+        return total <= 0 || (shipStageProgress[key] ?? 0) >= total
+      })
+      if (shipStageDone) {
+        shipStageIndex += 1
+        if (shipStageIndex < shipStages.length) {
+          resourceOrder.forEach(key => { shipStageProgress[key] = 0 })
+        }
+      }
+    }
+    // 月穹生态环阶段材料投入（前三个阶段积累进度；回报阶段由 MR-4 产出）
+    if (rPhaseIndex < ecologyRingPhases.length - 1) {
+      const rPhase = ecologyRingPhases[rPhaseIndex]
+      const rAssigned = Math.min(getFacilityWorkCapacity('R', levels.R), staffing.R ?? 0)
+      const rLevelScale = rAssigned * (1 + Math.max(0, levels.R - 1) * facilityEconomySpecs.R.yieldGrowth)
+      resourceOrder.forEach(key => {
+        const total = rPhase.input[key] ?? 0
+        if (total <= 0) return
+        const daily = (total / rPhase.cycleDays) * rLevelScale
+        productionNet[key] -= daily
+        rPhaseProgress[key] += daily
+      })
+      const rPhaseDone = resourceOrder.every(key => {
+        const total = rPhase.input[key] ?? 0
+        return total <= 0 || (rPhaseProgress[key] ?? 0) >= total
+      })
+      if (rPhaseDone) {
+        rPhaseIndex += 1
+        resourceOrder.forEach(key => { rPhaseProgress[key] = 0 })
+      }
+    }
     const afterProductionResources = settleDailyResources(resources, productionNet)
     const preliminaryPopulationProjection = projectPopulationSystem({
       resources: afterProductionResources,
@@ -395,7 +450,7 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
     cumulative.minBiomass = Math.min(cumulative.minBiomass, resources.biomass)
     if (postPopulationProjection.status === 'full') cumulative.capacityFullDays += 1
     if (postPopulationProjection.status === 'strained') cumulative.strainedDays += 1
-    if (shipWinDay === 0 && levels.D >= 6 && hasTech(techs, 'TD-1')) shipWinDay = nextDay
+    if (shipWinDay === 0 && shipStageIndex >= shipStages.length && hasTech(techs, 'TD-1')) shipWinDay = nextDay
     if (day % 50 === 0 || day === gameCalendar.finalDay) snapshots.push(buildSnapshot(dailyNet))
   }
 

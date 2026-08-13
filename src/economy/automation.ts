@@ -61,7 +61,7 @@ const projectSinkGain = (
   weights: Resources,
 ) => {
   if (!isProjectSinkFacility(id)) return 0
-  if (id === 'D' && currentLevel >= 6) return 0
+  if (id === 'D' && currentLevel >= facilityEconomySpecs.D.maxLevel) return 0
   const targets = projectSinkTargets(id, reserveFloors)
   const consumedMaterialKeys = resourceOrder.filter(key => {
     if (key === 'power' || key === 'population' || key === 'currency' || key === 'knowledge' || key === 'luxury') return false
@@ -227,6 +227,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     type RatedFacility = { id: FacilityId; capacity: number; perJobNet: Partial<Resources>; score: number }
     const rated: RatedFacility[] = []
     const totalNet = emptyResources()
+    let powerConsumption = 0
 
     facilityOrder.forEach(fid => {
       const facilitySpec = facilityEconomySpecs[fid]
@@ -242,35 +243,36 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
         resourceOrder.forEach(key => {
           totalNet[key] += (perJobNet[key] ?? 0) * assigned
         })
+        if ((perJobNet.power ?? 0) < 0) {
+          powerConsumption += -(perJobNet.power ?? 0) * assigned
+        }
       }
     })
 
     const deficitWeights: Partial<Resources> = {}
     resourceOrder.forEach(key => {
-      if (key === 'population' || key === 'knowledge' || key === 'luxury') return
+      if (key === 'population' || key === 'knowledge' || key === 'luxury' || key === 'power') return
       const floor = reserveFloors[key] ?? 0
       const stock = workingResources[key] ?? 0
       const net = totalNet[key] ?? 0
       let weight = 0
-      if (key === 'power') {
-        if (net < 0) weight = Math.min(3, 1 + Math.abs(net) / Math.max(1, floor))
-      } else {
-        if (stock < floor) {
-          weight = Math.min(3, 1 + (floor - stock) / Math.max(1, floor))
-        } else if (net < 0) {
-          const daysToFloor = (stock - floor) / Math.abs(net)
-          if (daysToFloor < 10) weight = Math.max(0.2, 1 - daysToFloor / 10)
-        }
+      if (stock < floor) {
+        weight = Math.min(3, 1 + (floor - stock) / Math.max(1, floor))
+      } else if (net < 0) {
+        const daysToFloor = (stock - floor) / Math.abs(net)
+        if (daysToFloor < 10) weight = Math.max(0.2, 1 - daysToFloor / 10)
       }
       if (weight > 0) deficitWeights[key] = weight
     })
 
-    // 电力不可存储：净电力盈余时，边际电力价值按 0 计，避免为多余电力浪费人力。
-    const powerSurplus = (totalNet.power ?? 0) >= 0
+    // 电力裕度评分：基于「净电力 / 绝对消耗」的连续权重，消除 0/1 阶跃导致的震荡。
+    const powerMargin = totalNet.power ?? 0
+    const powerScale = Math.max(1, powerConsumption)
+    const powerWeight = Math.max(0, Math.min(3, 1 - powerMargin / powerScale))
     rated.forEach(item => {
       let score = 0
       resourceOrder.forEach(key => {
-        const baseWeight = key === 'power' && powerSurplus ? 0 : resourceWeights[key]
+        const baseWeight = key === 'power' ? powerWeight : resourceWeights[key]
         score += (item.perJobNet[key] ?? 0) * baseWeight
       })
       resourceOrder.forEach(key => {
@@ -716,6 +718,7 @@ export function rebalanceStaffing(
   type RatedFacility = { id: FacilityId; capacity: number; perJobNet: Partial<Resources>; score: number }
   const rated: RatedFacility[] = []
   const totalNet = emptyResources()
+  let powerConsumption = 0
 
   facilityOrder.forEach(id => {
     const spec = facilityEconomySpecs[id]
@@ -731,36 +734,37 @@ export function rebalanceStaffing(
       resourceOrder.forEach(key => {
         totalNet[key] += (perJobNet[key] ?? 0) * assigned
       })
+      if ((perJobNet.power ?? 0) < 0) {
+        powerConsumption += -(perJobNet.power ?? 0) * assigned
+      }
     }
   })
 
-  // 赤字权重：库存低于储备线，或净产出为负且逼近储备线时，抬升该资源的边际价值
+  // 赤字权重：库存低于储备线，或净产出为负且逼近储备线时，抬升该资源的边际价值（电力单独按裕度处理）。
   const deficitWeights: Partial<Resources> = {}
   resourceOrder.forEach(key => {
-    if (key === 'population' || key === 'knowledge' || key === 'luxury') return
+    if (key === 'population' || key === 'knowledge' || key === 'luxury' || key === 'power') return
     const floor = floors[key] ?? 0
     const stock = resources[key] ?? 0
     const net = totalNet[key] ?? 0
     let weight = 0
-    if (key === 'power') {
-      if (net < 0) weight = Math.min(3, 1 + Math.abs(net) / Math.max(1, floor))
-    } else {
-      if (stock < floor) {
-        weight = Math.min(3, 1 + (floor - stock) / Math.max(1, floor))
-      } else if (net < 0) {
-        const daysToFloor = (stock - floor) / Math.abs(net)
-        if (daysToFloor < 10) weight = Math.max(0.2, 1 - daysToFloor / 10)
-      }
+    if (stock < floor) {
+      weight = Math.min(3, 1 + (floor - stock) / Math.max(1, floor))
+    } else if (net < 0) {
+      const daysToFloor = (stock - floor) / Math.abs(net)
+      if (daysToFloor < 10) weight = Math.max(0.2, 1 - daysToFloor / 10)
     }
     if (weight > 0) deficitWeights[key] = weight
   })
 
-  // 电力不可存储：净电力盈余时，边际电力价值按 0 计，避免为多余电力浪费人力。
-  const powerSurplus = (totalNet.power ?? 0) >= 0
+  // 电力裕度评分：基于「净电力 / 绝对消耗」的连续权重，消除 0/1 阶跃导致的震荡。
+  const powerMargin = totalNet.power ?? 0
+  const powerScale = Math.max(1, powerConsumption)
+  const powerWeight = Math.max(0, Math.min(3, 1 - powerMargin / powerScale))
   rated.forEach(item => {
     let score = 0
     resourceOrder.forEach(key => {
-      const baseWeight = key === 'power' && powerSurplus ? 0 : resourceWeights[key]
+      const baseWeight = key === 'power' ? powerWeight : resourceWeights[key]
       score += (item.perJobNet[key] ?? 0) * baseWeight
     })
     resourceOrder.forEach(key => {
