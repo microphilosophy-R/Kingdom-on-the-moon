@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import {
   applyBundle,
+  autoCorrectStaffing,
   buildFacilityModifiers,
   calculateCurrencyDebtInterest,
   canBuildFacility,
@@ -403,8 +404,18 @@ function App() {
         }
       }
     })
+    // 系统默认人力纠正（便捷工具）：仅在优化器未启用时执行，跌破债务上限时撤人纠偏。
+    if (activeOptimizerId === 'none') {
+      return autoCorrectStaffing(
+        resources,
+        regions.map(region => ({ id: region.id, level: region.level })),
+        auto,
+        techs,
+        productionMethods,
+      ).adjustedStaffing
+    }
     return auto
-  }, [regions, resources.population, staffingPriorities, manualStaffing])
+  }, [regions, resources, staffingPriorities, manualStaffing, activeOptimizerId, techs, productionMethods])
   const allocatedPopulation = useMemo(() => facilityOrder.reduce((sum, id) => sum + (staffing[id] ?? 0), 0), [staffing])
   const freePopulation = Math.max(0, Math.floor(resources.population - allocatedPopulation))
 

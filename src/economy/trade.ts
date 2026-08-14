@@ -1,7 +1,7 @@
 import { defaultReserveFloors, emptyResources, resourceMeta, resourceOrder, resourceWeights, weightedValue, applyBundle, canAfford } from './resources'
 import { hasTech } from './technologies'
 import type { AutoTrade, FacilityState, ResourceKey, Resources, StarportTradeOffer } from './types'
-const emptyTradeDelta = (): Resources => ({
+export const emptyTradeDelta = (): Resources => ({
   power: 0,
   water: 0,
   oxygen: 0,
@@ -147,7 +147,7 @@ export const dailyTradeResources: ResourceKey[] = ['water', 'oxygen', 'biomass',
 
 export const isDailyTradeResource = (key: ResourceKey) => dailyTradeResources.includes(key)
 
-const scaleBundle = (bundle: Partial<Resources>, multiplier: number): Partial<Resources> => {
+export const scaleBundle = (bundle: Partial<Resources>, multiplier: number): Partial<Resources> => {
   const scaled: Partial<Resources> = {}
   resourceOrder.forEach(key => {
     const value = bundle[key] ?? 0
@@ -156,13 +156,13 @@ const scaleBundle = (bundle: Partial<Resources>, multiplier: number): Partial<Re
   return scaled
 }
 
-const hasOperationalStarport = (facilities: FacilityState[], techs: string[] = []) =>
+export const hasOperationalStarport = (facilities: FacilityState[], techs: string[] = []) =>
   hasTech(techs, 'TS-0') && facilities.some(facility => facility.id === 'S' && facility.level > 0)
 
-const resourceImportOffer = (key: ResourceKey) =>
+export const resourceImportOffer = (key: ResourceKey) =>
   starportTradeOffers.find(offer => (offer.output[key] ?? 0) > 0 && (offer.input.currency ?? 0) > 0)
 
-const bundleDelta = (output: Partial<Resources>, input: Partial<Resources>) => {
+export const bundleDelta = (output: Partial<Resources>, input: Partial<Resources>) => {
   const delta: Partial<Resources> = {}
   resourceOrder.forEach(key => {
     const value = (output[key] ?? 0) - (input[key] ?? 0)
@@ -298,68 +298,6 @@ export function estimateResourceDeficitPremium(
   return basePremium + hardConstraintPenalty
 }
 
-export function planAutoTradesForDeficits(
-  resources: Resources,
-  targets: Partial<Resources>,
-  facilities: FacilityState[],
-  techs: string[] = [],
-  enabled: Partial<Record<ResourceKey, boolean>> = {},
-  protectionEnabled = true,
-  dailyNet: Partial<Resources> = {},
-): { trades: AutoTrade[]; resources: Resources; delta: Partial<Resources>; tradedResources: ResourceKey[] } {
-  if (!protectionEnabled || !hasOperationalStarport(facilities, techs)) {
-    return { trades: [], resources, delta: {}, tradedResources: [] }
-  }
-
-  let working = { ...resources }
-  const trades: AutoTrade[] = []
-  const tradedResources: ResourceKey[] = []
-
-  resourceOrder.forEach(key => {
-    if (key === 'power' || key === 'currency' || key === 'population' || key === 'knowledge') return
-    if (enabled[key] === false || !resourceMeta[key].storable || !resourceMeta[key].tradable) return
-    const target = targets[key] ?? 0
-    const shortage = Math.max(0, target - working[key])
-    if (shortage <= 0) return
-    const offer = resourceImportOffer(key)
-    if (!offer || !hasTech(techs, offer.unlockTech)) return
-    const outputPerBatch = offer.output[key] ?? 0
-    if (outputPerBatch <= 0) return
-
-    const requestedBatches = Math.ceil(shortage / outputPerBatch)
-    const currencyCost = offer.input.currency ?? 0
-
-    // 货币赤字时，先售卖盈余物资换货币，减少对信贷的依赖
-    if (currencyCost > 0) {
-      const requestedCurrency = requestedBatches * currencyCost
-      const availableCurrency = Math.max(0, working.currency)
-      if (availableCurrency < requestedCurrency) {
-        const sellPlan = planSellSurplusForCurrency(working, requestedCurrency - availableCurrency, facilities, techs, defaultReserveFloors, dailyNet)
-        working = sellPlan.resources
-        trades.push(...sellPlan.trades)
-      }
-    }
-
-    const affordableBatches = currencyCost > 0
-      ? Math.max(0, Math.floor(Math.max(0, working.currency) / currencyCost))
-      : requestedBatches
-    const debtCapacity = currencyCost > 0
-      ? Math.max(0, Math.floor(Math.max(0, working.currency - emergencyCreditDebtLimit) / currencyCost))
-      : requestedBatches
-    const batches = Math.min(requestedBatches, Math.max(affordableBatches, Math.min(debtCapacity, emergencyCreditBatchLimit)))
-    if (batches <= 0) return
-    const input = scaleBundle(offer.input, batches)
-    const output = scaleBundle(offer.output, batches)
-    working = applyBundle(applyBundle(working, input, -1), output)
-    trades.push({ offerId: offer.id, name: offer.name, input, output })
-    tradedResources.push(key)
-  })
-
-  const delta = trades.reduce((sum, trade) => applyBundle(sum as Resources, bundleDelta(trade.output, trade.input)), emptyTradeDelta())
-
-  return { trades, resources: working, delta, tradedResources }
-}
-
 /** 货币不足时，售卖高于储备线的盈余物资换取货币，用于支付建设或采购，避免单纯依赖信贷。 */
 export function planSellSurplusForCurrency(
   resources: Resources,
@@ -409,47 +347,3 @@ export function planSellSurplusForCurrency(
   return { trades, resources: working }
 }
 
-export function planAutoTradesForCost(
-  resources: Resources,
-  cost: Partial<Resources>,
-  facilities: FacilityState[],
-  techs: string[] = [],
-  reserveFloors: Partial<Resources> = defaultReserveFloors,
-): { trades: AutoTrade[]; resources: Resources } {
-  if (!hasOperationalStarport(facilities, techs)) return { trades: [], resources }
-
-  const floors = { ...defaultReserveFloors, ...reserveFloors } as Resources
-  let working = { ...resources }
-  const trades: AutoTrade[] = []
-
-  // 遍历所有自动贸易品，处理每种物资的短缺（用货币购买）
-  starportTradeOffers
-    .filter(offer => offer.automated && hasTech(techs, offer.unlockTech))
-    .forEach(offer => {
-      const outputKeys = resourceOrder.filter(key => (offer.output[key] ?? 0) > 0)
-      outputKeys.forEach(outputKey => {
-        if (outputKey === 'power' || outputKey === 'population' || outputKey === 'knowledge' || outputKey === 'luxury') return
-        const outputPerBatch = offer.output[outputKey] ?? 0
-        if (outputPerBatch <= 0) return
-
-        const target = (cost[outputKey] ?? 0) + floors[outputKey]
-        const shortage = Math.max(0, target - working[outputKey])
-        if (shortage <= 0) return
-
-        // 可用货币 = 当前货币 - 建筑消耗所需货币 - 储备底线
-        const availableCurrency = Math.max(0, working.currency - (cost.currency ?? 0) - floors.currency)
-        const currencyCost = offer.input.currency ?? 0
-        const maxBatchesByCurrency = currencyCost > 0 ? Math.floor(availableCurrency / currencyCost) : Number.POSITIVE_INFINITY
-        const maxBatchesByShortage = Math.ceil(shortage / outputPerBatch)
-        const batches = Math.min(maxBatchesByCurrency, maxBatchesByShortage)
-        if (batches <= 0 || !Number.isFinite(batches)) return
-
-        const input = scaleBundle(offer.input, batches)
-        const output = scaleBundle(offer.output, batches)
-        working = applyBundle(applyBundle(working, input, -1), output)
-        trades.push({ offerId: offer.id, name: offer.name, input, output })
-      })
-    })
-
-  return { trades, resources: working }
-}

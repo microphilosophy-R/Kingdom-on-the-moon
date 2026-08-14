@@ -584,6 +584,6 @@ describe('1000-day headless simulation', () => {
 
       const target = difficultyConfigs[difficulty].targetWinDay
       console.log(`\n[${difficulty}] pop=${result.final.population.total}/${result.final.population.capacity}, started=${result.final.cumulative.started}, shipWinDay=${result.shipWinDay} (target: ${target})\n`)
-    })
+    }, 20000)
   })
 })

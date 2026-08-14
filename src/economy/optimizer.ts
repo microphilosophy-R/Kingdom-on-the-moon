@@ -2,11 +2,108 @@ import { getFacilityWorkCapacity, getHousingCapacity, isFixedFacility, isHousing
 import { ecologyRingPhases, facilityEconomySpecs, facilityOrder, shipProjectStages } from './facilities'
 import { canAfford, applyBundle, defaultReserveFloors, emptyResources, resourceMeta, resourceOrder, resourceWeights, weightedValue } from './resources'
 import { canBuildFacility, canUseProductionMethod, estimateTechnologyValue, hasTech, hasTechnologyPrerequisites, selectProductionMethod, technologyCatalog } from './technologies'
-import { difficultyConfigs, type Difficulty } from './difficulty'
-import { emergencyCreditDebtLimit, estimateResourceDeficitPremium, estimateTradePremium, planAutoTradesForCost, resourceDebtLimits } from './trade'
+import type { Difficulty } from './difficulty'
+import { emergencyCreditDebtLimit, estimateResourceDeficitPremium, estimateTradePremium, hasOperationalStarport, planSellSurplusForCurrency, resourceDebtLimits, scaleBundle, starportTradeOffers } from './trade'
 import { projectFacilityCost, projectFacilityNet, projectTechnologyCost } from './production'
 import { eventChains, getCurrentGameEra } from '../events'
-import type { AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, MethodAutomationAction, PopulationProjection, ProductionMethod, ProductionMethodId, ResourceKey, Resources, StaffingAction, TechnologyAutomationAction, TechnologySpec } from './types'
+import type { AutoTrade, AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, MethodAutomationAction, PopulationProjection, ProductionMethodId, ResourceKey, Resources, StaffingAction, TechnologyAutomationAction, TechnologySpec } from './types'
+
+/** 优化器内部：按建造成本与储备线买入缺料（仅买入，不做售卖）。 */
+const planAutoBuyForCost = (
+  resources: Resources,
+  cost: Partial<Resources>,
+  facilities: FacilityState[],
+  techs: string[],
+  floors: Resources,
+): { trades: AutoTrade[]; resources: Resources } => {
+  let working = { ...resources }
+  const trades: AutoTrade[] = []
+
+  starportTradeOffers
+    .filter(offer => offer.automated && hasTech(techs, offer.unlockTech))
+    .forEach(offer => {
+      const outputKeys = resourceOrder.filter(key => (offer.output[key] ?? 0) > 0)
+      outputKeys.forEach(outputKey => {
+        if (outputKey === 'power' || outputKey === 'population' || outputKey === 'knowledge' || outputKey === 'luxury') return
+        const outputPerBatch = offer.output[outputKey] ?? 0
+        if (outputPerBatch <= 0) return
+
+        const target = (cost[outputKey] ?? 0) + floors[outputKey]
+        const shortage = Math.max(0, target - working[outputKey])
+        if (shortage <= 0) return
+
+        const availableCurrency = Math.max(0, working.currency - (cost.currency ?? 0) - floors.currency)
+        const currencyCost = offer.input.currency ?? 0
+        const maxBatchesByCurrency = currencyCost > 0 ? Math.floor(availableCurrency / currencyCost) : Number.POSITIVE_INFINITY
+        const maxBatchesByShortage = Math.ceil(shortage / outputPerBatch)
+        const batches = Math.min(maxBatchesByCurrency, maxBatchesByShortage)
+        if (batches <= 0 || !Number.isFinite(batches)) return
+
+        const input = scaleBundle(offer.input, batches)
+        const output = scaleBundle(offer.output, batches)
+        working = applyBundle(applyBundle(working, input, -1), output)
+        trades.push({ offerId: offer.id, name: offer.name, input, output })
+      })
+    })
+
+  return { trades, resources: working }
+}
+
+/**
+ * 优化器高级贸易策略：自主决策购入与卖出的数量。
+ * 先按建造成本与储备线计算缺料所需的货币；若可用货币不足，
+ * 则售卖高于储备线的盈余物资补足货币，再完成买入。
+ */
+export function planAutoTradesForCost(
+  resources: Resources,
+  cost: Partial<Resources>,
+  facilities: FacilityState[],
+  techs: string[] = [],
+  reserveFloors: Partial<Resources> = defaultReserveFloors,
+): { trades: AutoTrade[]; resources: Resources } {
+  if (!hasOperationalStarport(facilities, techs)) return { trades: [], resources }
+
+  const floors = { ...defaultReserveFloors, ...reserveFloors } as Resources
+  const reservedCurrency = (cost.currency ?? 0) + floors.currency
+
+  // 估算买入全部缺料所需货币（只做轻量求和，避免完整模拟一遍买入）
+  let neededCurrency = 0
+  starportTradeOffers
+    .filter(offer => offer.automated && hasTech(techs, offer.unlockTech))
+    .forEach(offer => {
+      const outputKeys = resourceOrder.filter(key => (offer.output[key] ?? 0) > 0)
+      outputKeys.forEach(outputKey => {
+        if (outputKey === 'power' || outputKey === 'population' || outputKey === 'knowledge' || outputKey === 'luxury') return
+        const outputPerBatch = offer.output[outputKey] ?? 0
+        if (outputPerBatch <= 0) return
+        const target = (cost[outputKey] ?? 0) + floors[outputKey]
+        const shortage = Math.max(0, target - resources[outputKey])
+        if (shortage <= 0) return
+        neededCurrency += Math.ceil(shortage / outputPerBatch) * (offer.input.currency ?? 0)
+      })
+    })
+
+  const availableCurrency = Math.max(0, resources.currency - reservedCurrency)
+
+  let working = resources
+  const trades: AutoTrade[] = []
+
+  if (neededCurrency > availableCurrency) {
+    // 售卖盈余补足货币；抬高建造成本所需资源的储备线，避免左手卖右手买
+    const sellFloors = { ...floors }
+    resourceOrder.forEach(key => {
+      if ((cost[key] ?? 0) > 0) sellFloors[key] += cost[key] ?? 0
+    })
+    const sellPlan = planSellSurplusForCurrency(working, neededCurrency - availableCurrency, facilities, techs, sellFloors)
+    working = sellPlan.resources
+    trades.push(...sellPlan.trades)
+  }
+
+  const buyPlan = planAutoBuyForCost(working, cost, facilities, techs, floors)
+  trades.push(...buyPlan.trades)
+  return { trades, resources: buyPlan.resources }
+}
+
 const mergeBundles = (...bundles: Partial<Resources>[]) => {
   const total = emptyResources()
   bundles.forEach(bundle => {
@@ -703,110 +800,14 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
 }
 
 /**
- * 人力自动纠正 —— 当物质资源跌破债务上限时，精确撤走最大消耗设施中对应数量的岗位，
- * 并按优先级将释放的人力重分配到有闲置容量的设施。
- * 返回调整后的人力配置和释放总数。
- */
-export function autoCorrectStaffing(
-  resources: Resources,
-  facilities: FacilityState[],
-  staffing: Record<FacilityId, number>,
-  techs: string[],
-  productionMethods: Partial<Record<FacilityId, ProductionMethodId>>,
-  debtLimits: Partial<Resources> = resourceDebtLimits,
-): { adjustedStaffing: Record<FacilityId, number>; releasedWorkers: number } {
-  const adjusted = { ...staffing }
-  let released = 0
-
-  // 阶段一：对被突破上限的资源，找到最大消费者并按超额量精确撤人
-  resourceOrder.forEach(key => {
-    const limit = debtLimits[key]
-    if (limit === undefined) return
-    if ((resources[key] ?? 0) >= limit) return
-
-    const overshoot = limit - (resources[key] ?? 0)
-
-    // 找到当前在职的、每岗消耗该资源最多的设施
-    const biggestConsumer = facilityOrder
-      .filter(id => adjusted[id] > 0)
-      .map(id => {
-        const spec = facilityEconomySpecs[id]
-        if (isHousingFacility(id) || isFixedFacility(id)) return null
-        const method = selectProductionMethod(spec.productionMethods, techs, productionMethods[id])
-        const perJob = method.input[key] ?? 0
-        if (perJob <= 0) return null
-        return { id, perJob, totalDaily: perJob * adjusted[id] }
-      })
-      .filter((c): c is NonNullable<typeof c> => c !== null)
-      .sort((a, b) => b.totalDaily - a.totalDaily)[0]
-
-    if (!biggestConsumer) return
-
-    // 精确撤人：超额量 + 5% 债务上限缓冲，防止撤人后立即反弹
-    const buffer = Math.abs(limit) * 0.05
-    const jobsToRemove = Math.min(
-      adjusted[biggestConsumer.id],
-      Math.max(1, Math.ceil((overshoot + buffer) / Math.max(0.01, biggestConsumer.perJob))),
-    )
-
-    adjusted[biggestConsumer.id] -= jobsToRemove
-    released += jobsToRemove
-  })
-
-  // 阶段二：按设施优先级将释放的人力重分配到有闲置容量的设施（排除刚撤人的设施防回弹）
-  if (released > 0) {
-    let remaining = released
-    const penalizedIds = new Set(
-      resourceOrder
-        .filter(key => {
-          const limit = debtLimits[key]
-          return limit !== undefined && (resources[key] ?? 0) < limit
-        })
-        .map(key => {
-          return facilityOrder
-            .filter(id => adjusted[id] < (staffing[id] ?? 0))
-            .map(id => {
-              const spec = facilityEconomySpecs[id]
-              if (isHousingFacility(id) || isFixedFacility(id)) return null
-              const method = selectProductionMethod(spec.productionMethods, techs, productionMethods[id])
-              return { id, perJob: method.input[key] ?? 0 }
-            })
-            .filter((c): c is NonNullable<typeof c> => c !== null && c.perJob > 0)
-            .sort((a, b) => (b.perJob * (staffing[b.id] ?? 0)) - (a.perJob * (staffing[a.id] ?? 0)))[0]?.id
-        })
-        .filter((id): id is FacilityId => id !== undefined),
-    )
-    const candidates = facilityOrder
-      .filter(id => {
-        if (penalizedIds.has(id)) return false
-        if (isHousingFacility(id) || isFixedFacility(id)) return false
-        const capacity = getFacilityWorkCapacity(id, facilities.find(f => f.id === id)?.level ?? 0)
-        return capacity > 0 && adjusted[id] < capacity
-      })
-      .map(id => ({
-        id,
-        priority: facilityEconomySpecs[id].priority,
-        capacity: getFacilityWorkCapacity(id, facilities.find(f => f.id === id)?.level ?? 0),
-        current: adjusted[id],
-      }))
-      .sort((a, b) => b.priority - a.priority)
-
-    candidates.forEach(c => {
-      if (remaining <= 0) return
-      const assignable = Math.min(remaining, c.capacity - c.current)
-      adjusted[c.id] += assignable
-      remaining -= assignable
-    })
-  }
-
-  return { adjustedStaffing: adjusted, releasedWorkers: released }
-}
-
-/**
- * 人力再平衡 —— 将人力视为随时可调的生产比例杠杆。
+ * 人力再平衡 —— 优化器自有的人力分配工具（高级评分分配）。
+ * 将人力视为随时可调的生产比例杠杆。
  * 每个御日根据当前库存与净产出，把劳动力按“基础价值 + 赤字溢价”重新分配到各生产设施，
  * 使赤字资源的生产者获得更高优先级、赤字资源的消费者被压低优先级，从而在赤字出现时及时纠偏，
  * 而不是等到跌破债务上限才被动撤人。
+ *
+ * 冲突说明：与系统自带的 autoCorrectStaffing（债务上限触发式撤人）是两套互相冲突的分配口径，
+ * 启用优化器时应停用 autoCorrectStaffing，统一使用本函数。
  */
 export function rebalanceStaffing(
   resources: Resources,

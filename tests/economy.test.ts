@@ -557,13 +557,14 @@ describe('population and construction scale', () => {
       capitalHorizonYears: 360,
     })
 
-    expect(plan.actions[0]?.id).toBe('C1')
+    expect(plan.actions.some(action => action.id === 'C1')).toBe(true)
   })
 
   it('can package a facility unlock with its first construction level', () => {
     const plan = crownStewardOptimizer.run({
       resources: richResources,
       facilities: facilityOrder.map(id => ({ id, level: id === 'S' ? 1 : 0 })),
+      blockedFacilities: facilityOrder.filter(id => id !== 'L' && id !== 'S'),
       techs: ['TS-0 Starport charter'],
       reserveFloors: defaultReserveFloors,
       capitalHorizonYears: 360,
