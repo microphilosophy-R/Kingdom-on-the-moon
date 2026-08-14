@@ -22,6 +22,40 @@ const reserveBreach = (resources: Resources, floors: Resources) =>
 
 const isProjectSinkFacility = (id: FacilityId) => id === 'R' || id === 'D'
 
+/**
+ * D/R 材料就绪度：当前库存相对储备线的富余度（取阶段材料中最短板，0-1）。
+ * 库存低于储备线时按比例减速，让 D/R 在材料紧张时自动放缓而非硬烧库存。
+ */
+const computeSinkReadiness = (resources: Resources, stageInput: Partial<Resources>, floors: Resources): number => {
+  let readiness = 1
+  resourceOrder.forEach(key => {
+    if (key === 'power' || key === 'population' || key === 'knowledge' || key === 'luxury' || key === 'currency') return
+    const required = stageInput[key] ?? 0
+    if (required <= 0) return
+    const stock = Math.max(0, resources[key] ?? 0)
+    const floor = floors[key] ?? 0
+    if (floor <= 0) return
+    // 库存相对储备线的富余度：低于储备线时按比例减速
+    readiness = Math.min(readiness, stock / floor)
+  })
+  return Math.max(0, Math.min(1, readiness))
+}
+
+/** 是否仍存在可研究（前置已满足且未解锁的非设施许可）科技。结果按已解锁科技集合缓存。 */
+const unresearchedTechCache = new Map<string, boolean>()
+const hasUnresearchedTech = (techs: string[]): boolean => {
+  const key = techs.join('|')
+  const cached = unresearchedTechCache.get(key)
+  if (cached !== undefined) return cached
+  const result = Object.values(technologyCatalog).some(tech => {
+    if (tech.category === 'construction') return false
+    if (hasTech(techs, tech.id)) return false
+    return hasTechnologyPrerequisites(tech.id, techs)
+  })
+  unresearchedTechCache.set(key, result)
+  return result
+}
+
 const scaleGain = (gain: Partial<Resources>, factor: number): Partial<Resources> => {
   const scaled: Partial<Resources> = {}
   resourceOrder.forEach(key => {
@@ -101,8 +135,17 @@ function rateStaffingFacilities(input: StaffingRatingInput): StaffingRating[] {
     const spec = facilityEconomySpecs[id]
     if (isHousingFacility(id) || isFixedFacility(id)) return
     const level = levels[id] ?? 0
-    const capacity = getFacilityWorkCapacity(id, level)
+    let capacity = getFacilityWorkCapacity(id, level)
     if (capacity <= 0) return
+    // D/R 材料就绪度动态上限：材料不足时自动减速
+    if (isProjectSinkFacility(id)) {
+      const stageInput = sinkStageInputs[id as 'D' | 'R']
+      if (stageInput) {
+        const readiness = computeSinkReadiness(resources, stageInput, reserveFloors)
+        capacity = Math.floor(capacity * readiness)
+      }
+      if (capacity <= 0) return
+    }
     const method = selectProductionMethod(spec.productionMethods, techs, productionMethods[id])
     const perJobNet = projectFacilityNet(spec, 1, modifiers[id], techs, method.id, level)
     rated.push({ id, capacity, perJobNet, score: 0 })
@@ -138,13 +181,15 @@ function rateStaffingFacilities(input: StaffingRatingInput): StaffingRating[] {
   const powerMargin = totalNet.power ?? 0
   const powerScale = Math.max(1, powerConsumption)
   const powerWeight = Math.max(0, Math.min(3, 1 - powerMargin / powerScale))
+  // 知识溢出（无可解锁科技）时评分归零，避免后期继续堆知识
+  const knowledgeWeight = hasUnresearchedTech(techs) ? (resourceWeights.knowledge ?? 0) : 0
 
   rated.forEach(item => {
     const isSink = isProjectSinkFacility(item.id)
     let score = 0
     resourceOrder.forEach(key => {
       const netValue = item.perJobNet[key] ?? 0
-      const baseWeight = key === 'power' ? powerWeight : resourceWeights[key]
+      const baseWeight = key === 'power' ? powerWeight : key === 'knowledge' ? knowledgeWeight : resourceWeights[key]
       // 基础分：产出价值 + 材料/电力消耗减分
       score += netValue * baseWeight
     })
@@ -217,6 +262,7 @@ export type PlanInput = {
 export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   const reserveFloors = { ...defaultReserveFloors, ...input.reserveFloors } as Resources
   const weights = { ...resourceWeights, ...input.weights } as Resources
+  if (!hasUnresearchedTech(input.techs ?? [])) weights.knowledge = 0
   const sinkStageInputs = input.sinkStageInputs ?? {}
   const horizon = input.capitalHorizonYears ?? 5
   const year = input.year ?? 0
@@ -516,8 +562,9 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
       const forwardDeficit = deficitPremium(forwardProjection)
       const deficitDelta = Math.max(0, Math.max(immediateDeficit, forwardDeficit * 0.6) - currentDeficit)
 
-      // 后期星舰驱动：若方法产出 quantumCore 且殖民地进入后期，强力加分
-      const victoryPressure = isLateGame() && (net.quantumCore ?? 0) > 0
+      // 后期星舰驱动：仅当知识已溢出（无可解锁科技）且方法产出 quantumCore 时才切换，
+      // 避免过早从知识生产切换到量子核心生产导致后续科技研究停滞。
+      const victoryPressure = isLateGame() && !hasUnresearchedTech(workingTechs) && (net.quantumCore ?? 0) > 0
         ? (net.quantumCore ?? 0) * weights.quantumCore * 6
         : 0
 

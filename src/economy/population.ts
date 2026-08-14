@@ -69,11 +69,14 @@ export function projectPopulationSystem(context: PopulationContext): PopulationP
   const nextPressureDays = hasCapacityPressure || hasLifePressure ? (context.pressureDays ?? 0) + 1 : 0
 
   const policyMultiplier = context.policy === 'festival' ? 1.15 : context.policy === 'ration' ? 0.85 : 1
+  const highestHousingLevel = Math.max(
+    context.facilities.K?.level ?? 0,
+    context.facilities.H?.level ?? 0,
+    context.facilities.M?.level ?? 0,
+  )
   const growthPotential = (
     0.04 +
-    (context.facilities.K?.level ?? 0) * 0.03 +
-    (context.facilities.H?.level ?? 0) * 0.08 +
-    (context.facilities.M?.level ?? 0) * 0.12 +
+    highestHousingLevel * 0.15 +
     (hasTech(context.techs, 'TS-1') ? 0.25 : 0) +
     (hasTech(context.techs, 'TC2-2') ? 0.18 : 0)
   ) * policyMultiplier

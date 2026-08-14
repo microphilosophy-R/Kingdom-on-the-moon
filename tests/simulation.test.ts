@@ -324,6 +324,8 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
       quantumCore: (shipMaterialDaily.quantumCore ?? 0) + (ringMaterialDaily.quantumCore ?? 0),
       luxury: 0,
     }
+    // 近似每日净增长 = 设施生产净产出 + 人口生命维持消耗，用于售卖盈余时判断哪些资源在净消耗
+    const approximateDailyNet = mergeResources(productionNet, preliminaryPopulationProjection.net)
     const autoTradePlan = planAutoTradesForDeficits(
       afterProductionResources,
       autoTradeTargets,
@@ -331,6 +333,7 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
       techs,
       autoTradeEnabled,
       autoTradeProtectionEnabled,
+      approximateDailyNet,
     )
     const currencyDebtInterest = calculateCurrencyDebtInterest(autoTradePlan.resources)
     const populationProjection = projectPopulationSystem({

@@ -239,7 +239,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     note: '可以解锁科技；前期产出知识，后期在相关科技解锁后可生产量子计算核心。',
     productionMethods: [
       { id: 'ML-1', name: '基础研究', input: { power: 0.8 }, output: { knowledge: 1.0 }, note: '前期主要产出知识。' },
-      { id: 'ML-2', name: '原子阵列光刻', input: { power: 1.8, water: 0.5, oxygen: 0.5, alloy: 0.8 }, output: { knowledge: 1.6, quantumCore: 0.12 }, unlockedBy: 'TL-1', note: 'TL-1 解锁后生产量子计算核心。' },
+      { id: 'ML-2', name: '原子阵列光刻', input: { power: 1.8, water: 0.5, oxygen: 0.5, alloy: 0.8 }, output: { quantumCore: 0.12 }, unlockedBy: 'TL-1', note: 'TL-1 解锁后生产量子计算核心。' },
     ],
     phaseNotes: [
       { name: '前期', note: '主要产出知识。' },

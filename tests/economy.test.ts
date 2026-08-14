@@ -501,7 +501,7 @@ describe('population and construction scale', () => {
 
     expect(tradePlan.resources.water).toBeGreaterThanOrEqual(8)
     expect(tradePlan.trades.some(trade => (trade.output.currency ?? 0) > 0)).toBe(true)
-    expect(tradePlan.resources.regolith).toBeLessThan(richResources.regolith)
+    expect(tradePlan.resources.alloy).toBeLessThan(richResources.alloy)
   })
 
   it('can globally disable automatic deficit purchases', () => {

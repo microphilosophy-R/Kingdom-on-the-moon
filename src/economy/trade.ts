@@ -181,6 +181,9 @@ export const currencyDebtInterestRate = 0.002
 export const emergencyCreditDebtLimit = -2000
 export const emergencyCreditBatchLimit = 12
 
+/** 售卖盈余时，为净消耗资源保留的缓冲天数（避免卖掉未来会被消耗的库存）。 */
+const SELL_RESERVE_DAYS = 30
+
 /** 物质资源债务上限 —— 资源不得跌破此值。触及后全设施产出等比衰减。 */
 export const resourceDebtLimits: Partial<Resources> = {
   water: -1000,
@@ -302,6 +305,7 @@ export function planAutoTradesForDeficits(
   techs: string[] = [],
   enabled: Partial<Record<ResourceKey, boolean>> = {},
   protectionEnabled = true,
+  dailyNet: Partial<Resources> = {},
 ): { trades: AutoTrade[]; resources: Resources; delta: Partial<Resources>; tradedResources: ResourceKey[] } {
   if (!protectionEnabled || !hasOperationalStarport(facilities, techs)) {
     return { trades: [], resources, delta: {}, tradedResources: [] }
@@ -330,7 +334,7 @@ export function planAutoTradesForDeficits(
       const requestedCurrency = requestedBatches * currencyCost
       const availableCurrency = Math.max(0, working.currency)
       if (availableCurrency < requestedCurrency) {
-        const sellPlan = planSellSurplusForCurrency(working, requestedCurrency - availableCurrency, facilities, techs)
+        const sellPlan = planSellSurplusForCurrency(working, requestedCurrency - availableCurrency, facilities, techs, defaultReserveFloors, dailyNet)
         working = sellPlan.resources
         trades.push(...sellPlan.trades)
       }
@@ -363,6 +367,7 @@ export function planSellSurplusForCurrency(
   facilities: FacilityState[],
   techs: string[] = [],
   reserveFloors: Partial<Resources> = defaultReserveFloors,
+  dailyNet: Partial<Resources> = {},
 ): { trades: AutoTrade[]; resources: Resources } {
   if (currencyShortage <= 0 || !hasOperationalStarport(facilities, techs)) {
     return { trades: [], resources }
@@ -372,16 +377,22 @@ export function planSellSurplusForCurrency(
   const trades: AutoTrade[] = []
   let remaining = currencyShortage
 
-  // 优先售卖低价值盈余资源（如月壤），尽量保留合金/量子核心等高价物资。
+  // 动态优先级：按「可售盈余」降序售卖，盈余最多（库存富余且非净消耗）的资源优先。
+  // 净增长为负的资源保留未来 SELL_RESERVE_DAYS 天的消耗量，避免前脚买入后脚卖出。
   const sellable = starportTradeOffers
     .filter(offer => offer.automated && offer.canSell && hasTech(techs, offer.unlockTech))
-    .sort((a, b) => resourceWeights[a.resource] - resourceWeights[b.resource])
+    .map(offer => {
+      const key = offer.resource
+      const net = dailyNet[key] ?? 0
+      const reserveBuffer = net < 0 ? Math.abs(net) * SELL_RESERVE_DAYS : 0
+      const surplus = Math.max(0, (working[key] ?? 0) - (floors[key] ?? 0) - reserveBuffer)
+      return { offer, key, surplus }
+    })
+    .filter(item => item.surplus > 0)
+    .sort((a, b) => b.surplus - a.surplus)
 
-  for (const offer of sellable) {
+  for (const { offer, key, surplus } of sellable) {
     if (remaining <= 0) break
-    const key = offer.resource
-    const surplus = (working[key] ?? 0) - (floors[key] ?? 0)
-    if (surplus <= 0) continue
     const sellValue = offer.baseValue * (1 - offer.sellDiscount)
     if (sellValue <= 0) continue
     const maxUnits = Math.floor(surplus)
