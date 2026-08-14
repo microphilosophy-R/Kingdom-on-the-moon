@@ -40,6 +40,9 @@ export const estimateTechnologyValue = (tech: TechnologySpec) =>
 export const estimateTechnologyResearchCost = (tech: TechnologySpec) =>
   tech.category === 'construction' ? 0 : Math.max(12, Math.round(estimateTechnologyValue(tech) / 9))
 
+/** 研究每日可吸收的知识上限（`researchThroughput` 的封顶值）。知识产能超过此值即为纯浪费。 */
+export const maxResearchThroughput = 10
+
 export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
   'TE1-0': {
     id: 'TE1-0',
@@ -419,14 +422,40 @@ export const hasTech = (techs: string[] = [], techId?: TechnologyId) => {
 export const hasRequiredFacilityTech = (spec: FacilityEconomySpec, techs: string[] = []) =>
   hasTech(techs, spec.requiredTech)
 
+/**
+ * 每日可吸收的知识量：与 App / 模拟循环中的 `researchThroughput` 同一口径。
+ * 供优化器判断「再多产知识是否还有意义」，避免评分与实际吸收速率脱节。
+ */
+export const researchThroughputFor = (labStaff: number, techs: string[] = []) =>
+  Math.max(1, Math.min(
+    maxResearchThroughput,
+    1 + Math.floor(labStaff * 0.5) + (hasTech(techs, 'TL-2') ? 1 : 0) + (hasTech(techs, 'TL-3') ? 2 : 0),
+  ))
+
+/** 尚未研究（前置已满足、非建造许可）的科技仍需多少知识。用于判断知识是否已过剩。 */
+export const remainingResearchBacklog = (techs: string[] = []) =>
+  Object.values(technologyCatalog).reduce((sum, tech) => {
+    if (tech.category === 'construction' || hasTech(techs, tech.id)) return sum
+    return sum + (tech.researchCost ?? 0)
+  }, 0)
+
 export const hasTechnologyPrerequisites = (techId: TechnologyId, techs: string[] = []) =>
   (technologyCatalog[techId].prerequisites ?? []).every(prerequisite => hasTech(techs, prerequisite))
 
 export const canBuildFacility = (spec: FacilityEconomySpec, techs: string[] = []) =>
   hasRequiredFacilityTech(spec, techs)
 
+/**
+ * 生产方式是否已由科技解锁。仅做科技门槛判断，不考虑 autoSelect。
+ * 阶段驱动的生产方式（如 R 的 MR-2/3/4）标记 autoSelect: false 表示「不由自动挑选进入」，
+ * 但一旦被调用方显式指定（工程阶段推进），仍应视为可用。
+ */
+export const isProductionMethodUnlocked = (method: ProductionMethod, techs: string[] = []) =>
+  hasTech(techs, method.unlockedBy)
+
+/** 是否可被自动挑选：科技已解锁且未被标记为阶段驱动。 */
 export const canUseProductionMethod = (method: ProductionMethod, techs: string[] = []) =>
-  method.autoSelect !== false && hasTech(techs, method.unlockedBy)
+  method.autoSelect !== false && isProductionMethodUnlocked(method, techs)
 
 export const selectProductionMethod = (
   methods: ProductionMethod[],
@@ -434,7 +463,8 @@ export const selectProductionMethod = (
   selectedMethodId?: ProductionMethodId,
 ) => {
   const selectedMethod = selectedMethodId ? methods.find(method => method.id === selectedMethodId) : undefined
-  if (selectedMethod && canUseProductionMethod(selectedMethod, techs)) return selectedMethod
+  // 显式指定优先：只要科技门槛满足就采用，允许阶段驱动的 autoSelect: false 生产方式被推进到位。
+  if (selectedMethod && isProductionMethodUnlocked(selectedMethod, techs)) return selectedMethod
   return methods.find(method => !method.unlockedBy && method.autoSelect !== false) ?? methods.find(method => canUseProductionMethod(method, techs)) ?? methods[0]
 }
 

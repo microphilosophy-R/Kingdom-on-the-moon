@@ -15,6 +15,7 @@ import {
   getHousingCapacity,
   isFixedFacility,
   isHousingFacility,
+  maxResearchThroughput,
   planAutoTradesForCost,
   planAutoTradesForDeficits,
   projectDailyFlow,
@@ -23,6 +24,9 @@ import {
   projectFacilityNet,
   projectPopulationSystem,
   projectFacilityCost,
+  rebalanceStaffing,
+  remainingResearchBacklog,
+  researchThroughputFor,
   resourceMeta,
   resourceOrder,
   resourceWeights,
@@ -32,6 +36,7 @@ import {
   shipProjectTotalValue,
   technologyCatalog,
   weightedValue,
+  type FacilityId,
   type FacilityState,
   type Resources,
 } from '../src/economy'
@@ -244,6 +249,23 @@ describe('economy catalog', () => {
     expect(net.alloy).toBeLessThan(0)
   })
 
+  it('lets stage-driven phases be selected explicitly so the ring can reach payback', () => {
+    const techs = ['TR-0 月穹生态环建造许可']
+    // autoSelect: false 只表示「不由自动挑选进入」；阶段推进显式指定时必须生效，
+    // 否则 MR-2/3/4 永远回落到 MR-1，生态环永久烧材料且永不回报。
+    ;(['MR-2', 'MR-3', 'MR-4'] as const).forEach(methodId => {
+      expect(selectProductionMethod(facilityEconomySpecs.R.productionMethods, techs, methodId).id).toBe(methodId)
+    })
+    // 自动挑选仍应停在第一阶段
+    expect(selectProductionMethod(facilityEconomySpecs.R.productionMethods, techs).id).toBe('MR-1')
+
+    const payback = projectFacilityNet(facilityEconomySpecs.R, 1, {}, techs, 'MR-4')
+    expect(payback.water).toBeGreaterThan(0)
+    expect(payback.oxygen).toBeGreaterThan(0)
+    expect(payback.biomass).toBeGreaterThan(0)
+    expect(payback.alloy).toBeUndefined()
+  })
+
   it('requires building technologies before construction', () => {
     expect(defaultStartingTechs).toEqual([
       'TE1-0 日冕能源署建造许可',
@@ -358,6 +380,79 @@ describe('automation planner', () => {
     })
 
     expect(plan.actions.some(action => action.id === 'R' || action.id === 'D')).toBe(true)
+  })
+})
+
+describe('staffing allocation invariants', () => {
+  const allTechs = Object.values(technologyCatalog).map(tech => `${tech.id} ${tech.name}`)
+  const builtLevels: Record<FacilityId, number> = Object.fromEntries(
+    facilityOrder.map(id => [id, facilityEconomySpecs[id].maxLevel]),
+  ) as Record<FacilityId, number>
+  const facilities = facilityOrder.map(id => ({ id, level: builtLevels[id] }))
+  const emptyStaffing = Object.fromEntries(facilityOrder.map(id => [id, 0])) as Record<FacilityId, number>
+
+  it('always keeps power plants staffed, since power is a non-tradable intermediate', () => {
+    // 电力权重若归零，发电厂（唯一产出就是电力）评分为 0 会被整批撤人，电网崩塌。
+    const flush: Resources = { ...richResources, power: 5000, population: 600, water: 4000, oxygen: 4000, biomass: 4000 }
+    const staffed = rebalanceStaffing(flush, facilities, emptyStaffing, allTechs, {}, {}, defaultReserveFloors, {})
+    expect(staffed.E1).toBeGreaterThan(0)
+    expect(staffed.E2).toBeGreaterThan(0)
+  })
+
+  it('never staffs a loss-making production facility just because workers are idle', () => {
+    // 物资枯竭时，工程蓄水池（D/R）应被就绪度收敛到 0 岗，而不是继续硬烧库存。
+    const drained: Resources = {
+      ...richResources, population: 600, water: 0, oxygen: 0, biomass: 0, regolith: 0, alloy: 0, quantumCore: 0,
+    }
+    const staffed = rebalanceStaffing(drained, facilities, emptyStaffing, allTechs, {}, {}, defaultReserveFloors, {})
+    expect(staffed.D).toBe(0)
+    expect(staffed.R).toBe(0)
+  })
+
+  it('staffs project sinks once surplus can actually cover their draw', () => {
+    const flush: Resources = {
+      ...richResources, population: 900, power: 20000,
+      water: 40000, oxygen: 40000, biomass: 40000, regolith: 60000, alloy: 60000, quantumCore: 400,
+    }
+    const staffed = rebalanceStaffing(flush, facilities, emptyStaffing, allTechs, {}, {}, defaultReserveFloors, {})
+    expect(staffed.D).toBeGreaterThan(0)
+  })
+
+  it('prices knowledge against the rate research can absorb, not a flat weight', () => {
+    // 研究每日封顶 maxResearchThroughput；库存已能喂完剩余科技树时，边际知识价值应归零。
+    expect(remainingResearchBacklog(allTechs)).toBe(0)
+    expect(remainingResearchBacklog(defaultStartingTechs)).toBeGreaterThan(0)
+    expect(researchThroughputFor(100, allTechs)).toBe(maxResearchThroughput)
+
+    // 人力充裕（每座设施都能满员），差异只来自知识的边际权重
+    const base: Resources = { ...richResources, population: 4000, power: 40000 }
+    const labTechs = [...defaultStartingTechs, 'TL-0 问天研究实验室建造许可']
+    const staffedOnStarved = rebalanceStaffing({ ...base, knowledge: 0 }, facilities, emptyStaffing, labTechs, {}, {}, defaultReserveFloors, {})
+    const staffedOnGlut = rebalanceStaffing({ ...base, knowledge: 50000 }, facilities, emptyStaffing, labTechs, {}, {}, defaultReserveFloors, {})
+    // 知识见底时实验室应上岗；知识已远超整棵科技树所需时应停产
+    expect(staffedOnStarved.L).toBeGreaterThan(0)
+    expect(staffedOnGlut.L).toBe(0)
+  })
+
+  it('evaluates production methods at full capacity so an idle lab is not deadlocked', () => {
+    // 旧实现要求 currentAssigned > 0 才评估生产方式：实验室空转 → 永不切 ML-2 →
+    // 永无量子核心 → 星舰第三阶段永久停滞。人力是可调杠杆，评估应按满员产能。
+    // isLateGame() 需要后期年份 + 人口过半 + 核心设施均级达标，这里以满级殖民地满足。
+    const plan = crownStewardOptimizer.run({
+      resources: { ...richResources, knowledge: 50000, quantumCore: 2, population: 900, power: 40000, water: 4000, oxygen: 4000, biomass: 4000, alloy: 4000 },
+      facilities,
+      staffing: { ...emptyStaffing, L: 0 },
+      population: {
+        capacity: 1000, availableCapacity: 100, residentsByFacility: {}, facilityNet: {},
+        lifeSupportCost: {}, lifeSupportRatio: 1, growthPotential: 0, migrationIn: 0,
+        attrition: 0, nextPressureDays: 0, net: {}, status: 'stable',
+      },
+      techs: allTechs,
+      reserveFloors: defaultReserveFloors,
+      year: 900,
+      capitalHorizonYears: 360,
+    })
+    expect(plan.methodActions.some(action => action.facilityId === 'L' && action.toMethodId === 'ML-2')).toBe(true)
   })
 })
 

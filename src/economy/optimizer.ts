@@ -1,7 +1,7 @@
 import { getFacilityWorkCapacity, getHousingCapacity, isFixedFacility, isHousingFacility } from './calendar'
 import { ecologyRingPhases, facilityEconomySpecs, facilityOrder, shipProjectStages } from './facilities'
 import { canAfford, applyBundle, defaultReserveFloors, emptyResources, resourceMeta, resourceOrder, resourceWeights, weightedValue } from './resources'
-import { canBuildFacility, canUseProductionMethod, estimateTechnologyValue, hasTech, hasTechnologyPrerequisites, selectProductionMethod, technologyCatalog } from './technologies'
+import { canBuildFacility, canUseProductionMethod, estimateTechnologyValue, hasTech, hasTechnologyPrerequisites, maxResearchThroughput, remainingResearchBacklog, selectProductionMethod, technologyCatalog } from './technologies'
 import type { Difficulty } from './difficulty'
 import { emergencyCreditDebtLimit, estimateResourceDeficitPremium, estimateTradePremium, hasOperationalStarport, planSellSurplusForCurrency, resourceDebtLimits, scaleBundle, starportTradeOffers } from './trade'
 import { projectFacilityCost, projectFacilityNet, projectTechnologyCost } from './production'
@@ -119,42 +119,70 @@ const reserveBreach = (resources: Resources, floors: Resources) =>
 
 const isProjectSinkFacility = (id: FacilityId) => id === 'R' || id === 'D'
 
+/** D/R 就绪度判定的目标储备天数：库存需覆盖这么多天的单岗投入才允许满员。 */
+const SINK_COVER_DAYS = 20
+
 /**
- * D/R 材料就绪度：当前库存相对储备线的富余度（取阶段材料中最短板，0-1）。
- * 库存低于储备线时按比例减速，让 D/R 在材料紧张时自动放缓而非硬烧库存。
+ * D/R 材料就绪度：储备线之上的可用库存能覆盖多少天的「单岗」投入（取最短板，0-1）。
+ *
+ * 分母必须是每岗日耗，不能是 `reserveFloor`：储备线是 10 量级的常数，而工程配方是
+ * 10~50/岗/日，满员时日耗数百，库存/储备线之比恒 > 1，就绪度永远为 1，减速形同虚设。
+ * 同样也不能用 `sinkStageInputs`——那是阶段总量（数千），会把就绪度永久压到 0。
+ * 因此这里直接取每岗净产出中的负项作为每岗日耗。
  */
-const computeSinkReadiness = (resources: Resources, stageInput: Partial<Resources>, floors: Resources): number => {
+const computeSinkReadiness = (resources: Resources, perJobNet: Partial<Resources>, floors: Resources): number => {
   let readiness = 1
   resourceOrder.forEach(key => {
     if (key === 'power' || key === 'population' || key === 'knowledge' || key === 'luxury' || key === 'currency') return
-    const required = stageInput[key] ?? 0
-    if (required <= 0) return
-    const stock = Math.max(0, resources[key] ?? 0)
-    const floor = floors[key] ?? 0
-    if (floor <= 0) return
-    // 库存相对储备线的富余度：低于储备线时按比例减速
-    readiness = Math.min(readiness, stock / floor)
+    const perJobDaily = -(perJobNet[key] ?? 0)
+    if (perJobDaily <= 0) return
+    const available = (resources[key] ?? 0) - (floors[key] ?? 0)
+    if (available <= 0) {
+      readiness = 0
+      return
+    }
+    readiness = Math.min(readiness, available / (perJobDaily * SINK_COVER_DAYS))
   })
   return Math.max(0, Math.min(1, readiness))
 }
 
-/** 是否仍存在可研究（前置已满足且未解锁的非设施许可）科技。结果按已解锁科技集合缓存。 */
-const unresearchedTechCache = new Map<string, boolean>()
-const hasUnresearchedTech = (techs: string[]): boolean => {
-  const key = techs.join('|')
-  const cached = unresearchedTechCache.get(key)
-  if (cached !== undefined) return cached
-  const result = Object.values(technologyCatalog).some(tech => {
-    if (tech.category === 'construction') return false
-    if (hasTech(techs, tech.id)) return false
-    return hasTechnologyPrerequisites(tech.id, techs)
-  })
-  unresearchedTechCache.set(key, result)
-  return result
-}
-
 /** 住房扩建评分用的人口增长假设（每日人数），与 growthPotential 解耦，避免人口增速下调时连锁压低住房扩建。 */
 const HOUSING_GROWTH_ASSUMPTION = 1.5
+
+/** 知识库存的目标缓冲天数：库存足以喂满这么多天的研究吞吐后，边际知识价值归零。 */
+const KNOWLEDGE_BUFFER_DAYS = 30
+
+/**
+ * 电力边际权重的下限。电力不可储存、不可交易，发电厂的唯一产出就是电力，
+ * 因此其权重绝不能归零——否则发电厂评分为 0，会被整批撤人导致电网崩塌。
+ */
+const POWER_MIN_WEIGHT = 0.25
+
+/**
+ * 知识的边际权重：研究每日最多吸收 `maxResearchThroughput` 点知识，
+ * 因此「再多产 1 点知识」的价值取决于剩余科技树还需多少、以及现有库存能喂多久。
+ *
+ * 只在「整棵树点完」时归零是不够的：L 满级产能约 265/日、吸收上限 10/日，
+ * 27 倍的过剩会在树点完之前就堆出数万点废库存（run-002 结局 50888 点）。
+ *
+ * 分母用吸收上限而非「当前实验室在岗数」：后者会造成循环——实验室没人时吸收速率按 1/日 计，
+ * 少量库存就显得能撑上百天，知识权重归零，于是实验室永远不会被建造 / 派人。
+ */
+const knowledgeMarginalWeight = (
+  resources: Resources,
+  techs: string[],
+  baseWeight: number,
+): number => {
+  if (baseWeight <= 0) return 0
+  const backlog = remainingResearchBacklog(techs)
+  if (backlog <= 0) return 0
+  const stocked = Math.max(0, resources.knowledge ?? 0)
+  // 库存已能喂完剩余科技树 → 边际价值归零
+  if (stocked >= backlog) return 0
+  const bufferedDays = stocked / maxResearchThroughput
+  const urgency = Math.max(0, Math.min(1, 1 - bufferedDays / KNOWLEDGE_BUFFER_DAYS))
+  return baseWeight * urgency
+}
 
 const scaleGain = (gain: Partial<Resources>, factor: number): Partial<Resources> => {
   const scaled: Partial<Resources> = {}
@@ -207,6 +235,8 @@ type StaffingRating = {
   capacity: number
   perJobNet: Partial<Resources>
   score: number
+  /** 工程蓄水池（D/R）：净产出价值恒为负，其岗位由「盈余可支撑的天数」而非评分正负决定。 */
+  isSink: boolean
 }
 
 type StaffingRatingInput = {
@@ -237,18 +267,14 @@ function rateStaffingFacilities(input: StaffingRatingInput): StaffingRating[] {
     const level = levels[id] ?? 0
     let capacity = getFacilityWorkCapacity(id, level)
     if (capacity <= 0) return
-    // D/R 材料就绪度动态上限：材料不足时自动减速
-    if (isProjectSinkFacility(id)) {
-      const stageInput = sinkStageInputs[id as 'D' | 'R']
-      if (stageInput) {
-        const readiness = computeSinkReadiness(resources, stageInput, reserveFloors)
-        capacity = Math.floor(capacity * readiness)
-      }
-      if (capacity <= 0) return
-    }
     const method = selectProductionMethod(spec.productionMethods, techs, productionMethods[id])
     const perJobNet = projectFacilityNet(spec, 1, modifiers[id], techs, method.id, level)
-    rated.push({ id, capacity, perJobNet, score: 0 })
+    // D/R 材料就绪度动态上限：按每岗日耗判断库存能撑多久，材料不足时自动减速
+    if (isProjectSinkFacility(id)) {
+      capacity = Math.floor(capacity * computeSinkReadiness(resources, perJobNet, reserveFloors))
+      if (capacity <= 0) return
+    }
+    rated.push({ id, capacity, perJobNet, score: 0, isSink: isProjectSinkFacility(id) })
     const assigned = Math.min(capacity, staffing[id] ?? 0)
     if (assigned > 0) {
       resourceOrder.forEach(key => {
@@ -278,11 +304,14 @@ function rateStaffingFacilities(input: StaffingRatingInput): StaffingRating[] {
   })
 
   // 电力裕度评分：基于「净电力 / 绝对消耗」的连续权重，消除 0/1 阶跃导致的震荡。
+  // 下限不能为 0：电力不可储存、不可交易，是纯中间品，发电厂的唯一产出就是电力。
+  // 权重归零会让发电厂评分变成 0，被「不给非正分岗位派人」的规则整批撤空，
+  // 电网随之崩塌（电力跌至负值 → 优化器进入 manual 模式 → 整局停摆）。
   const powerMargin = totalNet.power ?? 0
   const powerScale = Math.max(1, powerConsumption)
-  const powerWeight = Math.max(0, Math.min(3, 1 - powerMargin / powerScale))
-  // 知识溢出（无可解锁科技）时评分归零，避免后期继续堆知识
-  const knowledgeWeight = hasUnresearchedTech(techs) ? (resourceWeights.knowledge ?? 0) : 0
+  const powerWeight = Math.max(POWER_MIN_WEIGHT, Math.min(3, 1 - powerMargin / powerScale))
+  // 知识权重按「研究实际能吸收多少」折算，避免后期继续堆积无法消化的知识。
+  const knowledgeWeight = knowledgeMarginalWeight(resources, techs, resourceWeights.knowledge ?? 0)
 
   rated.forEach(item => {
     const isSink = isProjectSinkFacility(item.id)
@@ -324,11 +353,27 @@ function rateStaffingFacilities(input: StaffingRatingInput): StaffingRating[] {
   return rated.sort((a, b) => b.score - a.score)
 }
 
-/** 按评分贪心分配全部可用人口，返回各设施最终在岗数。 */
+/**
+ * 按评分贪心分配可用人口，返回各设施最终在岗数。
+ *
+ * 生产设施评分为负时不再兜底填人：负分意味着该岗位净产出价值为负（烧材料多于产出），
+ * 让富余人口「反正闲着不如上岗」是亏损行为。空闲人口本身不额外消耗资源
+ * （生命维持按居住人口结算），因此闲置严格优于负值生产。
+ *
+ * 工程蓄水池（D/R）例外：它们的配方没有产出，评分恒为负，用同一条规则会永久空转，
+ * 星舰因此永远造不完。它们的岗位上限已由 `computeSinkReadiness` 按「盈余能撑多少天」
+ * 收敛，这里只需让它们排在正收益生产设施之后，用剩下的人力推进工程。
+ */
 function assignStaffingByRating(rated: StaffingRating[], population: number): Record<FacilityId, number> {
   const next = Object.fromEntries(facilityOrder.map(id => [id, 0])) as Record<FacilityId, number>
   let workers = Math.max(0, Math.floor(population))
-  for (const item of rated) {
+  // 先满足正收益的生产设施，再把剩余人力投入工程蓄水池
+  const ordered = [
+    ...rated.filter(item => !item.isSink && item.score > 0),
+    ...rated.filter(item => item.isSink),
+  ]
+  for (const item of ordered) {
+    if (workers <= 0) break
     const assign = Math.min(item.capacity, workers)
     next[item.id] = assign
     workers -= assign
@@ -362,7 +407,9 @@ export type PlanInput = {
 export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   const reserveFloors = { ...defaultReserveFloors, ...input.reserveFloors } as Resources
   const weights = { ...resourceWeights, ...input.weights } as Resources
-  if (!hasUnresearchedTech(input.techs ?? [])) weights.knowledge = 0
+  // 知识按研究实际吸收速率折算边际价值（见 knowledgeMarginalWeight）。
+  // 旧实现只在「整棵树点完」时才归零，无法阻止树点完之前的巨额过剩堆积。
+  weights.knowledge = knowledgeMarginalWeight(input.resources, input.techs ?? [], weights.knowledge ?? 0)
   const sinkStageInputs = input.sinkStageInputs ?? {}
   const horizon = input.capitalHorizonYears ?? 5
   const year = input.year ?? 0
@@ -463,7 +510,9 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
 
   // 以“当前总人口”为唯一约束的人力投影：与每日实际分配的 rebalanceStaffing 共用同一评分口径，
   // 返回候选设施在目标等级下按该口径能分到多少在岗人口。
-  const projectStaffing = (candidateId: FacilityId, candidateLevel: number): number => {
+  // evaluationTechs 必须包含本次动作会一并解锁的建造许可，否则新设施在投影里没有产出、
+  // 评分为 0，会被「不给零分岗位派人」的规则判为不值得派人，从而永远无法首建。
+  const projectStaffing = (candidateId: FacilityId, candidateLevel: number, evaluationTechs: string[] = workingTechs): number => {
     const projectionLevels = Object.fromEntries(
       facilityOrder.map(fid => [fid, fid === candidateId ? candidateLevel : (stateById[fid]?.level ?? 0)]),
     ) as Record<FacilityId, number>
@@ -471,7 +520,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
       resources: workingResources,
       levels: projectionLevels,
       staffing: input.staffing ?? {},
-      techs: workingTechs,
+      techs: evaluationTechs,
       productionMethods: workingMethods,
       modifiers: input.modifiers ?? {},
       reserveFloors,
@@ -519,7 +568,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
       upgradedAssigned = 0
     } else {
       presentAssigned = Math.min(getFacilityWorkCapacity(id, current.level), input.staffing?.[id] ?? 0)
-      upgradedAssigned = projectStaffing(id, current.level + 1)
+      upgradedAssigned = projectStaffing(id, current.level + 1, evaluationTechs)
     }
     const presentNet = projectFacilityNet(spec, presentAssigned, modifiers, evaluationTechs, input.productionMethods?.[id], current.level)
     const upgradedNet = projectFacilityNet(spec, upgradedAssigned, modifiers, evaluationTechs, input.productionMethods?.[id], current.level + 1)
@@ -625,11 +674,13 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   const evaluateMethod = (id: FacilityId): ReturnType<typeof evaluateTechnology> | (MethodAutomationAction & { kind: 'method'; projectedResources: Resources }) | null => {
     const spec = facilityEconomySpecs[id]
     if (isFixedFacility(id) || isHousingFacility(id)) return null
-    const currentAssigned = Math.min(
-      getFacilityWorkCapacity(id, stateById[id].level),
-      input.staffing?.[id] ?? getFacilityWorkCapacity(id, stateById[id].level),
-    )
-    if (currentAssigned <= 0) return null
+    const capacity = getFacilityWorkCapacity(id, stateById[id].level)
+    if (capacity <= 0) return null
+    // 生产方式评估按「满员产能」而非当前在岗数：人力分配依赖生产方式的评分，
+    // 若反过来又要求先有在岗人口，两者会互锁——空转的实验室永远评不上 ML-2，
+    // 于是永远没有量子核心，星舰第三阶段永久停滞（旧实现的死锁）。
+    // 人力是随时可调的杠杆，这里评估的是「切换后满员运行是否更优」。
+    const currentAssigned = capacity
     const currentMethod = selectProductionMethod(spec.productionMethods, workingTechs, workingMethods[id])
     if (!canUseProductionMethod(currentMethod, workingTechs)) return null
     // 收集所有可用方法（包括当前方法），对所有方法独立评分后择优
@@ -640,16 +691,23 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     const evaluationTechs = workingTechs
     const horizon = Math.min(5, input.capitalHorizonYears ?? 5)
 
+    // 方法评分使用与人力分配一致的知识边际权重：知识产能已远超研究吸收速率时，
+    // 继续按 flat weight 给知识计分会让 L 永远锁死在 ML-1，量子核心配方永不启用。
+    const methodWeights = {
+      ...weights,
+      knowledge: knowledgeMarginalWeight(workingResources, workingTechs, resourceWeights.knowledge ?? 0),
+    } as Resources
+
     const scored = usableMethods.map(method => {
       const net = projectFacilityNet(spec, currentAssigned, modifiers, evaluationTechs, method.id, stateById[id].level)
       // 绝对基础收益：不考虑与当前方法的差异，直接对产出做加权
-      const baseValue = weightedValue(net, weights)
+      const baseValue = weightedValue(net, methodWeights)
 
       // 短缺激励：当某资源低于储备底线时，该资源产出/消耗获得额外权重
       const shortageWeight = resourceOrder.reduce((sum, key) => {
         const v = net[key] ?? 0
         if (workingResources[key] < reserveFloors[key]) {
-          return sum + v * weights[key] * 2
+          return sum + v * methodWeights[key] * 2
         }
         return sum
       }, 0)
@@ -662,9 +720,10 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
       const forwardDeficit = deficitPremium(forwardProjection)
       const deficitDelta = Math.max(0, Math.max(immediateDeficit, forwardDeficit * 0.6) - currentDeficit)
 
-      // 后期星舰驱动：仅当知识已溢出（无可解锁科技）且方法产出 quantumCore 时才切换，
-      // 避免过早从知识生产切换到量子核心生产导致后续科技研究停滞。
-      const victoryPressure = isLateGame() && !hasUnresearchedTech(workingTechs) && (net.quantumCore ?? 0) > 0
+      // 后期星舰驱动：量子核心是第三阶段的硬门槛，一旦知识边际价值归零就应转产。
+      // 旧条件额外要求 `!hasUnresearchedTech`（整棵树点完），而 TD-2 等科技依赖研究推进，
+      // 实际上几乎不可达，导致 L 永远停在知识生产、量子核心只能靠采购。
+      const victoryPressure = isLateGame() && methodWeights.knowledge <= 0 && (net.quantumCore ?? 0) > 0
         ? (net.quantumCore ?? 0) * weights.quantumCore * 6
         : 0
 

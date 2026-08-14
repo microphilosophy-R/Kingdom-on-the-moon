@@ -1,13 +1,18 @@
 import { baseConstructionDays, getConstructionCostDiscount, getUpgradeCostScale, isHousingFacility, jobsPerFacilityLevel } from './calendar'
 import { facilityEconomySpecs, facilityOrder, shipProjectStages } from './facilities'
-import { applyTechnologyToMethod, canUseProductionMethod, estimateTechnologyResearchCost, hasRequiredFacilityTech, selectProductionMethod } from './technologies'
+import { applyTechnologyToMethod, estimateTechnologyResearchCost, hasRequiredFacilityTech, isProductionMethodUnlocked, selectProductionMethod } from './technologies'
 import { emptyResources, resourceOrder, resourceWeights, weightedValue, type ResourceFlow } from './resources'
 import { difficultyConfigs, type Difficulty } from './difficulty'
 import type { AnnualContext, FacilityEconomySpec, FacilityId, FacilityModifiers, ProductionMethodId, Resources, TechnologySpec } from './types'
 export const shipProjectTotalValue = shipProjectStages.reduce((sum, stage) => sum + weightedValue(stage.input), 0)
 
-/** 人均利润基数：配方产出已按最终值固化，此基数保持 1。 */
-export const profitBase = Number(process.env.PROFIT_BASE ?? 1)
+/**
+ * 人均利润基数：配方产出已按最终值固化，此基数保持 1。
+ * 浏览器环境没有 process，故做存在性判断，避免打包后读取 `{}.PROFIT_BASE` 或直接抛错。
+ */
+export const profitBase = Number(
+  (typeof process !== 'undefined' ? process.env?.PROFIT_BASE : undefined) ?? 1,
+)
 
 export function projectFacilityFlow(
   spec: FacilityEconomySpec,
@@ -26,7 +31,7 @@ export function projectFacilityFlow(
   if (!hasRequiredFacilityTech(spec, techs)) return flow
   if (isHousingFacility(spec.id)) return flow
   const method = selectProductionMethod(spec.productionMethods, techs, selectedMethodId)
-  if (!canUseProductionMethod(method, techs)) return flow
+  if (!isProductionMethodUnlocked(method, techs)) return flow
   const adjustedMethod = applyTechnologyToMethod(spec, method, techs)
   const outputMultiplier = modifiers.outputMultiplier ?? 1
   const upkeepMultiplier = modifiers.upkeepMultiplier ?? 1
