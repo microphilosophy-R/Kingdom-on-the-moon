@@ -1,34 +1,60 @@
 # 5. UI
 
-## 5.1 总则
+> 本文档说明 `src/App.tsx` 与相关组件的界面信息架构。文档可能滞后，若与代码不一致，以代码为准。
 
-本章是 UI 信息架构的规则来源。详细视觉样式可在设计文档中展开，但不得与本章定义的功能入口冲突。
+## 5.1 顶部资源栏
 
-- 顶部固定资源视图，显示所有物资、库存与每日净变化。
-- 底部为菜单 tab，用于在主要系统间切换：设施、政策、科技、生态、贸易、星舰、异客。
-- 首页即设施总览。初始展示一个可转动观察的 Three.js 球面星球。
-- 每次开启游戏时，从 5 张本地星球纹理中随机选择 1 张作为球面贴图。
-- 星球初始位于页面中心。点击星球后，星球缩小并停靠在左侧，右侧展示建筑列表。
-- 点击建筑列表中的普通建筑进入建筑详情页。
-- 点击特殊建筑等同于点击底部对应菜单 tab：K 进入政策、L 进入科技、R 进入生态、S 进入贸易、D 进入星舰。
-- 一般设施页展示配方、当前产量、规模和扩建成本。
-- 特殊设施页展示专属机制，例如 R 月穹生态环阶段、S 星海交易港贸易、K 月面王城政策、L 问天研究实验室科技、D 冠冕星舰坞项目进度。
-- 科技界面归属于 L 问天研究实验室，但已解锁科技应可在全局状态中查看。
-- 政策界面归属于 K 月面王城，同时也是 K 的建筑页；页面必须展示王城等级、岗位容量、已分配人口、每日结算、吞吐率、政策签发台和上一轮 20 御日执行报告。
-- 政策选择始终可见；同一时间只执行一项当前政策，成功切换后进入 20 御日冷却。
-- 外星人事件以弹窗显示，弹窗承载事件链正文、资源变化、留任成本和事件操作。
-- 角色与事件链界面显示当前外交来函、已留任角色和角色派驻状态；角色美术资源后续可独立替换，不改变事件链数据。
+顶部固定资源视图（`resource-rail`）显示全部资源：电力显示当前产量，人口显示已分配岗位，其余资源显示库存与每日净变化（`ResourceAtom`）。
 
-## 5.2 星球纹理
+## 5.2 底部导航
 
-本阶段使用 5 张本地纹理：
+底部导航由 `navItems`（`App.tsx`）定义：
 
-| 文件 | 名称 | 来源 |
-| --- | --- | --- |
-| `public/textures/planets/mercury.jpg` | 水星纹理 | Solar System Scope / Wikimedia Commons |
-| `public/textures/planets/venus.jpg` | 金星纹理 | Solar System Scope / Wikimedia Commons |
-| `public/textures/planets/earth.jpg` | 地球纹理 | Solar System Scope / Wikimedia Commons |
-| `public/textures/planets/mars.jpg` | 火星纹理 | Solar System Scope / Wikimedia Commons |
-| `public/textures/planets/moon.jpg` | 月球纹理 | Solar System Scope / Wikimedia Commons |
+| 视图 | 标签 |
+| --- | --- |
+| facilities | 设施 |
+| palace | 王城 |
+| research | 科技 |
+| ecology | 生态 |
+| starport | 贸易 |
+| ship | 星舰 |
+| visitors | 异客 |
 
-贴图文件必须保持等距柱状投影，供 Three.js 球面材质直接使用。后续可替换为原创或授权美术，但文件容器与随机选择机制不变。
+特殊建筑与导航的对应关系（`specialTabFacility`）：K → 王城、L → 科技、R → 生态、S → 贸易、D → 星舰。点击这些特殊建筑等同于点击对应底部 tab。
+
+## 5.3 设施总览与星球
+
+- 首页即设施总览（`PlanetFacilities`）。初始展示一个可旋转的 Three.js 星球（`PlanetScene`）。
+- 每次开启游戏时，从 5 张本地星球纹理中随机选择 1 张（`planetTextures`）。
+- 点击星球后星球停靠左侧，右侧展示建筑列表；点击建筑进入详情页。
+
+## 5.4 特殊设施页
+
+- K 王城：人口、税收、王月报告（`PalaceReportBlock`）。
+- L 问天研究实验室：科技树（`ResearchTreeBlock`）。
+- R 月穹生态环：四阶段进度（`EcologyPhaseBlock`）。
+- S 星海交易港：双向贸易、手动采购、自动购买保护（`TradeBoardBlock`）。
+- D 冠冕星舰坞：御座号进度与三阶段物资（`ShipProgressBlock`）。
+
+普通建筑使用通用详情页，展示配方、规模、当前产量与扩建成本（`FacilityDetailPanel`）。
+
+## 5.5 星球纹理
+
+5 张本地纹理（`PlanetScene.tsx` 的 `planetTextures`）：
+
+| 文件 | 名称 |
+| --- | --- |
+| `public/textures/planets/mercury.jpg` | 水星纹理 |
+| `public/textures/planets/venus.jpg` | 金星纹理 |
+| `public/textures/planets/earth.jpg` | 地球纹理 |
+| `public/textures/planets/mars.jpg` | 火星纹理 |
+| `public/textures/planets/moon.jpg` | 月球纹理 |
+
+## 5.6 其它界面
+
+- 外星人事件以弹窗显示（`Modal`），承载正文、索取 / 回赠 / 留任成本与操作（礼送 / 交换 / 留任）。
+- 异客页（`Visitors`）显示已留任角色与派驻状态。
+- 时间控制位于底部右侧：御日计数、正常 / 加速切换、暂停 / 继续。
+- 设置面板（`SettingsPanel`）提供音量、存档（6 槽）、自动购买保护等。
+- 开局门槛（`StartGate`）提供难度、观察者模式、教程开关。
+- 教程（`TutorialOverlay`）与胜利结算（`VictoryModal`）分别覆盖新手引导与终局结算。
