@@ -1,44 +1,48 @@
+import { difficultyConfigs } from './difficulty'
+import type { Difficulty } from './difficulty'
+import { facilityEconomySpecs } from './facilities'
 import { resourceOrder } from './resources'
-import type { FacilityEconomySpec, ProductionMethod, ProductionMethodId, ResourceKey, Resources, TechnologyId, TechnologySpec } from './types'
-const eraPopulationScale: Record<NonNullable<TechnologySpec['era']>, number> = {
-  early: 8,
-  mid: 24,
-  late: 60,
+import type { FacilityEconomySpec, FacilityId, ProductionMethod, ProductionMethodId, ResourceKey, Resources, TechnologyId, TechnologySpec } from './types'
+// 科技价值按「解锁后满员工作岗数 × 每岗每日边际价值 × 360」估算。
+// 旧的 eraPopulationScale（8/24/60）已与实际人口曲线脱节——实际各设施满级 staffing
+// 均在 40~60 岗，故改用设施满级岗数（maxLevel × jobsPerFacilityLevel）。
+const JOBS_PER_LEVEL = 4
+
+// 每岗每日的边际产出价值（货币），按科技类别粗略估计（配方已更新，用 resourceWeights 折算）。
+const perJobDailyValue = (category: TechnologySpec['category']): number => {
+  switch (category) {
+    case 'production-method': return 3.0
+    case 'facility-efficiency': return 1.5
+    case 'global': return 0.1
+    case 'trade': return 2.0
+    default: return 1.0
+  }
 }
 
-const globalTechnologyScale: Record<NonNullable<TechnologySpec['era']>, number> = {
-  early: 40,
-  mid: 300,
-  late: 1000,
-}
-
-const tradeTechnologyScale: Record<NonNullable<TechnologySpec['era']>, number> = {
-  early: 20,
-  mid: 150,
-  late: 500,
-}
-
-const technologyMagnitude = (tech: TechnologySpec) => {
-  if (tech.category === 'construction') return 0
-  if (tech.category === 'global') return 0.02
-  if (tech.category === 'facility-efficiency') return 0.06
-  if (tech.category === 'production-method') return 0.10
-  if (tech.category === 'trade') return 0.04
-  return 0.03
-}
-
-const technologyBaseScale = (tech: TechnologySpec) => {
-  const era = tech.era ?? 'early'
-  if (tech.scope === 'G') return globalTechnologyScale[era]
-  if (tech.scope === 'S') return tradeTechnologyScale[era]
-  return eraPopulationScale[era]
+const staffScale = (tech: TechnologySpec): number => {
+  if (tech.scope === 'G') return 480 // 全局科技：近似后期生产岗总数
+  if (tech.scope === 'S') return 200 // 交易科技：近似贸易结算规模
+  const spec = facilityEconomySpecs[tech.scope as FacilityId]
+  return spec ? spec.maxLevel * JOBS_PER_LEVEL : 60
 }
 
 export const estimateTechnologyValue = (tech: TechnologySpec) =>
-  Math.round(technologyBaseScale(tech) * technologyMagnitude(tech) * 360)
+  tech.category === 'construction'
+    ? 0
+    : Math.round(staffScale(tech) * perJobDailyValue(tech.category) * 360)
 
-export const estimateTechnologyResearchCost = (tech: TechnologySpec) =>
-  tech.category === 'construction' ? 0 : Math.max(12, Math.round(estimateTechnologyValue(tech) / 9))
+// 研究成本与价值挂钩：cost = value / RESEARCH_COST_DIVISOR，再乘难度倍率。
+// divisor 用「科技总产出」锚定：价值为 V 的科技，其研究成本相当于 L 满级（60 知识/日）
+// 连续产出 V/60 天的知识量；divisor 越大，研究越快。这里取 100 让单个科技约需
+// value/6000 个满级研究日，整个科技树约 300~500 天研究完。
+const RESEARCH_COST_DIVISOR = 100
+
+export const estimateTechnologyResearchCost = (tech: TechnologySpec, difficulty?: Difficulty) => {
+  if (tech.category === 'construction') return 0
+  const value = estimateTechnologyValue(tech)
+  const mult = difficulty ? difficultyConfigs[difficulty].costScaleMultiplier : 1
+  return Math.max(12, Math.round((value / RESEARCH_COST_DIVISOR) * mult))
+}
 
 /** 研究每日可吸收的知识上限（`researchThroughput` 的封顶值）。知识产能超过此值即为纯浪费。 */
 export const maxResearchThroughput = 10
@@ -290,7 +294,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TD-1',
     name: '舰坞总装排程',
     scope: 'D',
-    category: 'facility-efficiency',
+    category: 'production-method',
     era: 'late',
     unlocks: 'MD-2',
     note: 'D 冠冕星舰坞项目推进效率 +5%，解锁第二阶段生产方式（远航壳层与循环农场）。经总装排程优化，项目推进效率提升。',
@@ -299,7 +303,7 @@ export const technologyCatalog: Record<TechnologyId, TechnologySpec> = {
     id: 'TD-2',
     name: '王座核心启动',
     scope: 'D',
-    category: 'facility-efficiency',
+    category: 'production-method',
     era: 'late',
     unlocks: 'MD-3',
     note: '解锁 D 冠冕星舰坞第三阶段生产方式（王座核心与深空储备）。王座核心投入运行，完成御座号核心系统装配。',

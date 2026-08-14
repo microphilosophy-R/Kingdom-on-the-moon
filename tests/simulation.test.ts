@@ -10,6 +10,7 @@ import {
   defaultReserveFloors,
   defaultStartingTechs,
   difficultyConfigs,
+  estimateLiquidationValue,
   facilityEconomySpecs,
   facilityOrder,
   gameCalendar,
@@ -52,6 +53,7 @@ type Snapshot = {
   day: number
   resources: Resources
   dailyNet: Resources
+  economicTotal: number
   population: {
     total: number
     capacity: number
@@ -147,7 +149,6 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
     facilityOrder.map(id => [id, selectProductionMethod(facilityEconomySpecs[id].productionMethods, defaultStartingTechs).id]),
   ) as Record<FacilityId, ProductionMethodId>
   let techs = [...defaultStartingTechs, 'TE2-0 月冕能源署建造许可', 'TC2-0 西海采掘署建造许可', 'TF-0 天工精炼署建造许可', 'TP-0 伊犁河谷建造许可', 'TR-0 月穹生态环建造许可', 'TL-0 问天研究实验室建造许可', 'TH-0 翡翠宫建造许可', 'TM-0 新月府建造许可', 'TD-0 冠冕星舰坞建造许可']
-  const researchProgress: Partial<Record<TechnologyId, number>> = {}
   let activeResearch = firstResearchableTechnology()
   let populationPressureDays = 0
   const policy: PopulationPolicy = 'ration'
@@ -212,6 +213,7 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
       day,
       resources: roundResources(resources),
       dailyNet: roundResources(dailyNet),
+      economicTotal: round(estimateLiquidationValue(resources, techs)),
       population: {
         total: round(resources.population),
         capacity: round(projection.capacity),
@@ -258,15 +260,17 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
     if (shipStageIndex < shipStages.length) {
       const shipStage = shipStages[shipStageIndex]
       const dMethodSpec = facilityEconomySpecs.D.productionMethods[shipStageIndex]
-      const dAssigned = Math.min(getFacilityWorkCapacity('D', levels.D), staffing.D ?? 0)
-      const dLevelScale = dAssigned * (1 + Math.max(0, levels.D - 1) * facilityEconomySpecs.D.yieldGrowth)
+      const dCapacity = getFacilityWorkCapacity('D', levels.D)
+      const dAssigned = Math.min(dCapacity, staffing.D ?? 0)
+      // 实际工程进度按当前在岗数推进；采购目标按满员计算，打破「没人→不采购→没人」的死锁。
+      const dProgressScale = dAssigned * (1 + Math.max(0, levels.D - 1) * facilityEconomySpecs.D.yieldGrowth)
+      const dFullScale = dCapacity * (1 + Math.max(0, levels.D - 1) * facilityEconomySpecs.D.yieldGrowth)
       resourceOrder.forEach(key => {
         if (key === 'power') return
-        const daily = (dMethodSpec.input[key] ?? 0) * dLevelScale
-        if (daily > 0) {
-          shipStageProgress[key] += daily
-          shipMaterialDaily[key] += daily
-        }
+        const progressDaily = (dMethodSpec.input[key] ?? 0) * dProgressScale
+        const materialDaily = (dMethodSpec.input[key] ?? 0) * dFullScale
+        if (progressDaily > 0) shipStageProgress[key] += progressDaily
+        if (materialDaily > 0) shipMaterialDaily[key] += materialDaily
       })
       const shipStageDone = resourceOrder.every(key => {
         const total = shipStage.input[key] ?? 0
@@ -284,15 +288,17 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
     if (rPhaseIndex < ecologyRingPhases.length - 1) {
       const rPhase = ecologyRingPhases[rPhaseIndex]
       const rMethodSpec = facilityEconomySpecs.R.productionMethods[rPhaseIndex]
-      const rAssigned = Math.min(getFacilityWorkCapacity('R', levels.R), staffing.R ?? 0)
-      const rLevelScale = rAssigned * (1 + Math.max(0, levels.R - 1) * facilityEconomySpecs.R.yieldGrowth)
+      const rCapacity = getFacilityWorkCapacity('R', levels.R)
+      const rAssigned = Math.min(rCapacity, staffing.R ?? 0)
+      // 实际工程进度按当前在岗数推进；采购目标按满员计算，打破「没人→不采购→没人」的死锁。
+      const rProgressScale = rAssigned * (1 + Math.max(0, levels.R - 1) * facilityEconomySpecs.R.yieldGrowth)
+      const rFullScale = rCapacity * (1 + Math.max(0, levels.R - 1) * facilityEconomySpecs.R.yieldGrowth)
       resourceOrder.forEach(key => {
         if (key === 'power') return
-        const daily = (rMethodSpec.input[key] ?? 0) * rLevelScale
-        if (daily > 0) {
-          rPhaseProgress[key] += daily
-          ringMaterialDaily[key] += daily
-        }
+        const progressDaily = (rMethodSpec.input[key] ?? 0) * rProgressScale
+        const materialDaily = (rMethodSpec.input[key] ?? 0) * rFullScale
+        if (progressDaily > 0) rPhaseProgress[key] += progressDaily
+        if (materialDaily > 0) ringMaterialDaily[key] += materialDaily
       })
       const rPhaseDone = resourceOrder.every(key => {
         const total = rPhase.input[key] ?? 0
@@ -315,13 +321,16 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
       techs,
       pressureDays: populationPressureDays,
     })
+    // 采购目标 = 储备线 + 「生命维持 + 满员星舰/生态环材料」的当日需求。
+    // 关键是把库存补到储备线之上（available>0），computeSinkReadiness 才会放行 D/R 岗位；
+    // 否则「缺材料 → 撤人 → 更缺材料」的死锁会一直卡住生态环与星舰。
     const autoTradeTargets = {
-      water: (preliminaryPopulationProjection.lifeSupportCost.water ?? 0) + (shipMaterialDaily.water ?? 0) + (ringMaterialDaily.water ?? 0),
-      oxygen: (preliminaryPopulationProjection.lifeSupportCost.oxygen ?? 0) + (shipMaterialDaily.oxygen ?? 0) + (ringMaterialDaily.oxygen ?? 0),
-      biomass: (preliminaryPopulationProjection.lifeSupportCost.biomass ?? 0) + (shipMaterialDaily.biomass ?? 0) + (ringMaterialDaily.biomass ?? 0),
+      water: defaultReserveFloors.water + (preliminaryPopulationProjection.lifeSupportCost.water ?? 0) + (shipMaterialDaily.water ?? 0) + (ringMaterialDaily.water ?? 0),
+      oxygen: defaultReserveFloors.oxygen + (preliminaryPopulationProjection.lifeSupportCost.oxygen ?? 0) + (shipMaterialDaily.oxygen ?? 0) + (ringMaterialDaily.oxygen ?? 0),
+      biomass: defaultReserveFloors.biomass + (preliminaryPopulationProjection.lifeSupportCost.biomass ?? 0) + (shipMaterialDaily.biomass ?? 0) + (ringMaterialDaily.biomass ?? 0),
       regolith: defaultReserveFloors.regolith + (shipMaterialDaily.regolith ?? 0) + (ringMaterialDaily.regolith ?? 0),
-      alloy: (shipMaterialDaily.alloy ?? 0) + (ringMaterialDaily.alloy ?? 0),
-      quantumCore: (shipMaterialDaily.quantumCore ?? 0) + (ringMaterialDaily.quantumCore ?? 0),
+      alloy: defaultReserveFloors.alloy + (shipMaterialDaily.alloy ?? 0) + (ringMaterialDaily.alloy ?? 0),
+      quantumCore: defaultReserveFloors.quantumCore + (shipMaterialDaily.quantumCore ?? 0) + (ringMaterialDaily.quantumCore ?? 0),
       luxury: 0,
     }
     // 近似每日净增长 = 设施生产净产出 + 人口生命维持消耗，用于售卖盈余时判断哪些资源在净消耗
@@ -381,19 +390,15 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
     })
 
     const activeResearchSpec = technologyCatalog[activeResearch]
+    // 研究不再按每日吞吐逐日推进：知识库存达到研究成本即立刻解锁，
+    // 研究速度完全由 L 的知识产出决定（L 满级产出即为知识供给上限）。
     if (activeResearchSpec && !hasTech(techs, activeResearch) && hasResearchPrerequisites(activeResearch, techs)) {
-      const requiredKnowledge = activeResearchSpec.researchCost ?? 0
-      const currentProgress = researchProgress[activeResearch] ?? 0
-      const researchThroughput = Math.max(1, Math.min(10, 1 + Math.floor((staffing.L ?? 0) * 0.5) + (hasTech(techs, 'TL-2') ? 1 : 0) + (hasTech(techs, 'TL-3') ? 2 : 0)))
-      const spentKnowledge = Math.min(resources.knowledge, researchThroughput, Math.max(0, requiredKnowledge - currentProgress))
-      if (spentKnowledge > 0 || requiredKnowledge === 0) {
-        const nextProgress = Math.min(requiredKnowledge, currentProgress + spentKnowledge)
-        resources = { ...resources, knowledge: resources.knowledge - spentKnowledge }
-        researchProgress[activeResearch] = nextProgress
-        if (nextProgress >= requiredKnowledge) {
-          techs = techs.some(item => item.startsWith(`${activeResearch} `)) ? techs : [...techs, `${activeResearch} ${activeResearchSpec.name}`]
-          activeResearch = firstResearchableTechnology()
-        }
+      // 研究成本与价值挂钩，难度倍率影响成本（costScaleMultiplier 越大研究越慢）。
+      const requiredKnowledge = (activeResearchSpec.researchCost ?? 0) * difficultyConfigs[difficulty].costScaleMultiplier
+      if (resources.knowledge >= requiredKnowledge) {
+        resources = { ...resources, knowledge: resources.knowledge - requiredKnowledge }
+        techs = techs.some(item => item.startsWith(`${activeResearch} `)) ? techs : [...techs, `${activeResearch} ${activeResearchSpec.name}`]
+        activeResearch = firstResearchableTechnology()
       }
     }
 
@@ -497,6 +502,7 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
     final.cumulative.started === 0
       ? 'The optimizer started no construction; early costs or tradable materials still need adjustment.'
       : `The optimizer started ${final.cumulative.started} projects and completed ${final.cumulative.completed}.`,
+    `Liquidation value (economic total): ${round(final.economicTotal)} currency.`,
     `Minimum life-support stocks: water ${round(final.cumulative.minWater)}, oxygen ${round(final.cumulative.minOxygen)}, biomass ${round(final.cumulative.minBiomass)}.`,
     final.population.status === 'full'
       ? `The main bottleneck is now the designed housing cap: life support remains positive, and population fills ${final.population.capacity} capacity.`
@@ -510,6 +516,7 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
     shipWinDay > 0
       ? `Ship victory achieved at day ${shipWinDay} (target: ${difficultyConfigs[difficulty].targetWinDay}).`
       : `Ship not completed by day 1000 (D level ${final.levels.D}).`,
+    `Ecology ring: phase ${rPhaseIndex + 1} (${productionMethods.R}), staffing ${staffing.R}/${getFacilityWorkCapacity('R', levels.R)}.`,
   )
 
   return {

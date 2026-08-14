@@ -233,6 +233,26 @@ export function constrainDailyNet(
 export const calculateCurrencyDebtInterest = (resources: Resources) =>
   resources.currency < 0 ? Math.max(0.05, Math.abs(resources.currency) * currencyDebtInterestRate) : 0
 
+/**
+ * 经济总量（清算价值）：假设把当前全部可交易库存通过星港以「卖出价」（多卖少买）归零后，
+ * 得到的星海货币总量。即 当前货币 + Σ(可售资源库存 × 单位卖出价)。
+ *
+ * - 只有星港可售（canSell）且已解锁（unlockTech）的品类才计入；人口仅可买入，不计入。
+ * - 电力不可交易，不计入；货币本身直接计入（可为负，即负债）。
+ * - 知识以 6 份一包报价，需按每份折算。
+ */
+export function estimateLiquidationValue(resources: Resources, techs: string[] = []): number {
+  let total = resources.currency ?? 0
+  for (const offer of starportTradeOffers) {
+    if (!offer.canSell || !hasTech(techs, offer.unlockTech)) continue
+    const unitsPerBatch = offer.output[offer.resource] ?? 0
+    if (unitsPerBatch <= 0) continue
+    const sellPricePerUnit = (offer.baseValue * (1 - offer.sellDiscount)) / unitsPerBatch
+    total += (resources[offer.resource] ?? 0) * sellPricePerUnit
+  }
+  return total
+}
+
 export const estimateTradePremium = (trade: AutoTrade, weights: Resources = resourceWeights) =>
   Math.max(0, weightedValue(trade.input, weights) - weightedValue(trade.output, weights)) +
   calculateCurrencyDebtInterest(applyBundle(emptyTradeDelta(), trade.input, -1))

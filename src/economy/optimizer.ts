@@ -1,7 +1,7 @@
 import { getFacilityWorkCapacity, getHousingCapacity, isFixedFacility, isHousingFacility } from './calendar'
 import { ecologyRingPhases, facilityEconomySpecs, facilityOrder, shipProjectStages } from './facilities'
 import { canAfford, applyBundle, defaultReserveFloors, emptyResources, resourceMeta, resourceOrder, resourceWeights, weightedValue } from './resources'
-import { canBuildFacility, canUseProductionMethod, estimateTechnologyValue, hasTech, hasTechnologyPrerequisites, maxResearchThroughput, remainingResearchBacklog, selectProductionMethod, technologyCatalog } from './technologies'
+import { canBuildFacility, canUseProductionMethod, estimateTechnologyValue, hasTech, hasTechnologyPrerequisites, remainingResearchBacklog, selectProductionMethod, technologyCatalog } from './technologies'
 import type { Difficulty } from './difficulty'
 import { emergencyCreditDebtLimit, estimateResourceDeficitPremium, estimateTradePremium, hasOperationalStarport, planSellSurplusForCurrency, resourceDebtLimits, scaleBundle, starportTradeOffers } from './trade'
 import { projectFacilityCost, projectFacilityNet, projectTechnologyCost } from './production'
@@ -149,8 +149,14 @@ const computeSinkReadiness = (resources: Resources, perJobNet: Partial<Resources
 /** 住房扩建评分用的人口增长假设（每日人数），与 growthPotential 解耦，避免人口增速下调时连锁压低住房扩建。 */
 const HOUSING_GROWTH_ASSUMPTION = 1.5
 
-/** 知识库存的目标缓冲天数：库存足以喂满这么多天的研究吞吐后，边际知识价值归零。 */
+/** 知识库存的目标缓冲天数：库存足以覆盖这么多天的 L 满级产出后，边际知识价值归零。 */
 const KNOWLEDGE_BUFFER_DAYS = 30
+
+/**
+ * L 满级知识产出（60 岗 × 1 知识/岗/日）。研究改为「知识达标立即解锁」后，
+ * 不再有每日吸收上限（原 maxResearchThroughput=10），知识供给上限即为 L 满级产出。
+ */
+const MAX_LAB_KNOWLEDGE_OUTPUT = 60
 
 /**
  * 电力边际权重的下限。电力不可储存、不可交易，发电厂的唯一产出就是电力，
@@ -159,14 +165,12 @@ const KNOWLEDGE_BUFFER_DAYS = 30
 const POWER_MIN_WEIGHT = 0.25
 
 /**
- * 知识的边际权重：研究每日最多吸收 `maxResearchThroughput` 点知识，
- * 因此「再多产 1 点知识」的价值取决于剩余科技树还需多少、以及现有库存能喂多久。
+ * 知识的边际权重：研究改为「知识达标立即解锁」，知识供给上限是 L 满级产出。
+ * 因此「再多产 1 点知识」的价值取决于剩余科技树还需多少、以及现有库存能覆盖多少天。
  *
- * 只在「整棵树点完」时归零是不够的：L 满级产能约 265/日、吸收上限 10/日，
- * 27 倍的过剩会在树点完之前就堆出数万点废库存（run-002 结局 50888 点）。
- *
- * 分母用吸收上限而非「当前实验室在岗数」：后者会造成循环——实验室没人时吸收速率按 1/日 计，
- * 少量库存就显得能撑上百天，知识权重归零，于是实验室永远不会被建造 / 派人。
+ * 只在「整棵树点完」时归零是不够的：L 满级产能远超单次研究需求时，
+ * 会在树点完之前就堆出废库存。分母用 L 满级产出而非「当前实验室在岗数」，
+ * 避免实验室没人时吸收速率按 1/日计、少量库存就显得能撑上百天的循环。
  */
 const knowledgeMarginalWeight = (
   resources: Resources,
@@ -179,7 +183,7 @@ const knowledgeMarginalWeight = (
   const stocked = Math.max(0, resources.knowledge ?? 0)
   // 库存已能喂完剩余科技树 → 边际价值归零
   if (stocked >= backlog) return 0
-  const bufferedDays = stocked / maxResearchThroughput
+  const bufferedDays = stocked / MAX_LAB_KNOWLEDGE_OUTPUT
   const urgency = Math.max(0, Math.min(1, 1 - bufferedDays / KNOWLEDGE_BUFFER_DAYS))
   return baseWeight * urgency
 }
