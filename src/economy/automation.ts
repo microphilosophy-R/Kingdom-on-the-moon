@@ -56,6 +56,9 @@ const hasUnresearchedTech = (techs: string[]): boolean => {
   return result
 }
 
+/** 住房扩建评分用的人口增长假设（每日人数），与 growthPotential 解耦，避免人口增速下调时连锁压低住房扩建。 */
+const HOUSING_GROWTH_ASSUMPTION = 1.5
+
 const scaleGain = (gain: Partial<Resources>, factor: number): Partial<Resources> => {
   const scaled: Partial<Resources> = {}
   resourceOrder.forEach(key => {
@@ -434,14 +437,14 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
       const addedCapacity = getHousingCapacity(id, current.level + 1) - getHousingCapacity(id, current.level)
       const vacancy = presentCapacity - input.resources.population
       housingCapacityPressure = vacancy <= 0
-      const potentialMigrants = Math.min(addedCapacity, Math.max(0, (input.population?.growthPotential ?? 0.5) * horizon - vacancy))
+      const potentialMigrants = Math.min(addedCapacity, Math.max(0, HOUSING_GROWTH_ASSUMPTION * horizon - vacancy))
       annualGain.population = potentialMigrants / Math.min(horizon, 120)
       // 新增人口的维生消耗计入扩建收益，避免住房在维生不足时被过度扩建
       const residentInput = spec.productionMethods[0].input
       for (const key of ['water', 'oxygen', 'biomass'] as ResourceKey[]) {
         annualGain[key] -= (residentInput[key] ?? 0) * potentialMigrants
       }
-      if (vacancy <= (input.population?.growthPotential ?? 0.5) * 90) {
+      if (vacancy <= HOUSING_GROWTH_ASSUMPTION * 90) {
         strategicBonus += addedCapacity * weights.population / 80 + overstockTechnologyBonus()
       }
       if (housingCapacityPressure) {

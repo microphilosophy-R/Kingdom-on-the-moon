@@ -75,8 +75,8 @@ export function projectPopulationSystem(context: PopulationContext): PopulationP
     context.facilities.M?.level ?? 0,
   )
   const growthPotential = (
-    0.04 +
-    highestHousingLevel * 0.15 +
+    0.5 +
+    highestHousingLevel * 0.04 +
     (hasTech(context.techs, 'TS-1') ? 0.25 : 0) +
     (hasTech(context.techs, 'TC2-2') ? 0.18 : 0)
   ) * policyMultiplier
