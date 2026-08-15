@@ -1,0 +1,30 @@
+/* ConstructionDaysPill 组件私有样式
+ * 迁移自：62-settings-modal.css(1994-2018) + 45-typography.css(185-186)
+ */
+
+.construction-days-pill {
+  display: inline-flex;
+  gap: .18rem;
+  align-items: center;
+  width: max-content;
+  max-width: 100%;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: none;
+  color: var(--ui-ink-strong);
+}
+
+.construction-days-pill svg {
+  color: var(--ui-brass-dark);
+  stroke-width: 2.2;
+  width: 18px;
+  height: 18px;
+}
+
+.construction-days-pill strong {
+  font-family: var(--ui-mono);
+  font-size: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}

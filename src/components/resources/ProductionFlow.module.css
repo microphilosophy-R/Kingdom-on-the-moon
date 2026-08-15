@@ -1,0 +1,49 @@
+/* ProductionFlow 组件私有样式
+ * 迁移自：00-base-shell.css(399-415) + 62-settings-modal.css(1332-1347) + 10-resources-events.css(34-39)
+ */
+
+.production-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: .45rem;
+  align-items: center;
+}
+
+.production-flow > svg {
+  color: oklch(50% .1 76);
+}
+
+.production-flow > div {
+  display: grid;
+  gap: .28rem;
+}
+
+.production-flow small {
+  color: oklch(49% .024 250);
+  font-size: var(--font-micro);
+}
+
+.flow-arrow-svg {
+  align-self: center;
+  width: 44px;
+  height: 18px;
+  overflow: visible;
+}
+
+.flow-arrow-svg path {
+  fill: none;
+  stroke: var(--ui-brass-dark);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+@media (max-width: 680px) {
+  .production-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .production-flow > svg {
+    transform: rotate(90deg);
+  }
+}

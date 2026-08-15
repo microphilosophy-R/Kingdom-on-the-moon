@@ -21,7 +21,8 @@ import type { ReignReport } from '../../types/game'
 import { displayCopy, fmt, fmtAmount, formatDay } from '../../utils/format'
 import { completedTechnologyIds, techLabel } from '../../utils/game'
 import { scaleResourceBundle } from '../../utils/trade'
-import { ResourceAtom, ResourceBundle } from '../resources'
+import { ResourceAtom, ResourceBundle, ResourceDeltaRows } from '../resources'
+import pillStyles from '../resources/ConstructionDaysPill.module.css'
 import { SectionHeading } from '../layout'
 import { InfoToggle } from './InfoToggle'
 import { TechnologyCard } from './TechnologyCard'
@@ -130,7 +131,7 @@ export function ShipProgressBlock({ shipProgress, shipProjectStages, activeStage
           const isActive = stage.id === activeStage
           return (
           <article key={stage.id} style={{ border: `1px solid ${isActive ? 'var(--ui-line-strong)' : 'var(--ui-line)'}`, borderRadius: '5px', padding: '.52rem .62rem', background: isActive ? 'color-mix(in oklab, var(--ui-brass) 12%, var(--ui-surface))' : 'var(--ui-surface)' }}>
-            <b>{stage.id}. {stage.name}{isActive ? <span className="construction-days-pill" style={{ marginLeft: '.4rem' }}>当前阶段</span> : null}</b>
+            <b>{stage.id}. {stage.name}{isActive ? <span className={pillStyles['construction-days-pill']} style={{ marginLeft: '.4rem' }}>当前阶段</span> : null}</b>
             <ResourceBundle bundle={stage.input} />
             <small>{stage.note}</small>
           </article>
@@ -440,16 +441,7 @@ export function TradeBoardBlock({
                 {/* Col 2: Trade recipe */}
                 <div className="trade-v4-col trade-v4-recipe">
                   <span className="trade-recipe-label">交易配方</span>
-                  <div className="resource-delta-stack">
-                    <div className="resource-delta-row consumption">
-                      <span aria-hidden="true">-</span>
-                      <ResourceBundle bundle={recipeInput} empty="—" signed={false} boxedEmpty />
-                    </div>
-                    <div className="resource-delta-row production">
-                      <span aria-hidden="true">+</span>
-                      <ResourceBundle bundle={recipeOutput} empty="—" signed={false} boxedEmpty />
-                    </div>
-                  </div>
+                  <ResourceDeltaRows input={recipeInput} output={recipeOutput} inputEmpty="—" outputEmpty="—" />
                 </div>
 
                 {/* Col 3: Quantity controls + execute */}
@@ -533,16 +525,7 @@ export function TradeBoardBlock({
                 {/* Col 4: Summary */}
                 <div className="trade-v4-col trade-v4-summary">
                   <span className="trade-summary-label">总计</span>
-                  <div className="resource-delta-stack">
-                    <div className="resource-delta-row consumption">
-                      <span aria-hidden="true">-</span>
-                      <ResourceBundle bundle={input} empty="—" signed={false} boxedEmpty />
-                    </div>
-                    <div className="resource-delta-row production">
-                      <span aria-hidden="true">+</span>
-                      <ResourceBundle bundle={output} empty="—" signed={false} boxedEmpty />
-                    </div>
-                  </div>
+                  <ResourceDeltaRows input={input} output={output} inputEmpty="—" outputEmpty="—" />
                 </div>
               </div>
             </article>

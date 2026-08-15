@@ -126,7 +126,6 @@ li,
 .planet-dock p,
 .king-profile p,
 .letter-body,
-.building-net-row,
 .facility-detail-v2 p {
   font-size: var(--font-body);
   line-height: 1.62;
@@ -153,8 +152,7 @@ li,
 .method-column-label,
 .construction-resources > span,
 .detail-progress-line small,
-.resource-empty,
-.cost-resource-item > small {
+.resource-empty {
   font-size: var(--font-label);
   line-height: 1.18;
 }
@@ -182,8 +180,6 @@ small,
 .resource-rail .resource-sub-value,
 .symbol-value,
 .ledger-stat-value,
-.construction-days-pill strong,
-.cost-resource-item > small,
 .detail-progress-line small,
 .policy-report-body strong,
 .special-facility-stats strong,
@@ -214,12 +210,6 @@ small,
   font-family: var(--ui-mono);
   font-size: var(--font-data-xl);
   font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.resource-delta-row > span:first-child {
-  font-family: var(--ui-mono);
-  font-size: var(--font-button);
   line-height: 1;
 }
 

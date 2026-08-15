@@ -1329,16 +1329,14 @@
   white-space: nowrap;
 }
 
-.method-flow-arrow,
-.flow-arrow-svg {
+.method-flow-arrow {
   align-self: center;
   width: 44px;
   height: 18px;
   overflow: visible;
 }
 
-.method-flow-arrow path,
-.flow-arrow-svg path {
+.method-flow-arrow path {
   fill: none;
   stroke: var(--ui-brass-dark);
   stroke-linecap: round;
@@ -1838,48 +1836,8 @@
   color: var(--ui-ink);
 }
 
-.resource-delta-stack {
-  display: grid;
-  gap: .42rem;
-  min-width: 0;
-}
-
-.resource-delta-row {
-  display: grid;
-  grid-template-columns: 1.05rem minmax(0, 1fr);
-  gap: .24rem;
-  align-items: center;
-  justify-items: start;
-  min-width: 0;
-}
-
-.resource-delta-row > span:first-child {
-  display: grid;
-  width: 1.05rem;
-  height: 1.05rem;
-  place-items: center;
-  border-radius: 3px;
-  color: oklch(97% .012 86);
-  font-family: var(--ui-mono);
-  font-size: var(--font-button);
-  font-weight: 900;
-  line-height: 1;
-}
-
-.resource-delta-row.consumption > span:first-child {
-  background: var(--ui-danger);
-}
-
-.resource-delta-row.production > span:first-child {
-  background: var(--ui-success);
-}
-
 .method-equation .resource-bundle {
   gap: .28rem;
-}
-
-.resource-delta-row .resource-empty.boxed {
-  justify-self: start;
 }
 
 .method-equation .resource-atom.compact {
@@ -1971,52 +1929,6 @@
   font-weight: 700;
 }
 
-.cost-resource-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .28rem;
-  min-width: 0;
-}
-
-.cost-resource-item {
-  display: inline-flex;
-  align-items: center;
-  gap: .12rem;
-}
-
-.cost-resource-item > small {
-  color: var(--ui-success);
-  font-family: var(--ui-mono);
-  font-size: var(--font-micro);
-  white-space: nowrap;
-}
-
-.construction-days-pill {
-  display: inline-flex;
-  gap: .18rem;
-  align-items: center;
-  width: max-content;
-  max-width: 100%;
-  border: 0;
-  border-radius: 0;
-  padding: 0;
-  background: none;
-  color: var(--ui-ink-strong);
-}
-
-.construction-days-pill svg {
-  color: var(--ui-brass-dark);
-  stroke-width: 2.2;
-  width: 18px;
-  height: 18px;
-}
-
-.construction-days-pill strong {
-  font-family: var(--ui-mono);
-  font-size: var(--font-data);
-  line-height: 1;
-}
-
 .construction-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2088,55 +2000,14 @@
   border-right: 1px solid oklch(80% .018 84);
 }
 
-.ledger-economy-block .ledger-stat-row,
-.ledger-economy-block .building-net-row {
+.ledger-economy-block .ledger-stat-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: .32rem;
   align-items: start;
   min-height: 26px;
   padding: 0;
-}
-
-.ledger-economy-block .ledger-stat-row {
   min-width: 0;
-}
-
-.ledger-economy-block .building-net-row {
-  min-width: 0;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-}
-
-.ledger-economy-block .building-net-row > span {
-  display: inline;
-  margin: 0;
-  padding-top: .18rem;
-  color: var(--ui-muted);
-  font-size: var(--font-label);
-  font-weight: 700;
-  line-height: 1.18;
-  white-space: nowrap;
-}
-
-.ledger-economy-block .building-net-row .resource-bundle {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  margin-left: auto;
-  min-width: 0;
-  gap: .28rem .48rem;
-}
-
-.building-net-row.compact .resource-bundle {
-  gap: .32rem;
-}
-
-.building-net-row.compact .resource-atom.compact {
-  min-height: 26px;
-  padding: 0;
 }
 
 .ledger-action-block {
@@ -2262,11 +2133,6 @@
   max-width: 72ch;
   margin: 0;
   color: var(--ui-ink);
-}
-
-.detail-description-row .building-net-row {
-  align-self: stretch;
-  background: var(--ui-surface);
 }
 
 .detail-progress-line {

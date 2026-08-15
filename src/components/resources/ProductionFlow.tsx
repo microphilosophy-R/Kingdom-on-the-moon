@@ -1,5 +1,6 @@
 import { ResourceBundle } from './ResourceBundle'
 import type { Resources } from '../../economy'
+import styles from './ProductionFlow.module.css'
 
 export interface FlowArrowSvgProps {
   className?: string
@@ -38,7 +39,7 @@ export interface ProductionFlowProps {
 
 export function ProductionFlow({ input, output }: ProductionFlowProps) {
   return (
-    <div className="production-flow">
+    <div className={styles['production-flow']}>
       <div>
         <small>输入</small>
         <ResourceBundle bundle={input} empty="无输入" />

@@ -178,8 +178,7 @@
 .cyan,
 .facility-node.available .node-icon,
 .tree-lines path.available,
-.tech-image-placeholder .active-line,
-.resource-symbol-strip .cyan {
+.tech-image-placeholder .active-line {
   color: var(--ui-signal);
   stroke: var(--ui-signal);
 }

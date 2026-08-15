@@ -1,0 +1,78 @@
+/* FacilityNetRow 组件私有样式
+ * 迁移自：65-building-cards.css(12-46) + 62-settings-modal.css(2091-2140, 2267-2270) + 45-typography.css
+ *
+ * 保留全局（不迁入本模块）：
+ * - `.ledger-economy-block .ledger-stat-row`（属于 FacilityDetailPanel 上下文，Phase 3 迁移）
+ *
+ * 外部上下文规则（以 :global 祖先桥接，待对应组件 Phase 3 迁移时随组件搬移）：
+ * - `.ledger-economy-block` / `.detail-description-row` → FacilityDetailPanel
+ * - `.resource-bundle` / `.resource-atom.compact` 为全局共享类，故以 :global 引用
+ */
+
+.building-net-row {
+  display: grid;
+  gap: .35rem;
+  min-width: 0;
+  border: 1px solid oklch(73% .018 84 / .62);
+  border-radius: 5px;
+  padding: .55rem .62rem;
+  background: var(--ui-surface);
+  font-size: var(--font-body);
+  line-height: 1.62;
+}
+
+.building-net-row > span {
+  display: block;
+  margin-bottom: .18rem;
+  color: var(--ui-muted);
+  font-size: var(--font-label);
+}
+
+.building-net-row.compact :global(.resource-bundle) {
+  gap: .32rem;
+}
+
+.building-net-row.compact :global(.resource-atom.compact) {
+  min-height: 26px;
+  padding: 0;
+}
+
+/* FacilityDetailPanel 账本经济块上下文（Phase 3 迁移） */
+:global(.ledger-economy-block) .building-net-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .32rem;
+  align-items: start;
+  min-height: 26px;
+  padding: 0;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+:global(.ledger-economy-block) .building-net-row > span {
+  display: inline;
+  margin: 0;
+  padding-top: .18rem;
+  color: var(--ui-muted);
+  font-size: var(--font-label);
+  font-weight: 700;
+  line-height: 1.18;
+  white-space: nowrap;
+}
+
+:global(.ledger-economy-block) .building-net-row :global(.resource-bundle) {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-left: auto;
+  min-width: 0;
+  gap: .28rem .48rem;
+}
+
+:global(.detail-description-row) .building-net-row {
+  align-self: stretch;
+  background: var(--ui-surface);
+}

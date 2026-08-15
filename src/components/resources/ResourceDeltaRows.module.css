@@ -1,0 +1,63 @@
+/* ResourceDeltaRows 组件私有样式
+ * 迁移自：62-settings-modal.css(1841-1883) + 45-typography.css(220-224)
+ *
+ * 保留全局（不迁入本模块）：
+ * - `.method-equation .resource-empty.boxed` 等（属于 FacilityDetailPanel 上下文，Phase 3 迁移）
+ */
+
+.resource-delta-stack {
+  display: grid;
+  gap: .42rem;
+  min-width: 0;
+}
+
+.resource-delta-row {
+  display: grid;
+  grid-template-columns: 1.05rem minmax(0, 1fr);
+  gap: .24rem;
+  align-items: center;
+  justify-items: start;
+  min-width: 0;
+}
+
+.resource-delta-row > span:first-child {
+  display: grid;
+  width: 1.05rem;
+  height: 1.05rem;
+  place-items: center;
+  border-radius: 3px;
+  color: oklch(97% .012 86);
+  font-family: var(--ui-mono);
+  font-size: var(--font-button);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.resource-delta-row.consumption > span:first-child {
+  background: var(--ui-danger);
+}
+
+.resource-delta-row.production > span:first-child {
+  background: var(--ui-success);
+}
+
+/* resource-empty 为共享类（全局 shared.css），此处以 :global 桥接盒状空态的对齐 */
+.resource-delta-row :global(.resource-empty.boxed) {
+  justify-self: start;
+}
+
+/* TradeBoard 上下文（Phase 3 迁移时随 trade-v4 组件一并搬移） */
+:global(.trade-v4-recipe) .resource-delta-stack {
+  padding: .32rem .4rem;
+  background: color-mix(in oklab, var(--ui-brass) 6%, transparent);
+  border-radius: 4px;
+  border: 1px solid var(--ui-line);
+}
+
+:global(.trade-v4-summary) .resource-delta-stack {
+  padding: .28rem .35rem;
+  background: color-mix(in oklab, var(--ui-brass) 4%, transparent);
+  border-radius: 4px;
+  border: 1px solid var(--ui-line);
+  min-height: 36px;
+}

@@ -1,4 +1,4 @@
-﻿.retainer {
+.retainer {
   grid-template-columns: 80px minmax(0, 1fr);
 }
 
@@ -31,12 +31,6 @@
   .event-exchange.concealed {
     grid-template-columns: 1fr;
   }
-  .production-flow {
-    grid-template-columns: 1fr;
-  }
-  .production-flow > svg {
-    transform: rotate(90deg);
-  }
   .retainer {
     grid-template-columns: 62px 1fr;
   }
@@ -51,42 +45,6 @@
 }
 
 /* Building UX pass: staffing, throughput, era grouping, and clearer operations. */
-.resource-symbol-strip {
-  display: inline-flex;
-  flex-wrap: wrap;
-  min-height: 22px;
-  align-items: center;
-  gap: .2rem;
-}
-.resource-symbol-item {
-  display: inline-flex;
-  align-items: center;
-  gap: .1rem;
-  min-width: 0;
-  border: 1px solid oklch(76% .018 84);
-  border-radius: 4px;
-  padding: .12rem .22rem;
-  background: oklch(98% .008 86);
-  line-height: 1;
-}
-.resource-symbol-item svg {
-  flex: 0 0 auto;
-}
-.resource-symbol-item small {
-  color: oklch(34% .032 250);
-  font-family: var(--ui-mono);
-  font-size: var(--font-micro);
-  font-weight: 700;
-  line-height: 1;
-}
-.resource-symbol-item small.negative {
-  color: oklch(56% .12 28);
-}
-.symbol-empty {
-  color: oklch(55% .018 250);
-  font-family: var(--ui-mono);
-  font-size: var(--font-micro);
-}
 .facility-era-list {
   display: grid;
   gap: 1rem;
@@ -244,41 +202,6 @@
   min-height: 0;
   height: 100%;
   padding: .35rem;
-}
-.ledger-flow .resource-symbol-strip {
-  display: contents;
-}
-.ledger-flow .resource-symbol-item {
-  display: inline-flex;
-  width: 100%;
-  min-width: 0;
-  height: 100%;
-  min-height: 28px;
-  align-items: center;
-  justify-content: center;
-  gap: .22rem;
-  padding: .25rem .28rem;
-  border-radius: 4px;
-  background: oklch(95% .022 84 / .6);
-  color: var(--ui-ink-strong);
-  font-family: var(--ui-mono);
-  font-size: var(--font-label);
-  font-weight: 700;
-}
-.ledger-flow .resource-symbol-item > small {
-  font-size: var(--font-label);
-  font-weight: 700;
-  font-family: var(--ui-mono);
-}
-.ledger-flow .symbol-empty {
-  display: inline-flex;
-  width: 100%;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-  color: var(--ui-muted-2);
-  font-size: var(--font-label);
-  font-family: var(--ui-mono);
 }
 .ledger-method-row {
   display: grid;

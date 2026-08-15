@@ -10,7 +10,6 @@
 }
 
 .building-metric-grid > div,
-.building-net-row,
 .intervention-progress > div {
   min-width: 0;
   border: 1px solid oklch(73% .018 84 / .62);
@@ -20,7 +19,6 @@
 }
 
 .building-metric-grid span,
-.building-net-row > span,
 .intervention-progress span,
 .special-intervention-note span {
   display: block;
@@ -38,11 +36,6 @@
 .building-metric-grid small {
   color: var(--ui-muted);
   font-size: var(--font-label);
-}
-
-.building-net-row {
-  display: grid;
-  gap: .35rem;
 }
 
 .building-intervention-block {

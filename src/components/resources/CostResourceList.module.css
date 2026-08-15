@@ -1,0 +1,28 @@
+/* CostResourceList 组件私有样式
+ * 迁移自：62-settings-modal.css(1974-1992) + 45-typography.css
+ *
+ * 保留全局（不迁入本模块）：
+ * - `.resource-empty` 为共享类，归入全局 shared.css（定义见 ResourceBundle.module.css 头注释）
+ */
+
+.cost-resource-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .28rem;
+  min-width: 0;
+}
+
+.cost-resource-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .12rem;
+}
+
+.cost-resource-item > small {
+  color: var(--ui-success);
+  font-family: var(--ui-mono);
+  font-size: var(--font-micro);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+}

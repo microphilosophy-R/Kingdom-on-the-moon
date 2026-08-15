@@ -1,0 +1,97 @@
+/* ResourceSymbolStrip 组件私有样式
+ * 迁移自：10-resources-events.css(54-89)
+ *
+ * 保留全局（不迁入本模块）：
+ * - tone 图标全局色类（`<ResourceIcon className={meta.tone} />` 使用 `.cyan`/`.gold` 等，
+ *   见 50-theme-overrides.css 与 00-base-shell.css）
+ * - `.ledger-flow .resource-symbol-strip` 系列（属于 FacilityDetailPanel 上下文，Phase 3 迁移）
+ * - `.resource-symbol-strip .cyan` 色调补强（50-theme-overrides.css 182）
+ */
+
+.resource-symbol-strip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  min-height: 22px;
+  align-items: center;
+  gap: .2rem;
+}
+
+.resource-symbol-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .1rem;
+  min-width: 0;
+  border: 1px solid oklch(76% .018 84);
+  border-radius: 4px;
+  padding: .12rem .22rem;
+  background: oklch(98% .008 86);
+  line-height: 1;
+}
+
+.resource-symbol-item svg {
+  flex: 0 0 auto;
+}
+
+.resource-symbol-item small {
+  color: oklch(34% .032 250);
+  font-family: var(--ui-mono);
+  font-size: var(--font-micro);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.resource-symbol-item small.negative {
+  color: oklch(56% .12 28);
+}
+
+.symbol-empty {
+  color: oklch(55% .018 250);
+  font-family: var(--ui-mono);
+  font-size: var(--font-micro);
+}
+
+/* tone 图标全局色类（50-theme-overrides.css），strip 已模块化故以 :global 引用 cyan 色调补强 */
+.resource-symbol-strip :global(.cyan) {
+  color: var(--ui-signal);
+  stroke: var(--ui-signal);
+}
+
+/* FacilityDetailPanel 账本流上下文（Phase 3 迁移时随 ledger-flow 组件一并搬移） */
+:global(.ledger-flow) .resource-symbol-strip {
+  display: contents;
+}
+
+:global(.ledger-flow) .resource-symbol-item {
+  display: inline-flex;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: .22rem;
+  padding: .25rem .28rem;
+  border-radius: 4px;
+  background: oklch(95% .022 84 / .6);
+  color: var(--ui-ink-strong);
+  font-family: var(--ui-mono);
+  font-size: var(--font-label);
+  font-weight: 700;
+}
+
+:global(.ledger-flow) .resource-symbol-item > small {
+  font-size: var(--font-label);
+  font-weight: 700;
+  font-family: var(--ui-mono);
+}
+
+:global(.ledger-flow) .symbol-empty {
+  display: inline-flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: var(--ui-muted-2);
+  font-size: var(--font-label);
+  font-family: var(--ui-mono);
+}
