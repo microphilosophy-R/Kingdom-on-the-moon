@@ -87,7 +87,7 @@ export function FacilityList({
                     : projectFacilityNet(spec, assignedPop, modifier, techs, method.id, region.level)
                   const order = facilityOrders[region.id] ?? 'hold'
                   const canQuickUpgrade = !fixed && !isHousingFacility(region.id) && !construction[region.id] && order === 'hold' && region.level < region.max && canBuildFacility(spec, techs)
-                  const populationText = fixed ? '固定' : housingCapacity ? `${residentsByFacility[region.id] ?? 0}/${housingCapacity}` : capacity ? `${assignedPop}/${capacity}` : '未建'
+                  const populationText = housingCapacity ? `${residentsByFacility[region.id] ?? 0}/${housingCapacity}` : `${assignedPop}/${capacity}`
                   const throughputText = fixed ? '在线' : region.level === 0 ? '未建' : `${Math.round(throughput * 100)}%`
                   return (
                     <div key={region.id} className={`${styles['ledger-card']} ${selected === region.id ? styles['selected'] : ''} ${special ? styles['special'] : ''} throughput-${throughputClass(throughput)}`}>

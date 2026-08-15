@@ -136,7 +136,20 @@ export function FacilityDetailPanel({
   const isStaffingAuto = autoStaffingByFacility[selectedRegion.id] !== false
   const staffingCurrent = isHousing ? (isStaffingAuto ? housingResidents : staffing[selectedRegion.id] ?? housingResidents) : assignedPopulation
   const staffingHardMax = isHousing ? housingCapacity : workCapacity
-  const staffingReachableMax = isHousing ? Math.min(housingCapacity, (isStaffingAuto ? housingResidents : staffing[selectedRegion.id] ?? housingResidents) + freePopulation) : Math.min(workCapacity, assignedPopulation + freePopulation)
+  // 人口建筑上下限：所有居民必须安置在人口建筑中，减少某建筑时其余建筑按其空余容量吸收（下限）；
+  // 增加某建筑最多只能并入全部居民（上限）
+  const housingRegions = regions.filter(region => isHousingFacility(region.id))
+  const housingCurrentOf = (hid: RegionId) => autoStaffingByFacility[hid] === false ? (staffing[hid] ?? 0) : (populationProjection.residentsByFacility[hid] ?? 0)
+  const housingTotal = housingRegions.reduce((sum, region) => sum + housingCurrentOf(region.id), 0)
+  const otherHousingCapacity = housingRegions
+    .filter(region => region.id !== selectedRegion.id)
+    .reduce((sum, region) => sum + getHousingCapacity(region.id, region.level), 0)
+  const staffingMin = isHousing ? Math.max(0, housingTotal - otherHousingCapacity) : 0
+  // 生产建筑上限受空闲人口约束：剩余空闲不足时不能填满全部岗位
+  const staffingMax = isHousing
+    ? Math.min(housingCapacity, housingTotal)
+    : Math.min(workCapacity, assignedPopulation + freePopulation)
+  const staffingReachableMax = staffingMax
   const staffColumnLabel = isHousing ? '居住人数' : '在岗人数'
   const staffDisplay = isHousing ? `${staffingCurrent}/${housingCapacity}` : `${assignedPopulation}/${workCapacity}`
   const selectedBuildable = canBuildFacility(selectedSpec, techs)
@@ -198,7 +211,7 @@ export function FacilityDetailPanel({
           : throughput >= 1
           ? '运转充分'
           : '低效运转'
-  const staffText = selectedFixed ? '固定' : isHousingFacility(selectedRegion.id) ? `居民 ${housingResidents}/${housingCapacity}` : `${assignedPopulation}/${workCapacity}`
+  const staffText = isHousingFacility(selectedRegion.id) ? `居民 ${housingResidents}/${housingCapacity}` : `${assignedPopulation}/${workCapacity}`
   const throughputText = selectedFixed ? '在线' : isHousingFacility(selectedRegion.id) ? `${housingCapacity > 0 ? Math.round(housingResidents / housingCapacity * 100) : 0}%` : `${Math.round(throughput * 100)}%`
 
   return (
@@ -291,8 +304,8 @@ export function FacilityDetailPanel({
                   <b><Users size={13} />{staffDisplay}</b>
                   <input
                     type="range"
-                    min={0}
-                    max={staffingHardMax}
+                    min={staffingMin}
+                    max={staffingMax}
                     value={staffingCurrent}
                     onChange={e => {
                       const v = Number(e.target.value)
@@ -313,7 +326,7 @@ export function FacilityDetailPanel({
                         : undefined,
                     }}
                   />
-                  {isHousing && (
+                  {!selectedFixed && staffingHardMax > 0 && (
                     <label className={styles['staffing-auto-toggle']}>
                       <input
                         type="checkbox"

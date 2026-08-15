@@ -109,10 +109,16 @@ export function PlanetScene({ texture, compact = false, onActivate }: PlanetScen
       camera.position.set(0, 0.18, adjustedZ)
 
       camera.updateProjectionMatrix()
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
       renderer.setSize(width, height, false)
+      // Keep CSS in control of the display size so the canvas always fills
+      // its container, even if a previous inline style or attribute sticks.
+      renderer.domElement.style.width = '100%'
+      renderer.domElement.style.height = '100%'
     }
     const observer = new ResizeObserver(resize)
     observer.observe(host)
+    window.addEventListener('resize', resize)
     resize()
 
     let animationId = 0
@@ -159,6 +165,7 @@ export function PlanetScene({ texture, compact = false, onActivate }: PlanetScen
     return () => {
       window.cancelAnimationFrame(animationId)
       observer.disconnect()
+      window.removeEventListener('resize', resize)
       renderer.domElement.removeEventListener('pointerdown', pointerDown)
       renderer.domElement.removeEventListener('pointermove', pointerMove)
       renderer.domElement.removeEventListener('pointerup', pointerUp)

@@ -435,8 +435,6 @@ function App() {
     }
     return auto
   }, [regions, resources, staffingPriorities, manualStaffing, activeOptimizerId, techs, productionMethods])
-  const allocatedPopulation = useMemo(() => facilityOrder.reduce((sum, id) => sum + (staffing[id] ?? 0), 0), [staffing])
-  const freePopulation = Math.max(0, Math.floor(resources.population - allocatedPopulation))
 
   // 人口建筑手动调配重分配：总量不变，按优先级再平衡
   const housingIds = useMemo(() => facilityOrder.filter(id => isHousingFacility(id)), [])
@@ -448,46 +446,52 @@ function App() {
       setAutoStaffingByFacility(prev => { const n = { ...prev }; delete n[id]; return n })
       setManualStaffing(prev => { const n = { ...prev }; delete n[id]; return n })
     } else {
-      // 切到手動：保留当前值作为手动
+      // 切到手動：保留当前值作为手动（人口建筑以当前已安置居民为初值，生产建筑以当前在岗人数为初值）
       setAutoStaffingByFacility(prev => ({ ...prev, [id]: false }))
-      setManualStaffing(prev => ({ ...prev, [id]: staffing[id] ?? 0 }))
+      setManualStaffing(prev => ({ ...prev, [id]: isHousingFacility(id) ? (populationProjection.residentsByFacility[id] ?? 0) : (staffing[id] ?? 0) }))
     }
   }
 
   /** 人口建筑手动调配：重分配空闲人口到其它建筑以保持总量 */
   const handleHousingRedistribute = (id: RegionId, newValue: number) => {
     if (observerMode) return
-    const oldValue = staffing[id] ?? 0
+    const oldValue = autoStaffingByFacility[id] === false ? (staffing[id] ?? 0) : (populationProjection.residentsByFacility[id] ?? 0)
     const delta = newValue - oldValue
     if (delta === 0) return
     setAutoStaffingByFacility(prev => { const n = { ...prev }; n[id] = false; return n })
     setManualStaffing(prev => {
       const next = { ...prev, [id]: newValue }
-      // 计算其它可分配人口建筑的当前人数
+      // 系统内住房总量与总容量：居民必须全部安置，据此推导其它建筑的容量吸收上限与下限
+      const housingTotal = housingIds.reduce((sum, hid) => sum + (
+        autoStaffingByFacility[hid] === false ? (prev[hid] ?? staffing[hid] ?? 0) : (populationProjection.residentsByFacility[hid] ?? 0)
+      ), 0)
+      const totalHousingCapacity = housingIds.reduce((sum, hid) => sum + getHousingCapacity(hid, regions.find(r => r.id === hid)?.level ?? 0), 0)
+      const excessCapacity = Math.max(0, totalHousingCapacity - housingTotal)
+      // 其它可分配人口建筑的当前人数、容量与下限（下限 = 其余建筑满载时该建筑必须承载的人数）
       const otherIds = housingIds.filter(hid => hid !== id)
       const otherStaffing = otherIds.map(hid => {
-        const manual = prev[hid] ?? staffing[hid]
-        return { hid, manual, capacity: getHousingCapacity(hid, regions.find(r => r.id === hid)?.level ?? 0) }
+        const current = autoStaffingByFacility[hid] === false ? (prev[hid] ?? staffing[hid] ?? 0) : (populationProjection.residentsByFacility[hid] ?? 0)
+        const capacity = getHousingCapacity(hid, regions.find(r => r.id === hid)?.level ?? 0)
+        return { hid, current, capacity, floor: Math.max(0, capacity - excessCapacity) }
       }).sort((a, b) => (staffingPriorities[b.hid] ?? 0) - (staffingPriorities[a.hid] ?? 0))
       let remaining = -delta
       if (remaining > 0) {
-        // 削减此建筑，按优先级分配给其它建筑
-        const reversed = [...otherStaffing].sort((a, b) => (staffingPriorities[b.hid] ?? 0) - (staffingPriorities[a.hid] ?? 0))
-        for (const item of reversed) {
+        // 削减此建筑，按优先级分配给其它建筑（最多填满其容量）
+        for (const item of otherStaffing) {
           if (remaining <= 0) break
-          const space = item.capacity - (item.manual ?? staffing[item.hid] ?? 0)
-          const give = Math.min(space, remaining)
-          if (give > 0) { next[item.hid] = (item.manual ?? staffing[item.hid] ?? 0) + give; remaining -= give }
+          const give = Math.min(item.capacity - item.current, remaining)
+          if (give > 0) { next[item.hid] = item.current + give; remaining -= give }
         }
+        // 其它建筑已满载仍无法吸收全部居民，截断目标值（下限保护）
+        if (remaining > 0) next[id] = newValue - remaining
       } else if (remaining < 0) {
-        // 增加此建筑，按优先级从其它建筑抽取
+        // 增加此建筑，按优先级从其它建筑抽取（不低于其下限）
         for (const item of otherStaffing) {
           if (remaining >= 0) break
-          const current = item.manual ?? staffing[item.hid] ?? 0
-          const take = Math.min(current, -remaining)
-          if (take > 0) { next[item.hid] = current - take; remaining += take }
+          const take = Math.min(item.current - item.floor, -remaining)
+          if (take > 0) { next[item.hid] = item.current - take; remaining += take }
         }
-        // 剩余不足则截断目标值
+        // 其它建筑已至下限仍不足，截断目标值
         if (remaining < 0) next[id] = newValue + remaining
       }
       return next
@@ -569,6 +573,11 @@ function App() {
     pressureDays: populationPressureDays,
   }), [populationBaseResources, housingFacilityMap, policy, techs, populationPressureDays])
   const populationFlow = useMemo(() => flowFromPopulation(populationProjection), [populationProjection])
+  // 已分配人口 = 生产岗位 + 手动安置居民（自动安置居民由 projection 独立结算，不在 staffing 中）
+  const allocatedPopulation = useMemo(() => facilityOrder.reduce((sum, id) => sum + (staffing[id] ?? 0), 0), [staffing])
+  // 空闲人口 = 总人口 - 已分配人口（住房承载全体人口，居民与生产岗位是同一批人的不同分工，
+  // 因此手动/自动安置都不占用空闲池）；生产建筑可新增岗位以它为上界
+  const freePopulation = Math.max(0, Math.floor(resources.population - allocatedPopulation))
   const tradeFlow = useMemo(() => flowFromTrades(autoTradePlan.trades, currencyDebtInterest), [autoTradePlan.trades, currencyDebtInterest])
   const dailyProduction = useMemo(() => mergeResourceChanges(productionFlow.production, populationFlow.production, tradeFlow.production), [productionFlow, populationFlow, tradeFlow])
   const dailyConsumption = useMemo(() => mergeResourceChanges(productionFlow.consumption, populationFlow.consumption, tradeFlow.consumption), [productionFlow, populationFlow, tradeFlow])
