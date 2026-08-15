@@ -119,7 +119,3 @@
   background: oklch(65% .12 78 / .56);
 }
 
-/* 外部上下文规则：科技树视口拖动时的光标 */
-:global(.technology-tree-viewport.dragging) .tech-card-compact {
-  cursor: grabbing;
-}

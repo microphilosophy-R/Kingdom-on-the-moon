@@ -1,0 +1,762 @@
+/* SpecialBlocks 组件私有样式
+ * 迁移自：63-trade-board.css(trade-v4 区段/trade-direction-toggle/premium-badge/qty-*)
+ *         + 64-technology.css(v2 区段) + 65-building-cards.css(special-content-block/ship-progress-v2/eco-progress-v2/palace-report-*)
+ *         + 62-settings-modal.css(trade-protection-toggle/palace-report-actions/palace-report-preview)
+ *         + 45-typography.css(policy-status/ship-stage-list/technology-book 字型组)
+ *         + 50-theme-overrides.css(technology-book/policy-status 组)
+ *         + 10-resources-events.css(policy-status 区段) + 40-layout-components.css(组) + 00-base-shell.css(phase-list/ship-stage-list)
+ *
+ * 保留全局（不迁入本模块）：
+ * - `primary-action`（共享，Button.tsx 亦用）
+ * - `resource-atom`/`resource-bundle`/`resource-empty`（共享，以 :global 桥接上下文）
+ * - `ship-meter`（SpecialBlocks 中无生效规则，TSX 已移除该类）
+ * - `palace-report-kpis`（唯一规则被 .policy-status strong 覆盖，TSX 已移除该类）
+ */
+
+/* ===================== 共享容器 ===================== */
+
+.special-content-block {
+  min-width: 0;
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  padding: .9rem;
+  background: var(--ui-raised);
+}
+
+/* ===================== PalaceReportBlock ===================== */
+
+.palace-report-v2 {
+  display: grid;
+  gap: .65rem;
+}
+
+.policy-status {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--ui-line);
+  border-radius: 5px;
+  background: var(--ui-surface-2);
+  margin: .95rem 0 .55rem;
+}
+.policy-status > div {
+  min-width: 0;
+  padding: .68rem .72rem;
+  background: oklch(97% .01 86);
+}
+.policy-status span {
+  display: block;
+  margin-bottom: .22rem;
+  color: oklch(48% .023 250);
+  font-size: var(--font-micro);
+}
+.policy-status strong {
+  display: block;
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono);
+  font-size: var(--font-data-lg);
+  font-weight: 700;
+  letter-spacing: 0 !important;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.policy-status small {
+  color: oklch(50% .023 250);
+  font-size: var(--font-micro);
+}
+
+.palace-report-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: .7rem 0;
+}
+
+.palace-report-preview {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: .8rem;
+}
+.palace-report-preview section {
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .75rem;
+  background: var(--ui-raised);
+}
+.palace-report-preview h3 {
+  margin: 0 0 .55rem;
+  color: var(--ui-ink-strong);
+  font-size: var(--font-card);
+}
+.palace-report-preview section:first-child > div {
+  display: grid;
+  grid-template-columns: minmax(54px, 1fr) repeat(3, minmax(42px, auto));
+  gap: .42rem;
+  border-bottom: 1px solid var(--ui-line);
+  padding: .34rem 0;
+  color: var(--ui-muted);
+  font-size: var(--font-label);
+}
+.palace-report-preview section:first-child > div:last-child {
+  border-bottom: 0;
+}
+.palace-report-preview b {
+  color: var(--ui-ink);
+  font-family: var(--ui-mono);
+  text-align: right;
+}
+.palace-report-preview b.negative {
+  color: oklch(48% .15 28);
+}
+.palace-report-preview ol {
+  display: grid;
+  gap: .45rem;
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--ui-ink);
+  font-size: var(--font-body);
+  line-height: 1.55;
+}
+
+.palace-report-empty {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: .52rem;
+  min-height: 220px;
+  color: var(--ui-muted);
+  font-size: var(--font-body);
+}
+
+/* ===================== EcologyPhaseBlock ===================== */
+
+.phase-list {
+  display: grid;
+  gap: .35rem;
+}
+.phase-list p {
+  margin: 0;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  padding: .42rem .5rem;
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: var(--font-micro);
+  line-height: 1.55;
+}
+.phase-list b {
+  display: block;
+  margin-bottom: .05rem;
+  color: oklch(34% .03 250);
+}
+.phase-list span {
+  color: oklch(47% .024 250);
+}
+
+.eco-progress-v2 {
+  position: relative;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: oklch(88% .018 82);
+  margin: .42rem 0 .7rem;
+}
+.eco-progress-v2 i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, oklch(50% .11 160), oklch(62% .13 150));
+  border-radius: 5px;
+  transition: width .3s ease;
+}
+
+/* ===================== ShipProgressBlock ===================== */
+
+.ship-progress-v2 {
+  position: relative;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: oklch(88% .018 82);
+  margin: .42rem 0 .7rem;
+}
+.ship-progress-v2 i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, oklch(54% .11 76), oklch(65% .13 78));
+  border-radius: 5px;
+  transition: width .3s ease;
+}
+
+.ship-progress-note {
+  margin: 0 0 .65rem;
+  color: var(--ui-ink);
+  font-size: var(--font-note);
+  line-height: 1.65;
+}
+
+.ship-stage-list {
+  display: grid;
+  gap: .55rem;
+  margin-top: 1rem;
+}
+.ship-stage-list article {
+  border: 1px solid var(--ui-line);
+  border-radius: 5px;
+  padding: .7rem;
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+}
+.ship-stage-list b {
+  display: block;
+  color: var(--ui-ink-strong);
+  font-size: var(--font-card);
+  line-height: 1.32;
+}
+.ship-stage-list article > span:not(:global(.resource-bundle)) {
+  display: block;
+  margin-top: .25rem;
+  color: oklch(49% .09 76);
+  font-size: var(--font-micro);
+}
+.ship-stage-list small {
+  display: block;
+  margin-top: .25rem;
+  color: oklch(48% .024 250);
+  font-size: var(--font-note);
+  line-height: 1.45;
+}
+
+/* ===================== ResearchTreeBlock ===================== */
+
+.technology-workbench-v2 {
+  display: grid;
+  gap: .72rem;
+  min-width: 0;
+}
+
+.tech-tree-toolbar {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  border-bottom: 1px solid var(--ui-line);
+  padding-bottom: .62rem;
+}
+.tech-tree-toolbar h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin: 0;
+  color: var(--ui-ink-strong);
+  font-size: var(--font-card);
+}
+.tech-tree-scale {
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono);
+  font-size: var(--font-label);
+  font-weight: 700;
+}
+.tech-tree-hint {
+  margin-left: auto;
+  color: var(--ui-muted);
+  font-size: var(--font-micro);
+}
+
+.technology-tree-viewport {
+  overflow: auto;
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  background: var(--ui-surface-2);
+  box-shadow: inset 18px 0 24px oklch(90% .018 84), inset -18px 0 24px oklch(90% .018 84);
+  max-height: min(620px, calc(100vh - 28rem));
+  min-height: 380px;
+  touch-action: none;
+}
+.technology-tree-viewport.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+/* 拖拽时覆盖全局 button:disabled 的 not-allowed，保持与旧 .technology-tree-viewport.dragging .tech-card-compact 一致 */
+.technology-tree-viewport.dragging :disabled {
+  cursor: grabbing;
+}
+.technology-tree-viewport::-webkit-scrollbar:horizontal {
+  height: 0;
+}
+
+.technology-tree-v2 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: .7rem;
+  padding: .7rem;
+  min-width: 820px;
+  align-items: start;
+}
+
+.tech-era-column-v2 {
+  display: grid;
+  align-content: start;
+  gap: .48rem;
+  min-width: 0;
+}
+.tech-era-column-v2 header {
+  border: 1px solid oklch(72% .02 250);
+  border-radius: 5px;
+  padding: .45rem .55rem;
+  background: oklch(95% .018 82);
+}
+.tech-era-column-v2 header span {
+  display: block;
+  color: oklch(29% .035 250);
+  font-family: var(--ui-serif);
+  font-size: var(--font-body);
+  font-weight: 700;
+}
+.tech-era-column-v2 header small {
+  display: block;
+  margin-top: .1rem;
+  color: oklch(49% .024 250);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.technology-book {
+  display: grid;
+  gap: .55rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .75rem .82rem;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  box-shadow: 0 8px 22px var(--ui-shadow);
+}
+.technology-book > div:first-child {
+  display: flex;
+  gap: .45rem;
+  align-items: center;
+  color: var(--ui-ink-strong);
+  font-size: var(--font-card);
+  line-height: 1.32;
+  font-weight: 700;
+}
+.technology-book > div:first-child small {
+  margin-left: auto;
+  color: var(--ui-muted);
+  font-family: var(--ui-font);
+  font-size: var(--font-label);
+  line-height: 1.18;
+  font-weight: 400;
+}
+.technology-book > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+.technology-book > div:last-child span {
+  border: 1px solid var(--ui-brass);
+  border-radius: 4px;
+  padding: .32rem .42rem;
+  background: var(--ui-brass-soft);
+  color: var(--ui-ink);
+  font-size: var(--font-micro);
+}
+
+/* ===================== TradeBoardBlock ===================== */
+
+.trade-board-v4 {
+  display: grid;
+  gap: .5rem;
+}
+
+.trade-protection-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: .58rem;
+  color: var(--ui-ink);
+  font-size: var(--font-body);
+  font-weight: 700;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .65rem .72rem;
+  background: var(--ui-raised);
+}
+.trade-protection-toggle span {
+  display: inline-flex;
+  align-items: center;
+  gap: .42rem;
+  min-width: 0;
+}
+.trade-protection-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.trade-protection-toggle i {
+  position: relative;
+  width: 42px;
+  height: 22px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 999px;
+  background: var(--ui-surface);
+  box-shadow: inset 0 1px 3px var(--ui-shadow);
+}
+.trade-protection-toggle i::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ui-muted);
+  transition: transform .16s ease, background .16s ease;
+}
+.trade-protection-toggle input:checked + i::after {
+  transform: translateX(18px);
+  background: var(--ui-brass);
+}
+
+.trade-offer-list-v4 {
+  display: grid;
+  gap: .5rem;
+}
+
+.trade-offer-v4 {
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-surface);
+  overflow: hidden;
+}
+.trade-offer-v4.active {
+  border-color: var(--ui-line-strong);
+}
+.trade-offer-v4.locked {
+  opacity: .55;
+}
+.trade-offer-v4.protected {
+  background: color-mix(in oklab, var(--ui-brass) 6%, var(--ui-surface));
+}
+
+.trade-v4-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .62rem;
+  border-bottom: 1px solid var(--ui-line);
+}
+.trade-v4-header h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ui-ink-strong);
+  flex: 1;
+}
+
+.daily-trade-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .15rem;
+  padding: .1rem .3rem;
+  background: color-mix(in oklab, var(--ui-brass) 16%, transparent);
+  border: 1px solid var(--ui-brass);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ui-brass);
+  white-space: nowrap;
+}
+
+.trade-direction-toggle {
+  display: flex;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.dir-btn {
+  display: flex;
+  align-items: center;
+  gap: .18rem;
+  padding: .32rem .52rem;
+  border: none;
+  background: var(--ui-surface);
+  color: var(--ui-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.dir-btn.buy.active {
+  background: oklch(52% .12 155);
+  color: #fff;
+}
+.dir-btn.sell.active {
+  background: oklch(48% .12 28);
+  color: #fff;
+}
+.dir-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.trade-v4-status {
+  font-size: 10px;
+  color: var(--ui-muted);
+  padding: .12rem .32rem;
+  background: color-mix(in oklab, var(--ui-brass) 10%, transparent);
+  border-radius: 3px;
+}
+
+.trade-v4-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0;
+  min-height: 80px;
+}
+
+.trade-v4-col {
+  display: flex;
+  flex-direction: column;
+  gap: .32rem;
+  padding: .52rem .55rem;
+  border-right: 1px solid var(--ui-line);
+}
+.trade-v4-col:last-child {
+  border-right: none;
+}
+
+.trade-v4-identity {
+  align-items: flex-start;
+  gap: .25rem;
+}
+
+.trade-v4-resource-info {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  width: 100%;
+}
+.trade-v4-resource-info :global(.resource-atom) {
+  flex-shrink: 0;
+}
+
+.premium-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: .1rem .35rem;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.premium-badge.buy {
+  background: color-mix(in oklab, oklch(58% .1 40) 18%, transparent);
+  color: oklch(42% .08 40);
+}
+.premium-badge.sell {
+  background: color-mix(in oklab, oklch(55% .1 160) 18%, transparent);
+  color: oklch(38% .08 160);
+}
+.premium-detail {
+  font-size: 9px;
+  color: var(--ui-muted);
+  line-height: 1.45;
+}
+
+.trade-v4-recipe {
+  gap: .22rem;
+}
+
+.trade-recipe-label,
+.trade-qty-label,
+.trade-summary-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ui-muted);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.trade-v4-quantity {
+  gap: .22rem;
+  justify-content: center;
+}
+
+.trade-qty-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .28rem;
+}
+.trade-qty-stepper .qty-adj {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  cursor: pointer;
+}
+.trade-qty-stepper .qty-adj:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ui-brass) 12%, var(--ui-surface));
+}
+.trade-qty-stepper .qty-adj:disabled {
+  opacity: .3;
+  cursor: default;
+}
+.trade-qty-stepper .qty-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ui-ink-strong);
+  min-width: 32px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.trade-qty-steps {
+  display: flex;
+  gap: .18rem;
+  justify-content: center;
+}
+.trade-qty-steps .step-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 22px;
+  padding: 0 .28rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 3px;
+  background: var(--ui-surface);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ui-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+.trade-qty-steps .step-btn:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ui-brass) 10%, var(--ui-surface));
+  color: var(--ui-ink);
+}
+.trade-qty-steps .step-btn.active {
+  background: var(--ui-brass);
+  border-color: var(--ui-brass);
+  color: var(--ui-surface);
+}
+.trade-qty-steps .step-btn:disabled {
+  opacity: .3;
+  cursor: default;
+}
+
+.trade-qty-actions {
+  display: flex;
+  gap: .18rem;
+  justify-content: center;
+}
+.trade-qty-actions .action-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  cursor: pointer;
+}
+.trade-qty-actions .action-icon-btn:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ui-brass) 12%, var(--ui-surface));
+}
+.trade-qty-actions .action-icon-btn.single-trade {
+  background: var(--ui-brass);
+  border-color: var(--ui-brass);
+  color: var(--ui-surface);
+}
+.trade-qty-actions .action-icon-btn.single-trade:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.trade-qty-actions .action-icon-btn.continuous-trade {
+  background: oklch(62% .14 250);
+  border-color: oklch(62% .14 250);
+  color: var(--ui-surface);
+}
+.trade-qty-actions .action-icon-btn.continuous-trade:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.trade-qty-actions .action-icon-btn.cancel-continuous {
+  background: oklch(48% .12 28);
+  border-color: oklch(48% .12 28);
+  color: var(--ui-surface);
+}
+.trade-qty-actions .action-icon-btn.cancel-continuous:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.trade-qty-actions .action-icon-btn.clear {
+  color: var(--ui-muted);
+}
+.trade-qty-actions .action-icon-btn:disabled {
+  opacity: .3;
+  cursor: default;
+}
+
+.trade-v4-summary {
+  gap: .25rem;
+}
+
+/* 替代 ResourceDeltaRows.module.css 的 :global(.trade-v4-recipe/.trade-v4-summary) 上下文，
+ * 通过 ResourceDeltaRows 的 className prop 叠加到 resource-delta-stack 上 */
+.recipe-stack {
+  padding: .32rem .4rem;
+  background: color-mix(in oklab, var(--ui-brass) 6%, transparent);
+  border-radius: 4px;
+  border: 1px solid var(--ui-line);
+}
+.summary-stack {
+  padding: .28rem .35rem;
+  background: color-mix(in oklab, var(--ui-brass) 4%, transparent);
+  border-radius: 4px;
+  border: 1px solid var(--ui-line);
+  min-height: 36px;
+}
+
+/* ===================== 响应式 ===================== */
+
+@media (max-width: 1100px) {
+  .technology-tree-viewport {
+    max-height: min(520px, calc(100vh - 26rem));
+    min-height: 340px;
+  }
+}
+
+@media (max-width: 900px) {
+  .palace-report-preview {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .technology-tree-viewport {
+    max-height: min(460px, calc(100vh - 24rem));
+    min-height: 300px;
+  }
+  .technology-tree-v2 {
+    grid-template-columns: 1fr;
+    min-width: 0;
+  }
+  .tech-tree-toolbar {
+    gap: .35rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .policy-status {
+    grid-template-columns: 1fr;
+  }
+}

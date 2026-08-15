@@ -1,0 +1,353 @@
+/* SettingsPanel 独占样式，迁移自 62-settings-modal.css 251-609 + 10-34 中的 settings-panel 上下文
+ * 保留全局：settings-button / time-dock / time-card / day-counter / time-control-btn / save-toast（App.tsx）、
+ * primary-action / icon-button / eyebrow（共享 UI 类），外部上下文以 :global() 桥接 */
+.settings-scrim {
+  position: fixed;
+  z-index: 12;
+  inset: 0;
+  display: grid;
+  justify-items: end;
+  padding: clamp(.8rem, 2vw, 1.4rem);
+  background: oklch(18% .022 250 / .34);
+}
+
+.settings-panel {
+  display: grid;
+  align-content: start;
+  gap: .9rem;
+  width: min(390px, 100%);
+  max-height: calc(100vh - 1.6rem);
+  overflow-y: auto;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 8px;
+  padding: 1rem;
+  background: var(--ui-surface);
+  box-shadow: 0 22px 70px var(--ui-shadow-strong);
+}
+
+/* 面板内所有按钮的基础样式（迁移自 62:12-23 组的 .settings-panel button 成员） */
+.settings-panel :global(button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 4px;
+  padding: .52rem .68rem;
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: var(--font-label);
+}
+
+.settings-panel :global(button:hover:not(:disabled)) {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+  color: var(--ui-ink-strong);
+}
+
+.settings-panel header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--ui-line);
+  padding-bottom: .72rem;
+}
+
+.settings-panel h2 {
+  margin: .12rem 0 0;
+  color: var(--ui-ink-strong);
+  font-size: var(--font-data-lg);
+}
+
+.settings-panel :global(.icon-button) {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}
+
+.settings-panel-wide {
+  width: min(680px, 100%);
+}
+
+.settings-section {
+  display: grid;
+  gap: .58rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .72rem;
+  background: var(--ui-raised);
+}
+
+.settings-section-title {
+  display: flex;
+  align-items: center;
+  gap: .42rem;
+  color: var(--ui-ink);
+  font-size: var(--font-body);
+  font-weight: 700;
+}
+
+.settings-section-title strong {
+  margin-left: auto;
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono);
+  font-size: var(--font-body);
+}
+
+.settings-section input[type='range'] {
+  width: 100%;
+  accent-color: var(--ui-brass);
+}
+
+.settings-section small {
+  color: var(--ui-muted);
+  font-size: var(--font-note);
+}
+
+.settings-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: .58rem;
+  color: var(--ui-ink);
+  font-size: var(--font-body);
+  font-weight: 700;
+}
+
+.settings-toggle span {
+  display: inline-flex;
+  align-items: center;
+  gap: .42rem;
+  min-width: 0;
+}
+
+.settings-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.settings-toggle i {
+  position: relative;
+  width: 42px;
+  height: 22px;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 999px;
+  background: var(--ui-surface);
+  box-shadow: inset 0 1px 3px var(--ui-shadow);
+}
+
+.settings-toggle i::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ui-muted);
+  transition: transform .16s ease, background .16s ease;
+}
+
+.settings-toggle input:checked + i::after {
+  transform: translateX(18px);
+  background: var(--ui-brass);
+}
+
+.settings-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .5rem;
+}
+
+.settings-main-actions {
+  grid-template-columns: 1fr;
+  border-top: 1px solid var(--ui-line);
+  padding-top: .78rem;
+}
+
+.settings-main-actions :global(.primary-action) {
+  width: 100%;
+  border-color: oklch(43% .074 var(--action-hue, 76));
+  background: oklch(54% .082 var(--action-hue, 76));
+  color: oklch(97% .012 86);
+  box-shadow: none;
+}
+
+.settings-main-actions :global(.primary-action:hover:not(:disabled)) {
+  background: oklch(60% .11 var(--action-hue, 76));
+  color: oklch(98% .01 86);
+}
+
+.save-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
+}
+
+.save-slot-card {
+  display: grid;
+  gap: .5rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .65rem;
+  background: oklch(99% .005 85);
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.save-slot-card.occupied {
+  border-color: oklch(73% .04 76 / .45);
+  background: oklch(97% .025 80 / .55);
+}
+
+.save-slot-card:hover {
+  border-color: var(--ui-brass);
+  box-shadow: 0 4px 16px var(--ui-shadow);
+}
+
+.save-slot-name-row {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  min-width: 0;
+}
+
+.save-slot-name {
+  overflow: hidden;
+  color: var(--ui-ink-strong);
+  font-family: var(--ui-serif);
+  font-size: var(--font-button);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.save-slot-empty {
+  color: var(--ui-muted);
+  font-family: var(--ui-font);
+  font-weight: 400;
+}
+
+.save-slot-rename-btn {
+  display: grid;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ui-muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+
+.save-slot-rename-btn:hover {
+  border-color: var(--ui-line);
+  color: var(--ui-brass);
+}
+
+.save-slot-rename {
+  display: flex;
+  gap: .3rem;
+  align-items: center;
+}
+
+.save-slot-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--ui-brass);
+  border-radius: 4px;
+  padding: .28rem .42rem;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: var(--font-note);
+  outline: none;
+}
+
+.save-slot-input:focus {
+  box-shadow: 0 0 0 2px oklch(63% .1 76 / .24);
+}
+
+.save-slot-rename-confirm {
+  display: grid;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--ui-brass);
+  border-radius: 4px;
+  background: var(--ui-brass);
+  color: oklch(98% .012 86);
+  cursor: pointer;
+}
+
+.save-slot-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  align-items: baseline;
+}
+
+.save-slot-info span {
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono);
+  font-size: var(--font-label);
+}
+
+.save-slot-info small {
+  color: var(--ui-muted);
+  font-size: var(--font-micro);
+}
+
+.save-slot-actions {
+  display: flex;
+  gap: .35rem;
+}
+
+.save-slot-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  padding: .32rem .48rem;
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: var(--font-micro);
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+}
+
+.save-slot-actions button:hover {
+  border-color: var(--ui-brass);
+  color: var(--ui-brass);
+  background: oklch(95% .036 78);
+}
+
+.save-slot-actions .save-slot-load {
+  border-color: var(--ui-brass-light);
+  color: var(--ui-brass);
+}
+
+.save-slot-actions .save-slot-load:hover {
+  background: var(--ui-brass);
+  color: oklch(98% .012 86);
+}
+
+@media (max-width: 680px) {
+  .settings-panel-wide {
+    width: min(390px, 100%);
+  }
+  .save-slots-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .settings-scrim {
+    justify-items: stretch;
+  }
+}

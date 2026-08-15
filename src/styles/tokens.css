@@ -1,0 +1,52 @@
+/* ============================================================
+   tokens.css — 全局设计令牌
+   来源：40-layout-components.css 226-270（:root）、70-components.css（:root）
+   Phase 4 全局收敛：仅保留 CSS 变量，无任何选择器规则。
+   ============================================================ */
+:root {
+  color-scheme: light;
+  --ui-font: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --ui-serif: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', serif;
+  --ui-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  --ui-shell: oklch(92% .018 86);
+  --ui-shell-2: oklch(88% .018 84);
+  --ui-surface: oklch(97% .01 86);
+  --ui-surface-2: oklch(94% .014 84);
+  --ui-raised: oklch(98% .008 86);
+  --ui-parchment: oklch(90% .022 82);
+  --ui-ink: oklch(24% .024 250);
+  --ui-ink-strong: oklch(18% .026 250);
+  --ui-muted: oklch(47% .018 250);
+  --ui-muted-2: oklch(57% .016 250);
+  --ui-line: oklch(73% .018 84);
+  --ui-line-strong: oklch(64% .026 78);
+  --ui-brass: oklch(54% .082 76);
+  --ui-brass-dark: oklch(43% .074 74);
+  --ui-brass-soft: oklch(94% .028 78);
+  --ui-brass-wash: oklch(88% .026 78);
+  --ui-signal: oklch(50% .058 205);
+  --ui-signal-soft: oklch(92% .018 205);
+  --ui-success: oklch(51% .058 148);
+  --ui-success-soft: oklch(94% .018 142);
+  --ui-danger: oklch(52% .085 28);
+  --ui-danger-soft: oklch(94% .02 35);
+  --ui-violet: oklch(49% .045 300);
+  --ui-shadow: oklch(35% .028 250 / .11);
+  --ui-shadow-strong: oklch(21% .025 250 / .26);
+  --font-micro: 10px;
+  --font-caption: 12px;
+  --font-label: 12px;
+  --font-note: 12px;
+  --font-button: 14px;
+  --font-body: 16px;
+  --font-data: 16px;
+  --font-card: 18px;
+  --font-panel: 20px;
+  --font-data-lg: 24px;
+  --font-page: 32px;
+  --font-data-xl: 32px;
+  --font-display: 40px;
+  --font-hero: 56px;
+  --ui-panel-radius: 7px;
+  --ui-panel-shadow: 0 8px 22px var(--ui-shadow);
+}

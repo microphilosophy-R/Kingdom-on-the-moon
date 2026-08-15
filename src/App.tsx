@@ -79,7 +79,6 @@ import {
   PlanetFacilities,
   ReignReportModal,
   SettingsPanel,
-  SpecialFacilityPanel,
   StartGate,
   TechnologyCard,
   TechnologyImagePlaceholder,

@@ -45,19 +45,3 @@
 .resource-delta-row :global(.resource-empty.boxed) {
   justify-self: start;
 }
-
-/* TradeBoard 上下文（Phase 3 迁移时随 trade-v4 组件一并搬移） */
-:global(.trade-v4-recipe) .resource-delta-stack {
-  padding: .32rem .4rem;
-  background: color-mix(in oklab, var(--ui-brass) 6%, transparent);
-  border-radius: 4px;
-  border: 1px solid var(--ui-line);
-}
-
-:global(.trade-v4-summary) .resource-delta-stack {
-  padding: .28rem .35rem;
-  background: color-mix(in oklab, var(--ui-brass) 4%, transparent);
-  border-radius: 4px;
-  border: 1px solid var(--ui-line);
-  min-height: 36px;
-}

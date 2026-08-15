@@ -97,7 +97,7 @@ export function FacilityList({
                         {worker && <i title={`${worker.name} 执勤`}>{worker.glyph}</i>}
                       </div>
                       <div className={`${styles['ledger-block']} ${styles['ledger-economy-block']}`}>
-                        <div className={styles['ledger-stat-row']}><span className={styles['ledger-stat-label']}>{fixed ? '岗位' : housingCapacity ? '居住容量' : '岗位占用'}</span><span className={styles['ledger-stat-value']}><em className="ledger-pop-count"><Users size={13} /><strong>{populationText}</strong></em></span></div>
+                        <div className={styles['ledger-stat-row']}><span className={styles['ledger-stat-label']}>{fixed ? '岗位' : housingCapacity ? '居住容量' : '岗位占用'}</span><span className={styles['ledger-stat-value']}><em><Users size={13} /><strong>{populationText}</strong></em></span></div>
                         <FacilityNetRow net={actualNet} compact empty="-" />
                       </div>
                       <div className={`${styles['ledger-block']} ${styles['ledger-action-block']}`}>

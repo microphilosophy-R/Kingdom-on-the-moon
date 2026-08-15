@@ -27,6 +27,7 @@ import { SectionHeading } from '../layout'
 import { InfoToggle } from './InfoToggle'
 import { TechnologyCard } from './TechnologyCard'
 import { TrendChart, type TrendSeries } from './TrendChart'
+import styles from './SpecialBlocks.module.css'
 
 /* ===================== PalaceReportBlock ===================== */
 
@@ -50,22 +51,22 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
   ]
 
   return (
-    <section className="special-content-block palace-report-v2">
-      <div className="tech-tree-toolbar">
+    <section className={`${styles['special-content-block']} ${styles['palace-report-v2']}`}>
+      <div className={styles['tech-tree-toolbar']}>
         <h3><Crown size={18} />{gameCalendar.monthName}报告</h3>
-        <span className="tech-tree-scale">{reportProgress}%</span>
+        <span className={styles['tech-tree-scale']}>{reportProgress}%</span>
         {lastReignReport && <span style={{ color: 'var(--ui-muted)', fontSize: '10px' }}>{formatDay(lastReignReport.startDay)} 至 {formatDay(lastReignReport.endDay)}</span>}
       </div>
       {lastReignReport ? <>
-        <div className="policy-status palace-report-kpis">
+        <div className={styles['policy-status']}>
           <div><span>人口变化</span><strong>{populationDelta}</strong><small>{fmt(lastReignReport.populationEnd)}/{fmtAmount(lastReignReport.housingCapacity)} 人</small></div>
           <div><span>GDP</span><strong>{lastReignReport.gdp.toFixed(1)}</strong><small>{lastReignReport.gdpDelta >= 0 ? '+' : ''}{lastReignReport.gdpDelta.toFixed(1)} 星海货币/日</small></div>
           <div><span>阶段</span><strong>{lastReignReport.monthNumber}</strong><small>{gameCalendar.monthName}</small></div>
         </div>
-        <div className="palace-report-actions">
+        <div className={styles['palace-report-actions']}>
           <button className="primary-action" onClick={() => onOpenReport(lastReignReport)}><BookOpen size={15} />打开完整报告</button>
         </div>
-        <div className="palace-report-preview">
+        <div className={styles['palace-report-preview']}>
           <section>
             <h3>资源趋势</h3>
             <TrendChart
@@ -79,7 +80,7 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
             <ol>{lastReignReport.suggestions.map(item => <li key={item}>{item}</li>)}</ol>
           </section>
         </div>
-      </> : <div className="palace-report-empty"><BookOpen size={22} /><span>尚未形成可复核的{gameCalendar.monthName}报告。</span></div>}
+      </> : <div className={styles['palace-report-empty']}><BookOpen size={22} /><span>尚未形成可复核的{gameCalendar.monthName}报告。</span></div>}
     </section>
   )
 }
@@ -94,12 +95,12 @@ export interface EcologyPhaseBlockProps {
 export function EcologyPhaseBlock({ phaseNotes, progress = 0 }: EcologyPhaseBlockProps) {
   const pct = Math.max(0, Math.min(100, progress))
   return (
-    <section className="special-content-block phase-list">
-      <div className="tech-tree-toolbar">
+    <section className={`${styles['special-content-block']} ${styles['phase-list']}`}>
+      <div className={styles['tech-tree-toolbar']}>
         <h3><Waves size={18} />生态阶段</h3>
-        <span className="tech-tree-scale">{pct}%</span>
+        <span className={styles['tech-tree-scale']}>{pct}%</span>
       </div>
-      <div className="eco-progress-v2"><i style={{ width: `${pct}%` }} /></div>
+      <div className={styles['eco-progress-v2']}><i style={{ width: `${pct}%` }} /></div>
       {phaseNotes?.map(phase => (
         <p key={phase.name} style={{ border: '1px solid var(--ui-line)', borderRadius: '5px', padding: '.55rem .62rem', background: 'var(--ui-surface)', marginBottom: '.42rem' }}>
           <b style={{ display: 'block', marginBottom: '.18rem', color: 'var(--ui-ink-strong)', fontSize: 'var(--font-card)' }}>{phase.name}</b>
@@ -121,16 +122,16 @@ export interface ShipProgressBlockProps {
 export function ShipProgressBlock({ shipProgress, shipProjectStages, activeStage }: ShipProgressBlockProps) {
   const currentStage = shipProjectStages.find(s => s.id === activeStage)
   return (
-    <section className="special-content-block ship-meter">
-      <div className="tech-tree-toolbar">
+    <section className={styles['special-content-block']}>
+      <div className={styles['tech-tree-toolbar']}>
         <h3><Rocket size={18} />御座号建造阶段</h3>
-        <span className="tech-tree-scale">{shipProgress}%</span>
+        <span className={styles['tech-tree-scale']}>{shipProgress}%</span>
       </div>
-      <div className="ship-progress-v2">
+      <div className={styles['ship-progress-v2']}>
         <i style={{ width: `${shipProgress}%` }} />
       </div>
-      <p className="ship-progress-note">千日之限将至，御座号的完成度将决定此局国祚。{currentStage ? `当前阶段：${currentStage.name}。` : ''}</p>
-      <div className="ship-stage-list">
+      <p className={styles['ship-progress-note']}>千日之限将至，御座号的完成度将决定此局国祚。{currentStage ? `当前阶段：${currentStage.name}。` : ''}</p>
+      <div className={styles['ship-stage-list']}>
         {shipProjectStages.map(stage => {
           const isActive = stage.id === activeStage
           return (
@@ -230,26 +231,26 @@ export function ResearchTreeBlock({ techs, activeResearch, researchProgress, onR
   }, [])
 
   return (
-    <section className="special-content-block technology-workbench-v2">
-      <div className="tech-tree-toolbar">
+    <section className={`${styles['special-content-block']} ${styles['technology-workbench-v2']}`}>
+      <div className={styles['tech-tree-toolbar']}>
         <h3><FlaskConical size={18} />科技树</h3>
-        <span className="tech-tree-scale">缩放 {Math.round(treeScale * 100)}%</span>
-        <span className="tech-tree-hint">Ctrl+滚轮缩放 · 拖拽平移</span>
+        <span className={styles['tech-tree-scale']}>缩放 {Math.round(treeScale * 100)}%</span>
+        <span className={styles['tech-tree-hint']}>Ctrl+滚轮缩放 · 拖拽平移</span>
       </div>
       <div
         ref={treeContainerRef}
-        className={`technology-tree-viewport ${treeDragging ? 'dragging' : ''}`}
+        className={`${styles['technology-tree-viewport']} ${treeDragging ? styles.dragging : ''}`}
         onPointerDown={beginTreeDrag}
         onPointerMove={moveTreeDrag}
         onPointerUp={endTreeDrag}
         onPointerCancel={endTreeDrag}
         onWheel={zoomTree}
       >
-        <div className="technology-tree-v2" style={{ transform: `scale(${treeScale})`, transformOrigin: 'top left' }}>
+        <div className={styles['technology-tree-v2']} style={{ transform: `scale(${treeScale})`, transformOrigin: 'top left' }}>
           {researchEraSections.map(section => {
             const techIds = researchableTechIds.filter(id => (technologyCatalog[id].era ?? 'early') === section.id)
             return (
-              <section className="tech-era-column-v2" key={section.id}>
+              <section className={styles['tech-era-column-v2']} key={section.id}>
                 <header><span>{section.label}</span><small>{section.note}</small></header>
                 {techIds.map(id => (
                   <TechnologyCard key={id} techId={id} techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={selectResearch} />
@@ -259,7 +260,7 @@ export function ResearchTreeBlock({ techs, activeResearch, researchProgress, onR
           })}
         </div>
       </div>
-      <aside className="technology-book">
+      <aside className={styles['technology-book']}>
         <div><BookOpen size={17} /><span>科技书</span><small>已完成 {completedIds.length} 项</small></div>
         <div>{completedIds.map(id => <span key={id}>{techLabel(id)}</span>)}</div>
       </aside>
@@ -335,7 +336,7 @@ export function TradeBoardBlock({
     offer.automated && autoTradeProtectionEnabled && autoTradeEnabled[offer.resource] !== false
 
   return (
-    <section className="special-content-block trade-board-v4">
+    <section className={`${styles['special-content-block']} ${styles['trade-board-v4']}`}>
       <SectionHeading eyebrow="S 星海交易港" title="贸易清单">
         <InfoToggle title="贸易规则">
           <p>交易立即结算库存。自动保护只会补足赤字与安全线，不会替玩家出售自产盈余。</p>
@@ -344,12 +345,12 @@ export function TradeBoardBlock({
           <p>受自动保护的商品无法手动买卖，保护关闭后方可操作。</p>
         </InfoToggle>
       </SectionHeading>
-      <label className="trade-protection-toggle">
+      <label className={styles['trade-protection-toggle']}>
         <span><ArrowLeftRight size={16} />自动购入保护</span>
         <input type="checkbox" checked={autoTradeProtectionEnabled} onChange={event => onProtection(event.target.checked)} />
         <i aria-hidden="true" />
       </label>
-      <div className="trade-offer-list-v4">
+      <div className={styles['trade-offer-list-v4']}>
         {starportTradeOffers.map(offer => {
           const unlocked = hasTech(techs, offer.unlockTech)
           const popBlocked = offer.resource === 'population' && (populationProjection.availableCapacity < 1 || populationProjection.lifeSupportRatio < 1)
@@ -405,67 +406,67 @@ export function TradeBoardBlock({
                 : ''
 
           return (
-            <article key={offer.id} className={`trade-offer-v4 ${unlocked ? 'active' : 'locked'} ${protectionOn ? 'protected' : ''} ${disabled ? 'disabled' : ''}`}>
-              <header className="trade-v4-header">
+            <article key={offer.id} className={`${styles['trade-offer-v4']} ${unlocked ? styles.active : styles.locked} ${protectionOn ? styles.protected : ''}`}>
+              <header className={styles['trade-v4-header']}>
                 <h3>{offer.name}</h3>
                 {activeDailyTrade && (
-                  <span className="daily-trade-badge" title={`每日${activeDailyTrade.dir === 'buy' ? '进口' : '出口'} ${activeDailyTrade.qty} 单位`}>
+                  <span className={styles['daily-trade-badge']} title={`每日${activeDailyTrade.dir === 'buy' ? '进口' : '出口'} ${activeDailyTrade.qty} 单位`}>
                     <Lock size={10} />每日 {activeDailyTrade.qty}
                   </span>
                 )}
                 {canSell && (
-                  <div className="trade-direction-toggle">
-                    <button type="button" className={`dir-btn buy ${isBuy ? 'active' : ''}`} onClick={() => setTradeDir(prev => ({ ...prev, [offer.id]: 'buy' }))} disabled={disabled}>
+                  <div className={styles['trade-direction-toggle']}>
+                    <button type="button" className={`${styles['dir-btn']} ${styles.buy} ${isBuy ? styles.active : ''}`} onClick={() => setTradeDir(prev => ({ ...prev, [offer.id]: 'buy' }))} disabled={disabled}>
                       <ArrowDown size={12} />进口
                     </button>
-                    <button type="button" className={`dir-btn sell ${!isBuy ? 'active' : ''}`} onClick={() => setTradeDir(prev => ({ ...prev, [offer.id]: 'sell' }))} disabled={disabled}>
+                    <button type="button" className={`${styles['dir-btn']} ${styles.sell} ${!isBuy ? styles.active : ''}`} onClick={() => setTradeDir(prev => ({ ...prev, [offer.id]: 'sell' }))} disabled={disabled}>
                       <ArrowUp size={12} />出口
                     </button>
                   </div>
                 )}
-                {statusNote && <small className="trade-v4-status">{statusNote}</small>}
+                {statusNote && <small className={styles['trade-v4-status']}>{statusNote}</small>}
               </header>
 
-              <div className="trade-v4-grid">
+              <div className={styles['trade-v4-grid']}>
                 {/* Col 1: Resource identity + premium */}
-                <div className="trade-v4-col trade-v4-identity">
-                  <div className="trade-v4-resource-info">
+                <div className={`${styles['trade-v4-col']} ${styles['trade-v4-identity']}`}>
+                  <div className={styles['trade-v4-resource-info']}>
                     <ResourceAtom
                       resourceKey={offer.resource}
                       value={resources[offer.resource] ?? 0}
                       signed
                     />
-                    <span className={`premium-badge ${isBuy ? 'buy' : 'sell'}`}>
+                    <span className={`${styles['premium-badge']} ${isBuy ? styles.buy : styles.sell}`}>
                       {isBuy ? '进口' : '出口'} {premiumPct >= 0 ? '+' : ''}{premiumPct.toFixed(0)}%
                     </span>
-                    <span className="premium-detail">{offer.note}</span>
+                    <span className={styles['premium-detail']}>{offer.note}</span>
                   </div>
                 </div>
 
                 {/* Col 2: Trade recipe */}
-                <div className="trade-v4-col trade-v4-recipe">
-                  <span className="trade-recipe-label">交易配方</span>
-                  <ResourceDeltaRows input={recipeInput} output={recipeOutput} inputEmpty="—" outputEmpty="—" />
+                <div className={`${styles['trade-v4-col']} ${styles['trade-v4-recipe']}`}>
+                  <span className={styles['trade-recipe-label']}>交易配方</span>
+                  <ResourceDeltaRows className={styles['recipe-stack']} input={recipeInput} output={recipeOutput} inputEmpty="—" outputEmpty="—" />
                 </div>
 
                 {/* Col 3: Quantity controls + execute */}
-                <div className="trade-v4-col trade-v4-quantity">
-                  <span className="trade-qty-label">数量</span>
-                  <div className="trade-qty-stepper">
-                    <button type="button" className="qty-adj" onClick={() => addQty(offer.id, -step)} disabled={disabled || qty <= 0}>
+                <div className={`${styles['trade-v4-col']} ${styles['trade-v4-quantity']}`}>
+                  <span className={styles['trade-qty-label']}>数量</span>
+                  <div className={styles['trade-qty-stepper']}>
+                    <button type="button" className={styles['qty-adj']} onClick={() => addQty(offer.id, -step)} disabled={disabled || qty <= 0}>
                       <Minus size={14} />
                     </button>
-                    <strong className="qty-value">{qty}</strong>
-                    <button type="button" className="qty-adj" onClick={() => addQty(offer.id, step)} disabled={disabled}>
+                    <strong className={styles['qty-value']}>{qty}</strong>
+                    <button type="button" className={styles['qty-adj']} onClick={() => addQty(offer.id, step)} disabled={disabled}>
                       <Plus size={14} />
                     </button>
                   </div>
-                  <div className="trade-qty-steps">
+                  <div className={styles['trade-qty-steps']}>
                     {stepSizes.map(n => (
                       <button
                         key={n}
                         type="button"
-                        className={`step-btn ${step === n ? 'active' : ''}`}
+                        className={`${styles['step-btn']} ${step === n ? styles.active : ''}`}
                         onClick={() => setTradeStep(prev => ({ ...prev, [offer.id]: n }))}
                         disabled={disabled}
                       >
@@ -473,21 +474,21 @@ export function TradeBoardBlock({
                       </button>
                     ))}
                   </div>
-                  <div className="trade-qty-actions">
-                    <button type="button" className="action-icon-btn" onClick={() => setQty(offer.id, surplusMax)} disabled={disabled || surplusMax <= 0} title="最大">
+                  <div className={styles['trade-qty-actions']}>
+                    <button type="button" className={styles['action-icon-btn']} onClick={() => setQty(offer.id, surplusMax)} disabled={disabled || surplusMax <= 0} title="最大">
                       <Maximize2 size={13} />
                     </button>
                     {isBuy && (
-                      <button type="button" className="action-icon-btn" onClick={() => setQty(offer.id, deficitMax)} disabled={disabled || deficitMax <= 0} title="补足">
+                      <button type="button" className={styles['action-icon-btn']} onClick={() => setQty(offer.id, deficitMax)} disabled={disabled || deficitMax <= 0} title="补足">
                         <ArrowUpToLine size={13} />
                       </button>
                     )}
-                    <button type="button" className="action-icon-btn clear" onClick={() => clearTrade(offer.id)} disabled={disabled || qty <= 0} title="清空">
+                    <button type="button" className={`${styles['action-icon-btn']} ${styles.clear}`} onClick={() => clearTrade(offer.id)} disabled={disabled || qty <= 0} title="清空">
                       <Trash2 size={13} />
                     </button>
                     <button
                       type="button"
-                      className="action-icon-btn single-trade"
+                      className={`${styles['action-icon-btn']} ${styles['single-trade']}`}
                       onClick={() => {
                         const dirLabel = isBuy ? '进口' : '出口'
                         onTrade(`${offer.name} ${dirLabel} ×${qty}`, input, output)
@@ -502,7 +503,7 @@ export function TradeBoardBlock({
                       activeDailyTrade ? (
                         <button
                           type="button"
-                          className="action-icon-btn cancel-continuous"
+                          className={`${styles['action-icon-btn']} ${styles['cancel-continuous']}`}
                           onClick={() => onCancelDailyTrade(offer.resource)}
                           title="取消连续交易"
                         >
@@ -511,7 +512,7 @@ export function TradeBoardBlock({
                       ) : (
                         <button
                           type="button"
-                          className="action-icon-btn continuous-trade"
+                          className={`${styles['action-icon-btn']} ${styles['continuous-trade']}`}
                           onClick={() => {
                             onScheduleDailyTrade(offer.resource, dir, qty, input, output)
                             clearTrade(offer.id)
@@ -527,9 +528,9 @@ export function TradeBoardBlock({
                 </div>
 
                 {/* Col 4: Summary */}
-                <div className="trade-v4-col trade-v4-summary">
-                  <span className="trade-summary-label">总计</span>
-                  <ResourceDeltaRows input={input} output={output} inputEmpty="—" outputEmpty="—" />
+                <div className={`${styles['trade-v4-col']} ${styles['trade-v4-summary']}`}>
+                  <span className={styles['trade-summary-label']}>总计</span>
+                  <ResourceDeltaRows className={styles['summary-stack']} input={input} output={output} inputEmpty="—" outputEmpty="—" />
                 </div>
               </div>
             </article>

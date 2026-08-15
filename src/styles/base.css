@@ -1,0 +1,585 @@
+/* ============================================================
+   base.css — 重置、字体基线、全局 shell 布局
+   Phase 4 全局收敛。规则按原文件加载顺序（00→30→40→45→62）排列，
+   以复现原级联终值；组选择器已裁剪至仍被引用的成员。
+   共享类（resource-rail / letter-* / section-heading 等）见 shared.css。
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ---------- 重置与字体基线（00-base-shell） ---------- */
+:root { color-scheme: light; font-family: var(--ui-font); color: oklch(25% .028 252); background: oklch(91% .014 82); font-synthesis: none; }
+* { box-sizing: border-box; }
+body { min-width: 320px; margin: 0; min-height: 100vh; background: linear-gradient(120deg, oklch(94% .018 85), oklch(89% .012 225)); }
+button { color: inherit; font: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid oklch(67% .13 76 / .62); outline-offset: 3px; }
+button:disabled { cursor: not-allowed; opacity: .42; }
+h1, h2, h3, p { margin-top: 0; }
+h1, h2, h3 { font-family: var(--ui-serif); }
+
+/* ---------- shell 布局（00-base-shell） ---------- */
+.app-shell { min-height: 100vh; padding: 0 clamp(1rem, 3vw, 3.2rem) 1.4rem; position: relative; overflow: hidden; }
+.app-shell::before { position: fixed; content: ''; inset: 0; pointer-events: none; opacity: .4; background-image: radial-gradient(oklch(39% .024 252 / .14) .65px, transparent .7px), linear-gradient(90deg, transparent 49.9%, oklch(52% .03 252 / .06) 50%, transparent 50.1%); background-size: 9px 9px, 170px 170px; }
+.site-header { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; min-height: 96px; border-bottom: 1px solid oklch(65% .026 252 / .55); }
+.brand-block { display: flex; align-items: center; gap: .78rem; }
+.brand-seal { display: grid; width: 45px; height: 45px; place-items: center; border: 1px solid oklch(58% .095 76); color: oklch(54% .105 76); transform: rotate(-5deg); }
+.brand-block p { margin: 0; color: oklch(47% .048 73); font-size: var(--font-label); font-weight: 700; letter-spacing: .14em; }
+.brand-block h1 { margin: .08rem 0 0; font-size: var(--font-data-xl); letter-spacing: .12em; line-height: 1.1; }
+.page-content { position: relative; z-index: 1; min-height: calc(100vh - 270px); padding: 1.05rem 0; }
+.command-deck { position: relative; z-index: 1; display: flex; gap: 1rem; align-items: center; border-top: 1px solid oklch(65% .07 76); padding: .8rem 0 0; }
+.scoreline { display: grid; grid-template-columns: auto auto; column-gap: .5rem; align-items: center; border: 1px solid var(--ui-line); border-radius: 5px; padding: .3rem .6rem; background: var(--ui-raised); min-height: 38px; }
+.scoreline span { grid-column: 1 / -1; color: var(--ui-brass-dark); font-size: var(--font-micro); font-weight: 700; letter-spacing: .08em; }
+.scoreline strong { color: var(--ui-brass-dark); font-family: var(--ui-mono); font-size: var(--font-card); line-height: 1; }
+.scoreline small { color: var(--ui-muted); font-size: var(--font-micro); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+
+@media (max-width: 1100px) {
+  .site-header { grid-template-columns: 1fr auto; }
+  .page-content { min-height: calc(100vh - 230px); }
+}
+
+@media (max-width: 680px) {
+  .app-shell { padding: 0 .75rem .8rem; }
+  .site-header { min-height: 70px; grid-template-columns: 1fr auto; }
+  .brand-seal { width: 37px; height: 37px; }
+  .brand-block p { display: none; }
+  .brand-block h1 { font-size: var(--font-data-lg); }
+  .page-content { min-height: 0; padding: .75rem 0; }
+  .command-deck { flex-wrap: wrap; gap: .55rem; }
+}
+
+.app-shell { padding-bottom: 5.2rem; }
+.site-header { grid-template-columns: 1fr auto; min-height: 82px; }
+.page-content { min-height: calc(100vh - 230px); }
+
+/* ---------- 星球场景（00-base-shell，PlanetScene.tsx 共享类） ---------- */
+.planet-scene { width: 100%; height: 100%; min-height: 420px; cursor: grab; touch-action: none; }
+.planet-scene:active { cursor: grabbing; }
+.planet-scene canvas { display: block; width: 100%; height: 100%; }
+.planet-scene.compact { height: 220px; min-height: 180px; }
+
+/* ---------- 底部标签栏 / 时间控制（00 / 62 终值） ---------- */
+.bottom-tabs { position: fixed; z-index: 5; right: 0; bottom: 0; left: 0; border-top: 1px solid oklch(68% .035 250); border-radius: 0; padding: .55rem clamp(1rem, 3vw, 3.2rem); background: oklch(96% .012 86 / .9); backdrop-filter: blur(14px); box-shadow: 0 -12px 32px oklch(22% .025 250 / .16); }
+
+@media (max-width: 1100px) {
+  .planet-scene.compact { height: 190px; min-height: 160px; }
+  .bottom-tabs { align-items: stretch; padding: .55rem 1rem; }
+  .bottom-tabs .footer-row-left { order: 1; }
+  .bottom-tabs .footer-row-right { order: 3; margin-left: 0; }
+}
+@media (max-width: 680px) {
+  .app-shell { padding-bottom: 7.5rem; }
+  .site-header { min-height: 68px; }
+  .planet-scene { min-height: 340px; }
+  .bottom-tabs { flex-wrap: wrap; gap: .45rem; }
+  .bottom-tabs .scoreline { display: none; }
+}
+
+/* ---------- 30-special-systems：字体基线片断 ---------- */
+:root { font-family: var(--ui-font); }
+h1, h2, h3, .brand-block h1 { font-family: var(--ui-serif); }
+.page-content { padding-bottom: 7.2rem; }
+
+/* ---------- 40-layout-components：全局色彩收口（仅元素级规则保留） ---------- */
+body { background: linear-gradient(180deg, var(--ui-shell), var(--ui-shell-2)); color: var(--ui-ink); font-family: var(--ui-font); }
+body * { letter-spacing: 0 !important; }
+button, input, select, textarea { font-family: var(--ui-font); }
+button:focus-visible, [role='button']:focus-visible { outline: 3px solid oklch(58% .105 76 / .46); outline-offset: 3px; }
+h1, h2, h3, .brand-block h1 { color: var(--ui-ink-strong); font-family: var(--ui-serif); }
+.app-shell::before { opacity: .28; background-image: radial-gradient(oklch(52% .025 78 / .14) .55px, transparent .7px), linear-gradient(90deg, transparent 49.9%, oklch(58% .02 84 / .08) 50%, transparent 50.1%); }
+button:disabled { border-color: oklch(80% .012 84); background: oklch(92% .012 86); color: var(--ui-muted-2); box-shadow: none; }
+
+@media (max-width: 680px) {
+  .page-content { padding-bottom: 9rem; }
+}
+
+/* ---------- 45-typography：字型基线 ---------- */
+html { font-size: 16px; }
+body, button, input, select, textarea { font-family: var(--ui-font); }
+body { font-size: var(--font-body); line-height: 1.58; }
+
+button, input, select, textarea, .settings-button, .time-control-btn {
+  font-size: var(--font-button);
+  line-height: 1.18;
+}
+
+h1, h2, h3, .brand-block h1 {
+  font-family: var(--ui-serif);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.brand-block h1 {
+  font-size: var(--font-page);
+  line-height: 1.12;
+}
+
+p, li {
+  font-size: var(--font-body);
+  line-height: 1.62;
+}
+
+small, .scoreline small {
+  font-size: var(--font-note);
+  line-height: 1.45;
+}
+
+.scoreline strong {
+  font-family: var(--ui-mono);
+  font-size: var(--font-data-lg);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+@media (max-width: 760px) {
+  .brand-block h1 {
+    font-size: var(--font-panel);
+  }
+}
+
+/* ---------- 50-theme-overrides：shell 终值 ---------- */
+.brand-block h1 {
+  font-size: var(--font-data-lg);
+  line-height: 1.12;
+}
+
+.bottom-tabs {
+  background: oklch(96% .012 86 / .94);
+  box-shadow: 0 14px 34px var(--ui-shadow);
+}
+
+.scoreline {
+  border-color: var(--ui-line);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+}
+
+.scoreline span {
+  color: var(--ui-brass-dark);
+}
+
+@media (max-width: 760px) {
+  .brand-block h1 {
+    font-size: var(--font-panel);
+  }
+}
+
+/* Final overrides（50 末尾，bottom-tabs 收口） */
+.bottom-tabs {
+  z-index: 7;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 0;
+  border-top: 1px solid var(--ui-line-strong);
+  border-radius: 0;
+  background: var(--ui-shell);
+  backdrop-filter: none;
+  box-shadow: 0 -12px 32px var(--ui-shadow-strong);
+}
+
+.bottom-tabs::before {
+  position: absolute;
+  content: '';
+  left: 0;
+  right: 0;
+  top: -3.5rem;
+  height: 3.5rem;
+  pointer-events: none;
+  background: linear-gradient(180deg, oklch(92% .018 86 / 0) 0%, oklch(92% .018 86 / .45) 50%, var(--ui-shell) 100%);
+}
+
+.bottom-tabs::after {
+  position: absolute;
+  content: '';
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  pointer-events: none;
+  background: var(--ui-line-strong);
+}
+
+/* ---------- 62-settings-modal：底部时间控制与设置入口（App shell） ---------- */
+.app-shell {
+  padding-bottom: 7.4rem;
+}
+
+.site-header {
+  grid-template-columns: 1fr auto;
+}
+
+.settings-button,
+.time-dock button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 4px;
+  padding: .52rem .68rem;
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: var(--font-label);
+}
+
+.settings-button {
+  justify-self: end;
+}
+
+.settings-button:hover {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+  color: var(--ui-ink-strong);
+}
+
+.bottom-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem .72rem;
+  align-items: stretch;
+  min-height: 50px;
+}
+
+.footer-row {
+  display: flex;
+  align-items: stretch;
+  gap: .55rem;
+}
+
+.footer-row-left {
+  align-self: stretch;
+}
+
+.footer-row-left > .scoreline {
+  height: 100%;
+  min-height: 0;
+}
+
+.bottom-tabs .scoreline {
+  flex: 0 0 auto;
+}
+
+.bottom-tabs .tab-nav {
+  flex: 1 1 390px;
+  min-width: 0;
+  align-self: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.bottom-tabs .tab-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.bottom-tabs .tab-nav button {
+  align-self: stretch;
+  height: 100%;
+  margin: 0;
+}
+
+.footer-row-right {
+  margin-left: auto;
+  align-self: stretch;
+}
+
+.time-dock {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: .35rem;
+}
+
+.time-card {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 0;
+  height: 100%;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--ui-raised);
+}
+
+.time-card .day-counter {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: .22rem;
+  min-width: 110px;
+  padding: 0 .55rem;
+  border: 0;
+  border-radius: 0;
+  background: var(--ui-raised);
+}
+
+.time-card .day-counter span {
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-serif);
+  font-size: var(--font-note);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.time-card .day-counter > div {
+  display: flex;
+  align-items: baseline;
+}
+
+.time-card .day-counter strong {
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono);
+  font-size: var(--font-card);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.time-card .day-counter small {
+  color: var(--ui-muted);
+  font-family: var(--ui-mono);
+  font-size: var(--font-micro);
+  margin-left: .08rem;
+}
+
+.time-card .time-control-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: auto;
+  border: 0;
+  border-radius: 0;
+  padding: 0 .7rem;
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: var(--font-button);
+  font-weight: 400;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .18s, color .18s;
+}
+
+.time-card .time-control-btn:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ui-brass) 14%, var(--ui-raised));
+  color: var(--ui-ink-strong);
+}
+
+.time-card .time-control-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.time-card .time-control-btn svg {
+  flex: 0 0 auto;
+}
+
+.day-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .18rem;
+  min-width: 72px;
+  border: 1px solid var(--ui-line);
+  border-radius: 5px;
+  padding: .3rem .55rem;
+  background: var(--ui-raised);
+}
+
+.day-counter span {
+  color: var(--ui-brass-dark);
+  font-size: var(--font-micro);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.day-counter > div {
+  display: flex;
+  align-items: baseline;
+  gap: .1rem;
+}
+
+.day-counter strong {
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono);
+  font-size: var(--font-card);
+  line-height: 1;
+}
+
+.day-counter small {
+  color: var(--ui-muted);
+  font-family: var(--ui-mono);
+  font-size: var(--font-micro);
+}
+
+.time-control-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in oklab, var(--ui-brass) 30%, var(--ui-line));
+  border-radius: 6px;
+  padding: .5rem .85rem;
+  background: color-mix(in oklab, var(--ui-brass) 8%, var(--ui-raised));
+  color: var(--ui-ink);
+  font-size: var(--font-micro);
+  white-space: nowrap;
+  min-height: 42px;
+  cursor: pointer;
+  transition: background .18s, border-color .18s, color .18s, box-shadow .18s;
+}
+
+.time-control-btn:hover:not(:disabled) {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+  color: var(--ui-ink-strong);
+}
+
+.time-control-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.time-control-btn svg {
+  flex: 0 0 auto;
+}
+
+/* ─── Save toast ─── */
+.save-toast {
+  position: fixed;
+  z-index: 20;
+  bottom: 1.6rem;
+  left: 50%;
+  max-width: min(480px, 92vw);
+  transform: translateX(-50%);
+  border: 1px solid var(--ui-brass);
+  border-radius: 6px;
+  padding: .62rem 1rem;
+  background: oklch(29% .042 250);
+  color: oklch(96% .018 84);
+  font-size: var(--font-note);
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 10px 36px oklch(17% .028 252 / .38);
+  animation: saveToastIn .24s cubic-bezier(.22, 1, .36, 1) both;
+  pointer-events: none;
+}
+
+@keyframes saveToastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.gdp-line strong {
+  color: var(--ui-success);
+}
+
+/* ─── 资源栏外层容器与折叠开关（62，App shell） ─── */
+.resource-rail-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
+.rail-collapse-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .3rem;
+  min-height: 26px;
+  padding: .15rem .5rem;
+  border-width: 0px;
+  border-style: solid;
+  border-color: #000000;
+  border-radius: 5px;
+  background-color: rgba(0, 94, 0, 0);
+  color: var(--ui-ink);
+  font-size: var(--font-label);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+  align-self: stretch;
+}
+.rail-collapse-toggle:hover {
+  background-color: rgba(0, 94, 0, 0);
+  border-color: #000000;
+}
+.rail-collapse-toggle .rail-toggle-label {
+  font-size: var(--font-label);
+  white-space: nowrap;
+}
+
+/* collapsed state: hide the rail grid entirely, toggle becomes the only visible element */
+.resource-rail-wrapper.rail-collapsed .resource-rail {
+  display: none;
+}
+
+/* ─── 按钮基调（62 --button-tone 组，base 成员） ─── */
+.settings-button,
+.time-control-btn {
+  --button-tone: oklch(48% .074 205);
+}
+
+.settings-button:hover,
+.time-control-btn:hover:not(:disabled) {
+  border-color: var(--button-tone);
+  background: color-mix(in oklab, var(--button-tone) 18%, var(--ui-raised));
+  color: var(--ui-ink-strong);
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    padding-bottom: 8.5rem;
+  }
+
+  .bottom-tabs {
+    flex-wrap: wrap;
+  }
+
+  .bottom-tabs .scoreline {
+    display: none;
+  }
+
+  .bottom-tabs .tab-nav {
+    flex: 1 1 100%;
+    order: 1;
+  }
+
+  .bottom-tabs .footer-row-right {
+    order: 2;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 620px) {
+  .app-shell {
+    padding-bottom: 11rem;
+  }
+
+  .bottom-tabs {
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .footer-row {
+    width: 100%;
+  }
+
+  .footer-row-right {
+    justify-content: flex-end;
+  }
+
+  .time-card {
+    min-width: 0;
+  }
+}
