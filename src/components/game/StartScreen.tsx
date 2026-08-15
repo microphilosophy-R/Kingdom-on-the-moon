@@ -12,7 +12,7 @@ interface StartScreenProps extends SharedSettingsProps {
   startSettingsOpen: boolean
   toastMessage: string | null
   onStart: (options: StartOptions) => void
-  onContinue: (options: Pick<StartOptions, 'observerMode'>) => void
+  onContinue: (options: Pick<StartOptions, 'observerMode' | 'autoEventsEnabled'>) => void
   onOpenSettings: () => void
   onCloseSettings: () => void
 }

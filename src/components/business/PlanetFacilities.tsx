@@ -7,7 +7,7 @@ import { FacilityDetailPanel } from './FacilityDetailPanel'
 import { formatDay } from '../../utils/format'
 import styles from './PlanetFacilities.module.css'
 import charChenlin from '../../assets/char-00.jpg'
-import type { AutomationPlan, PopulationProjection, ProductionMethodId, Resources } from '../../economy'
+import type { PopulationProjection, ProductionMethodId, Resources } from '../../economy'
 import type { Role } from '../../events'
 import type {
   ConstructionProject,
@@ -41,7 +41,6 @@ export interface PlanetFacilitiesProps {
   selectedCost: Partial<Resources>
   resources: Resources
   dailyNet: Partial<Resources>
-  automationPlan: AutomationPlan
   planetTexture: typeof planetTextures[number]
   docked: boolean
   detailOpen: boolean
@@ -86,7 +85,6 @@ export function PlanetFacilities({
   selectedCost,
   resources,
   dailyNet,
-  automationPlan,
   planetTexture,
   docked,
   detailOpen,
@@ -180,7 +178,6 @@ export function PlanetFacilities({
           selectedCost={selectedCost}
           resources={resources}
           dailyNet={dailyNet}
-          automationPlan={automationPlan}
           regions={regions}
           onBack={onBack}
           onSelect={onSelect}

@@ -13,7 +13,7 @@ import type { FacilityId, FacilityState, ProductionMethodId, Resources } from '.
  *
  * 冲突说明：本工具与优化器内置的 rebalanceStaffing（L3，高级评分分配）是两套互相冲突的分配口径，
  * 启用优化器时应停用本工具，改用 rebalanceStaffing，避免两套算法同时争夺人力。
- * 现状：App.tsx 在优化器激活时已停用本工具，但 rebalanceStaffing 尚未接入（见 optimizer.ts 备注）。
+ * 现状：App.tsx 在优化器激活时已停用本工具，改由 rebalanceStaffing（L3）接管。
  */
 export function autoCorrectStaffing(
   resources: Resources,

@@ -24,6 +24,7 @@ import {
   resourceOrder,
   settleDailyResources,
   planAutoTradesForDeficits,
+  rebalanceStaffing,
   shipProjectStages,
   starportTradeOffers,
   technologyCatalog,
@@ -151,9 +152,11 @@ function App() {
   const [activeOptimizerId, setActiveOptimizerId] = useState<OptimizerId | 'none'>('none')
   const [difficulty, setDifficulty] = useState<Difficulty>(defaultDifficulty)
   const [observerMode, setObserverMode] = useState(false)
-  // 事件自动处理开关：L2/L3 共用通道。优化器内按 defaultAction 模拟事件（optimizer.ts autoEventsEnabled），
-  // 当前无任何 UI 开关，新档恒为 false（见冲突汇报 C4）。
+  // 事件自动处理开关（L3 观察者模式通道）：由 StartGate 提供开关；开启后优化器按 defaultAction
+  // 模拟事件效果（事件授予的科技经 technologyActions 真实落地，资源转移进入优化器投影）。
+  // L1/L2 手动模式事件始终由玩家决策，本开关不生效。
   const [autoEventsEnabled, setAutoEventsEnabled] = useState(false)
+  // L2 总开关：优化器（L3）激活时自动让位（见 autoTradeProtectionEffective），切回手动模式即恢复
   const [autoTradeProtectionEnabled, setAutoTradeProtectionEnabled] = useState(true)
   const [autoTradeEnabled, setAutoTradeEnabled] = useState<Partial<Record<ResourceKey, boolean>>>({})
   const [tradeSourcedResources, setTradeSourcedResources] = useState<Partial<Record<ResourceKey, boolean>>>({})
@@ -184,14 +187,23 @@ function App() {
   const habitatLevel = regions.find(region => region.id === 'M')?.level ?? 0
   const shipLevel = regions.find(region => region.id === 'D')!.level
   const completed = day >= gameCalendar.finalDay
-  // 人力最终配置 = 三层叠加：
-  //   L2 automation   autoAllocateStaffing（按优先级自动分配）为基底，每日全量重算；
-  //   L1 manual       手动在岗/安置值覆盖对应设施（handleToggleAutoStaffing/handleHousingRedistribute 写入）；
-  //   L2 automation   autoCorrectStaffing（债务触发撤人）仅在优化器未激活时兜底执行；
-  //                   优化器激活后本应改由 L3 rebalanceStaffing 接管，但该函数尚未接入（见 economy 冲突说明）。
+  const workerByFacility = useMemo(
+    () => Object.fromEntries(regions.map(region => [region.id, roster.find(item => item.id === assigned[region.id])])) as Partial<Record<RegionId, Role>>,
+    [regions, roster, assigned],
+  )
+  const facilityModifiers = useMemo(
+    () => Object.fromEntries(facilityOrder.map(id => {
+      const worker = workerByFacility[id]
+      return [id, buildFacilityModifiers(habitatLevel, policy, worker?.specialty === id ? 1 + worker.boost : 1)]
+    })) as Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>,
+    [workerByFacility, habitatLevel, policy],
+  )
+  // 人力最终配置 = 三层，L2/L3 互斥取一：
+  //   L2 路径（优化器未激活）：L2 autoAllocateStaffing（按优先级分配）基底 + L1 manual 手动覆盖 + L2 autoCorrectStaffing（债务撤人）兜底；
+  //   L3 路径（优化器激活）：   L3 rebalanceStaffing（评分分配）接管，L2 的两套分配工具全部停用。
   const staffing = useMemo(() => {
     const auto = autoAllocateStaffing(regions, resources.population, staffingPriorities)
-    // 手动调配覆盖：保持手动值（不超过容量），自动分配补足其余
+    // L1 手动覆盖：保持手动值（不超过容量），自动分配补足其余
     facilityOrder.forEach(id => {
       const manual = manualStaffing[id]
       if (manual !== undefined) {
@@ -202,18 +214,27 @@ function App() {
         }
       }
     })
-    // 系统默认人力纠正（便捷工具）：仅在优化器未启用时执行，跌破债务上限时撤人纠偏。
-    if (activeOptimizerId === 'none') {
-      return autoCorrectStaffing(
+    if (activeOptimizerId !== 'none') {
+      // L3：评分分配接管（以覆盖后的 auto 作为「当前在岗」估计，供赤字权重/电力裕度评估）
+      return rebalanceStaffing(
         resources,
         regions.map(region => ({ id: region.id, level: region.level })),
         auto,
         techs,
         productionMethods,
-      ).adjustedStaffing
+        facilityModifiers,
+        defaultReserveFloors,
+      )
     }
-    return auto
-  }, [regions, resources, staffingPriorities, manualStaffing, activeOptimizerId, techs, productionMethods])
+    // L2：债务触发撤人纠偏（系统默认便捷工具）
+    return autoCorrectStaffing(
+      resources,
+      regions.map(region => ({ id: region.id, level: region.level })),
+      auto,
+      techs,
+      productionMethods,
+    ).adjustedStaffing
+  }, [regions, resources, staffingPriorities, manualStaffing, activeOptimizerId, techs, productionMethods, facilityModifiers])
 
   // 人口建筑手动调配重分配：总量不变，按优先级再平衡
   const housingIds = useMemo(() => facilityOrder.filter(id => isHousingFacility(id)), [])
@@ -291,17 +312,6 @@ function App() {
     () => Object.fromEntries(regions.map(region => [region.id, region.level])) as Record<RegionId, number>,
     [regions],
   )
-  const workerByFacility = useMemo(
-    () => Object.fromEntries(regions.map(region => [region.id, roster.find(item => item.id === assigned[region.id])])) as Partial<Record<RegionId, Role>>,
-    [regions, roster, assigned],
-  )
-  const facilityModifiers = useMemo(
-    () => Object.fromEntries(facilityOrder.map(id => {
-      const worker = workerByFacility[id]
-      return [id, buildFacilityModifiers(habitatLevel, policy, worker?.specialty === id ? 1 + worker.boost : 1)]
-    })) as Partial<Record<RegionId, ReturnType<typeof buildFacilityModifiers>>>,
-    [workerByFacility, habitatLevel, policy],
-  )
   const productionFlow = useMemo(() => projectDailyFlow({
     facilities: facilityStates,
     facilityLevels,
@@ -333,15 +343,16 @@ function App() {
   }), [preliminaryPopulationProjection])
   /** 【L2 automation】星港自动补货计划：按 autoTradeTargets（维生缺口）由 planAutoTradesForDeficits 计算，
    *  受 autoTradeProtectionEnabled（总开关）与 autoTradeEnabled（分资源开关）控制。
-   *  注意：本计划每日执行，即使优化器（L3）激活也不会自动关闭（见冲突汇报）。 */
+   *  L3 优化器接管时本工具自动让位（autoTradeProtectionEffective=false），贸易改由 L3 planAutoTradesForCost 决策。 */
+  const autoTradeProtectionEffective = activeOptimizerId === 'none' && autoTradeProtectionEnabled
   const autoTradePlan = useMemo(() => planAutoTradesForDeficits(
     afterProductionResources,
     autoTradeTargets,
     regions.map(region => ({ id: region.id, level: region.level })),
     techs,
     autoTradeEnabled,
-    autoTradeProtectionEnabled,
-  ), [afterProductionResources, autoTradeTargets, regions, techs, autoTradeEnabled, autoTradeProtectionEnabled])
+    autoTradeProtectionEffective,
+  ), [afterProductionResources, autoTradeTargets, regions, techs, autoTradeEnabled, autoTradeProtectionEffective])
   const currencyDebtInterest = useMemo(() => calculateCurrencyDebtInterest(autoTradePlan.resources), [autoTradePlan.resources])
   const populationBaseResources = useMemo(
     () => currencyDebtInterest > 0 ? apply(autoTradePlan.resources, { currency: -currencyDebtInterest }) : autoTradePlan.resources,
@@ -543,7 +554,7 @@ function App() {
 
     setResources(finalResources)
     setPopulationPressureDays(populationProjection.nextPressureDays)
-    if (autoTradeProtectionEnabled && autoTradePlan.tradedResources.length) {
+    if (autoTradeProtectionEffective && autoTradePlan.tradedResources.length) {
       setTradeSourcedResources(previous => {
         const next = { ...previous }
         autoTradePlan.tradedResources.forEach(key => { next[key] = true })
@@ -732,7 +743,9 @@ function App() {
       writeLog(pendingMonthlyReport)
       setPendingMonthlyReport(null)
     }
-    if (!isReportDay && !visitor && (nextDay % 80 === 0 || Math.random() < 0.025)) chooseVisitor()
+    // 事件来访（L1/L2 手动模式）：由玩家决策。L3 优化器接管时不再在此生成访客，
+    // 事件统一交给优化器的 autoEventsEnabled 模拟通道处理（见 C4 修复）。
+    if (!isReportDay && !visitor && activeOptimizerId === 'none' && (nextDay % 80 === 0 || Math.random() < 0.025)) chooseVisitor()
     if (milestoneLogs[nextDay]) {
       writeLog(`${formatDay(nextDay)}：${milestoneLogs[nextDay]}`)
     }
@@ -883,7 +896,8 @@ function App() {
     if (visitor) advanceEncounter(visitor, true)
   }
 
-  // 【L3 接管】观察者模式下访客来函自动礼送，避免阻塞自动推进（事件效果被整体跳过，见冲突汇报 C4）。
+  // 安全网：切换到观察者模式时若存档遗留访客，自动礼送避免阻塞自动推进
+  // （L3 下新事件不再由此生成——App 层 chooseVisitor 已按优化器状态跳过，见 C4 修复）。
   useEffect(() => {
     if (observerMode && visitor) dismiss()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -933,6 +947,7 @@ function App() {
   const startGame = (options: StartOptions) => {
     setDifficulty(options.difficulty)
     setObserverMode(options.observerMode)
+    setAutoEventsEnabled(options.autoEventsEnabled)
     setActiveOptimizerId(options.observerMode ? 'crown-steward' : 'none')
     setRunning(options.observerMode)
     const openingBaseline = { day: 1, resources, gdp }
@@ -1069,7 +1084,7 @@ function App() {
       )}
 
       <section className="page-content">
-        {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} habitatLevel={habitatLevel} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} autoStaffingByFacility={autoStaffingByFacility} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={guarded((regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId })))} onStaffingSet={guarded((id, staff) => setManualStaffing(previous => ({ ...previous, [id]: staff })))} onClearAutoStaffing={handleToggleAutoStaffing} onHousingRedistribute={handleHousingRedistribute} onAssignment={guarded((visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId })))}>
+        {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} habitatLevel={habitatLevel} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} autoStaffingByFacility={autoStaffingByFacility} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={guarded((regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId })))} onStaffingSet={guarded((id, staff) => setManualStaffing(previous => ({ ...previous, [id]: staff })))} onClearAutoStaffing={handleToggleAutoStaffing} onHousingRedistribute={handleHousingRedistribute} onAssignment={guarded((visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId })))}>
           {selected === 'K' && <PalaceReportBlock day={day} lastReignReport={lastReignReport} onOpenReport={setActiveReignReport} />}
           {selected === 'L' && <ResearchTreeBlock techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={guarded(setActiveResearch)} />}
           {selected === 'R' && <EcologyPhaseBlock phaseNotes={selectedRegion.phaseNotes} progress={selectedRegion.max > 0 ? Math.round(selectedRegion.level / selectedRegion.max * 100) : 0} />}

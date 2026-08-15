@@ -282,7 +282,7 @@ export function useSaveSystem(state: SaveSystemState, setters: SaveSystemSetters
     }
   }
 
-  const continueGame = (options: Pick<StartOptions, 'observerMode'>) => {
+  const continueGame = (options: Pick<StartOptions, 'observerMode' | 'autoEventsEnabled'>) => {
     const save = readAutoSave()
     if (!save) return
     if (![4, 5, 6].includes(save.version) || !save.resources || !save.regionLevels || !save.construction || !save.reignReportBaseline) {
@@ -292,7 +292,7 @@ export function useSaveSystem(state: SaveSystemState, setters: SaveSystemSetters
       return
     }
     const savedObserverMode = save.observerMode ?? false
-    applySave({ ...save, observerMode: options.observerMode })
+    applySave({ ...save, observerMode: options.observerMode, autoEventsEnabled: options.autoEventsEnabled })
     // 仅当玩家在开始界面改变了观察者开关时调整接管状态
     if (options.observerMode && !savedObserverMode) {
       setters.setActiveOptimizerId('crown-steward')

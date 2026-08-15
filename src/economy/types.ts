@@ -153,25 +153,18 @@ export type MethodAutomationAction = {
   projectedResources: Resources
 }
 
-/** L3 产物：一次人力调整。当前恒为空数组（App 未接入 rebalanceStaffing，见 staffingTools/optimizer 冲突说明）。 */
-export type StaffingAction = {
-  facilityId: FacilityId
-  fromStaff: number
-  toStaff: number
-  score: number
-}
-
 /**
- * L3 优化器执行状态。注意：此处的 'manual' 表示「优化器让位（被禁用或资源缺口触发退守）」，
- * 与 L1 玩家手动操作是不同语义——App 侧目前不消费该字段，仅做状态表达。
+ * L3 优化器执行状态。'active' = 优化器本轮产出可执行计划；
+ * 'inactive' = 优化器让位（被禁用，或因资源缺口主动退守）。
+ * 注意：与 L1 玩家手动操作、L2 automation 均无关系——该字段只是优化器自身的状态表达。
+ * 人力分配不在计划内：每日由 App 侧 L3 rebalanceStaffing 统一执行（见 C1 修复）。
  */
 export type AutomationPlan = {
-  mode: 'auto' | 'manual'
+  mode: 'active' | 'inactive'
   reason?: string
   actions: AutomationAction[]
   technologyActions: TechnologyAutomationAction[]
   methodActions: MethodAutomationAction[]
-  staffingActions: StaffingAction[]
   targetLevels: Record<FacilityId, number>
   weightedProfit: number
   projectedResources: Resources

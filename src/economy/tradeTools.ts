@@ -11,7 +11,7 @@ import type { AutoTrade, FacilityState, ResourceKey, Resources } from './types'
  * 冲突说明：本工具是「按固定目标被动补资源」的系统默认口径；
  * 优化器使用 optimizer.ts 内的 planAutoTradesForCost（L3）自主决定购入/卖出数量，
  * 启用优化器时应停用本工具，避免两套贸易策略同时争抢库存。
- * 现状：App.tsx 的 autoTradeProtectionEnabled 默认开启且优化器激活时不会自动关闭（见 App 冲突）。
+ * 现状：App.tsx 在优化器激活时自动让位（autoTradeProtectionEffective=false），贸易由 L3 接管。
  */
 export function planAutoTradesForDeficits(
   resources: Resources,

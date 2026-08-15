@@ -9,13 +9,15 @@ export interface StartOptions {
   difficulty: Difficulty
   tutorialEnabled: boolean
   observerMode: boolean
+  /** L3 观察者模式下由内置优化署按事件默认取向自动结算；手动模式（L1/L2）下玩家自行决策，此开关不生效 */
+  autoEventsEnabled: boolean
 }
 
 export interface StartGateProps {
   planetTexture: typeof planetTextures[number]
   autoSave: { difficulty: Difficulty; observerMode: boolean; day: number } | null
   onStart: (options: StartOptions) => void
-  onContinue: (options: Pick<StartOptions, 'observerMode'>) => void
+  onContinue: (options: Pick<StartOptions, 'observerMode' | 'autoEventsEnabled'>) => void
   onSettings: () => void
 }
 
@@ -31,13 +33,14 @@ export function StartGate({ planetTexture, autoSave, onStart, onContinue, onSett
   const [difficulty, setDifficulty] = useState<Difficulty>(autoSave?.difficulty ?? defaultDifficulty)
   const [tutorialEnabled, setTutorialEnabled] = useState(() => !window.localStorage.getItem('lunar-crown-tutorial-seen'))
   const [observerMode, setObserverMode] = useState(autoSave?.observerMode ?? false)
+  const [autoEventsEnabled, setAutoEventsEnabled] = useState(false)
 
-  const begin = () => onStart({ difficulty, tutorialEnabled, observerMode })
+  const begin = () => onStart({ difficulty, tutorialEnabled, observerMode, autoEventsEnabled })
 
   return (
     <main className={styles['start-gate']}>
       <section className={styles['start-orbit']} aria-label="殖民星球预览">
-        <PlanetScene texture={planetTexture} onActivate={hasAutoSave ? () => onContinue({ observerMode }) : begin} />
+        <PlanetScene texture={planetTexture} onActivate={hasAutoSave ? () => onContinue({ observerMode, autoEventsEnabled }) : begin} />
       </section>
       <section className={styles['start-console']} aria-label="开始游戏">
         <div className="brand-seal"><Crown size={25} /></div>
@@ -69,11 +72,15 @@ export function StartGate({ planetTexture, autoSave, onStart, onContinue, onSett
             <span className={styles['start-option-label']}>观察者模式<small>内置优化署接管决策，玩家仅旁观</small></span>
             <input type="checkbox" checked={observerMode} onChange={e => setObserverMode(e.target.checked)} />
           </label>
+          <label className={`${styles['start-option-row']} ${styles['toggle-row']}`}>
+            <span className={styles['start-option-label']}>自动处理事件<small>观察者模式下按事件默认取向自动结算</small></span>
+            <input type="checkbox" checked={autoEventsEnabled} disabled={!observerMode} onChange={e => setAutoEventsEnabled(e.target.checked)} />
+          </label>
           {hasAutoSave && <p className={styles['start-autosave-hint']}>检测到自动存档（御日 {autoSave.day}），继续执政将接续此进度。</p>}
         </div>
         <div className={styles['start-actions']}>
           {hasAutoSave ? (
-            <Button variant="continue" onClick={() => onContinue({ observerMode })}><Play size={16} />继续执政</Button>
+            <Button variant="continue" onClick={() => onContinue({ observerMode, autoEventsEnabled })}><Play size={16} />继续执政</Button>
           ) : (
             <Button variant="primary" onClick={begin}><Play size={16} />开始执政</Button>
           )}

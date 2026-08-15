@@ -34,19 +34,18 @@ export const gameOptimizers: Record<OptimizerId, GameOptimizer> = {
 }
 
 /**
- * 【L3 禁用态】优化器未激活时生成的空计划（mode='manual'）。
+ * 【L3 禁用态】优化器未激活时生成的空计划（mode='inactive'）。
  * 仅用于向 UI/报告提供统一形状，不产生任何动作。
  */
 export const createDisabledAutomationPlan = (
   resources: Resources,
   facilities: { id: FacilityId; level: number }[] = facilityOrder.map(id => ({ id, level: 0 })),
 ): AutomationPlan => ({
-  mode: 'manual',
+  mode: 'inactive',
   reason: 'optimizer disabled',
   actions: [],
   technologyActions: [],
   methodActions: [],
-  staffingActions: [],
   targetLevels: Object.fromEntries(
     facilityOrder.map(id => [id, facilities.find(facility => facility.id === id)?.level ?? 0]),
   ) as Record<FacilityId, number>,

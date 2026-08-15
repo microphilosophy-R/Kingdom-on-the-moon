@@ -24,7 +24,7 @@ import { displayCopy } from '../../utils/format'
 import { orderLabel } from '../../utils/game'
 import { scaleResourceBundle } from '../../utils/trade'
 import { getFacilityArt } from '../../assets/facilityArt'
-import type { AutomationPlan, PopulationProjection, ProductionMethodId, Resources } from '../../economy'
+import type { PopulationProjection, ProductionMethodId, Resources } from '../../economy'
 import type { Role } from '../../events'
 import type {
   ConstructionProject,
@@ -57,7 +57,6 @@ export interface FacilityDetailPanelProps {
   selectedCost: Partial<Resources>
   resources: Resources
   dailyNet: Partial<Resources>
-  automationPlan: AutomationPlan
   regions: Region[]
   onBack: () => void
   onSelect: (id: RegionId) => void

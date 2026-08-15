@@ -6,7 +6,7 @@ import type { Difficulty } from './difficulty'
 import { emergencyCreditDebtLimit, estimateResourceDeficitPremium, estimateTradePremium, hasOperationalStarport, planSellSurplusForCurrency, resourceDebtLimits, scaleBundle, starportTradeOffers } from './trade'
 import { projectFacilityCost, projectFacilityNet, projectTechnologyCost } from './production'
 import { eventChains, getCurrentGameEra } from '../events'
-import type { AutoTrade, AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, MethodAutomationAction, PopulationProjection, ProductionMethodId, ResourceKey, Resources, StaffingAction, TechnologyAutomationAction, TechnologySpec } from './types'
+import type { AutoTrade, AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, MethodAutomationAction, PopulationProjection, ProductionMethodId, ResourceKey, Resources, TechnologyAutomationAction, TechnologySpec } from './types'
 
 /** 【L3 内部】优化器按建造成本与储备线买入缺料（仅买入，不做售卖）。 */
 const planAutoBuyForCost = (
@@ -835,30 +835,25 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   }
 
   if (initialBreach && !actions.length && !technologyActions.length) {
-    // mode='manual'：优化器因初始资源缺口主动让位（与 L1 玩家手动操作无关，仅表达「本轮无可执行计划」）。
+    // mode='inactive'：优化器因初始资源缺口主动让位（本轮无可执行计划）。
     return {
-      mode: 'manual',
+      mode: 'inactive',
       reason: `${resourceMeta[initialBreach].label} 低于最低要求`,
       actions: [],
       technologyActions: [],
       methodActions: [],
-      staffingActions: [],
       targetLevels,
       weightedProfit: 0,
       projectedResources: { ...input.resources },
     }
   }
 
-  // 人力分配：L3 的 rebalanceStaffing 设计为每日循环统一执行，但当前 App.tsx 尚未接入
-  // （优化器激活时仍由 L2 的 autoAllocateStaffing 按优先级分配），故此处不再产出 staffingActions。
-  const staffingActions: StaffingAction[] = []
-
+  // 人力分配不在计划内：每日由 App.tsx 侧 L3 rebalanceStaffing 统一执行（人口可重分配，见 C1 修复）。
   return {
-    mode: 'auto' as const,
+    mode: 'active' as const,
     actions,
     technologyActions,
     methodActions,
-    staffingActions,
     targetLevels,
     weightedProfit,
     projectedResources: workingResources,
