@@ -5,10 +5,8 @@
 }
 
 .welcome-panel h2,
-.planet-title h2,
 .palace-hero h2,
-.system-hero h2,
-.visitor-hero h2 {
+.system-hero h2 {
   color: var(--ui-ink-strong);
   font-size: var(--font-page);
   line-height: 1.32;
@@ -25,9 +23,7 @@
 }
 
 .facility-summary b,
-.facility-ledger-list b,
 .policy-cards h3,
-.retainer-copy h3,
 .tech-card-copy h3,
 .technology-book > div:first-child,
 .ship-stage-list b,
@@ -46,8 +42,7 @@
 .policy-status strong,
 .policy-report-body strong,
 .special-facility-stats strong,
-.special-production-row strong,
-.retainer-duty b {
+.special-production-row strong {
   color: var(--ui-brass-dark);
   font-family: var(--ui-mono);
   letter-spacing: 0 !important;
@@ -55,10 +50,6 @@
 
 .resource-rail {
   grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
-}
-
-.resource-atom small,
-.facility-ledger-list small {
 }
 
 .ship-card,
@@ -132,8 +123,7 @@
 }
 
 .operation-progress.operation-expand > span,
-.throughput-panel.throughput-steady,
-.facility-ledger-list button.throughput-steady::before {
+.throughput-panel.throughput-steady {
   background: var(--ui-success);
 }
 
@@ -144,7 +134,6 @@
 
 .operation-progress.operation-shrink > span,
 .throughput-panel.throughput-thin,
-.facility-ledger-list button.throughput-thin::before,
 .resource em.negative,
 .resource-atom strong.negative,
 .stat-block b.cost {
@@ -156,18 +145,8 @@
   background: var(--ui-danger-soft);
 }
 
-.facility-ledger-list button.throughput-idle::before {
-  background: var(--ui-muted-2);
-}
-
-.facility-ledger-list button.throughput-surged::before {
-  background: var(--ui-brass);
-}
-
-.facility-ledger-list button.special,
 .tech-card.completed,
 .policy-cards button.selected,
-.retainer.active,
 .trade-board p.active,
 .tech-cabinet p.active,
 .technology-book > div:last-child span {
@@ -177,8 +156,7 @@
 
 .cyan,
 .facility-node.available .node-icon,
-.tree-lines path.available,
-.tech-image-placeholder .active-line {
+.tree-lines path.available {
   color: var(--ui-signal);
   stroke: var(--ui-signal);
 }
@@ -257,7 +235,6 @@
 }
 
 .research-rule-box b,
-.tech-tags span,
 .tech-prerequisites span,
 .tech-cost-row span,
 .stat-block b,
@@ -325,24 +302,6 @@
   color: var(--ui-brass-dark);
 }
 
-.planet-title {
-  background: oklch(95% .014 86 / .78);
-  border-radius: 8px;
-}
-
-.planet-title h2 {
-  font-size: var(--font-display);
-}
-
-.planet-title button {
-  background: var(--ui-brass);
-  color: oklch(97% .012 86);
-}
-
-.king-profile {
-  color: var(--ui-ink);
-}
-
 .king-portrait-slot {
   background: linear-gradient(160deg, var(--ui-parchment), var(--ui-surface-2));
 }
@@ -353,10 +312,8 @@
   }
 
   .welcome-panel h2,
-  .planet-title h2,
   .palace-hero h2,
-  .system-hero h2,
-  .visitor-hero h2 {
+  .system-hero h2 {
     font-size: var(--font-data-lg);
   }
 
@@ -373,20 +330,6 @@
 
   .event-modal .letter-body {
     font-size: var(--font-note);
-  }
-
-  .planet-title {
-    width: min(420px, 92%);
-    bottom: 12.2rem;
-  }
-
-  .planet-home {
-    padding-bottom: 8rem;
-  }
-
-  .planet-stage {
-    height: 520px;
-    min-height: 420px;
   }
 
   .resource-rail {
@@ -446,7 +389,6 @@
 
 .art-button,
 .art-brief,
-.facility-ledger-list button::before,
 .special-panel-note {
   display: none;
 }
@@ -468,12 +410,6 @@
 }
 
 /* Building command redesign: answer player questions in order. */
-.planet-workbench.detail-mode {
-  display: block;
-  max-width: 1180px;
-  margin: 0 auto;
-}
-
 .building-command-page {
   display: grid;
   grid-template-columns: 1fr;
@@ -488,39 +424,6 @@
   grid-template-columns: auto 1fr auto;
   gap: .7rem;
   align-items: center;
-}
-
-.building-status-chip {
-  justify-self: start;
-  display: inline-flex;
-  align-items: baseline;
-  gap: .42rem;
-  border: 1px solid var(--ui-line);
-  border-radius: 999px;
-  padding: .28rem .58rem;
-  background: var(--ui-raised);
-  color: var(--ui-ink);
-  font-size: var(--font-label);
-}
-
-.building-status-chip small {
-  color: var(--ui-muted);
-  font-family: var(--ui-mono);
-}
-
-.building-status-chip.steady {
-  border-color: var(--ui-success);
-  background: var(--ui-success-soft);
-}
-
-.building-status-chip.watch {
-  border-color: var(--ui-line-strong);
-  background: var(--ui-parchment);
-}
-
-.building-status-chip.attention {
-  border-color: oklch(64% .095 35);
-  background: var(--ui-danger-soft);
 }
 
 .building-answer-grid {

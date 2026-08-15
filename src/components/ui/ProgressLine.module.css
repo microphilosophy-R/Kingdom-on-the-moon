@@ -1,0 +1,30 @@
+/* 迁移自 62-settings-modal.css 2138-2163 + 45-typography.css 154/183（合并 cascade） */
+.detail-progress-line {
+  position: relative;
+  min-height: 24px;
+  overflow: hidden;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  background: var(--ui-parchment);
+}
+
+.detail-progress-line > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: oklch(72% .105 78 / .36);
+}
+
+.detail-progress-line small {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  padding: 0 .45rem;
+  color: var(--ui-ink);
+  font-family: var(--ui-mono);
+  font-size: var(--font-note);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 1;
+}

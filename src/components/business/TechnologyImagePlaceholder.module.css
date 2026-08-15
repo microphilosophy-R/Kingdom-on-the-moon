@@ -1,0 +1,19 @@
+/* 迁移自 20-facilities-policy.css 207-221 + 40-layout-components.css 162-165/404 + 50-theme-overrides.css 181（合并 cascade：尺寸以 40 为准，active-line 以 50 为准） */
+.tech-image-placeholder {
+  width: 96px;
+  height: 60px;
+  color: var(--ui-brass);
+}
+
+.tech-image-placeholder rect,
+.tech-image-placeholder circle,
+.tech-image-placeholder path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.tech-image-placeholder .active-line {
+  color: var(--ui-signal);
+  stroke: var(--ui-signal);
+}

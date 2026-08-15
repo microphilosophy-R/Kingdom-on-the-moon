@@ -28,15 +28,12 @@ textarea,
 .back-button,
 .resource-inline-action,
 .facility-actions button,
-.construction-actions button,
-.method-book-tabs button,
 .trade-step-buttons button,
 .trade-limit-buttons button,
 .trade-count-row button,
 .trade-offer-list button,
 .letter-actions button,
 .worker-card button,
-.retainer-duty button,
 .special-secondary-action,
 .upgrade-button,
 .tab-nav button {
@@ -48,14 +45,11 @@ h1,
 h2,
 h3,
 .brand-block h1,
-.detail-v2-title h2,
 .section-heading h2,
 .section-heading h3,
 .special-panel-head h2,
 .inspector-head h2,
-.planet-title h2,
 .palace-hero h2,
-.visitor-hero h2,
 .system-hero h2 {
   font-family: var(--ui-serif);
   font-weight: 700;
@@ -67,10 +61,8 @@ h3,
   line-height: 1.12;
 }
 
-.planet-title h2,
 .welcome-panel h2,
 .palace-hero h2,
-.visitor-hero h2,
 .system-hero h2 {
   font-size: var(--font-display);
   line-height: 1.18;
@@ -78,7 +70,6 @@ h3,
 
 .section-heading h2,
 .section-heading h3,
-.detail-v2-title h2,
 .special-panel-head h2,
 .inspector-head h2,
 .ship-meter .section-heading h2 {
@@ -87,19 +78,12 @@ h3,
 }
 
 .facility-summary b,
-.facility-ledger-list b,
-.ledger-identity b,
 .policy-cards h3,
-.retainer-copy h3,
 .tech-card-copy h3,
 .technology-book > div:first-child,
 .ship-stage-list b,
 .production-methods b,
-.construction-card h3,
-.detail-advice-strip h3,
-.method-ledger-head h3,
 .intervention-copy h3,
-.king-profile h3,
 .palace-report-kpis strong,
 .settings-panel h3 {
   font-size: var(--font-card);
@@ -112,7 +96,6 @@ li,
 .chronicle-panel p,
 .signal-panel p,
 .inspector-description,
-.detail-advice-strip li,
 .special-panel-note,
 .special-panel-head p,
 .special-panel-brief,
@@ -121,12 +104,7 @@ li,
 .policy-report-body small,
 .tech-card-copy p,
 .research-rule-box p,
-.visitor-hero p,
-.retainer-copy p,
-.planet-dock p,
-.king-profile p,
-.letter-body,
-.facility-detail-v2 p {
+.letter-body {
   font-size: var(--font-body);
   line-height: 1.62;
 }
@@ -136,22 +114,14 @@ li,
 .group-label,
 .resource-label,
 .resource-atom small,
-.facility-ledger-list small,
-.ledger-method-tag,
-.ledger-stat-label,
 .policy-cards small,
 .tech-card-top > span,
 .technology-book > div:first-child small,
 .event-transmission-head span,
 .event-transmission-head small,
-.retainer-copy > span,
-.retainer-duty small,
 .special-facility-stats span,
 .special-production-row span,
 .research-rule-box > span,
-.method-column-label,
-.construction-resources > span,
-.detail-progress-line small,
 .resource-empty {
   font-size: var(--font-label);
   line-height: 1.18;
@@ -161,7 +131,6 @@ small,
 .building-metric-grid small,
 .node-copy small,
 .worker-card small,
-.pending-visitor small,
 .ship-stage-list small,
 .tech-cabinet p small,
 .resource-atom-content .resource-net,
@@ -179,12 +148,9 @@ small,
 .resource-rail .resource-main-value strong,
 .resource-rail .resource-sub-value,
 .symbol-value,
-.ledger-stat-value,
-.detail-progress-line small,
 .policy-report-body strong,
 .special-facility-stats strong,
 .special-production-row strong,
-.retainer-duty b,
 .reign-control strong {
   font-family: var(--ui-mono);
   font-size: var(--font-data);
@@ -196,7 +162,6 @@ small,
 .scoreline strong,
 .ship-card strong,
 .policy-status strong,
-.reign-report-kpis strong,
 .palace-building-stats strong {
   font-family: var(--ui-mono);
   font-size: var(--font-data-lg);
@@ -204,8 +169,6 @@ small,
   line-height: 1;
 }
 
-.method-staff b,
-.method-throughput b,
 .ship-meter strong small {
   font-family: var(--ui-mono);
   font-size: var(--font-data-xl);
@@ -221,10 +184,8 @@ small,
 }
 
 @media (max-width: 760px) {
-  .planet-title h2,
   .welcome-panel h2,
   .palace-hero h2,
-  .visitor-hero h2,
   .system-hero h2 {
     font-size: var(--font-page);
   }

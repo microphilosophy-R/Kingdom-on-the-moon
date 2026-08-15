@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { TrendPoint } from '../../types/game'
 import { fmtAmount } from '../../utils/format'
+import styles from './TrendChart.module.css'
 
 export interface TrendSeries {
   key: string
@@ -183,15 +184,15 @@ export function TrendChart({
   // Fallback table
   if (!hasData && !mini && fallbackRows && fallbackRows.length > 0) {
     return (
-      <section className="reign-trend-chart">
+      <section className={styles['reign-trend-chart']}>
         {title && <h3>{title}</h3>}
-        <div className="reign-resource-table">
+        <div className={styles['reign-resource-table']}>
           {fallbackRows.map(row => (
             <div key={row.label}>
               <span>{row.label}</span>
               <b>{row.produced}</b>
               <b>{row.consumed}</b>
-              <b className={row.negative ? 'negative' : ''}>{row.net}</b>
+              <b className={row.negative ? styles.negative : ''}>{row.net}</b>
             </div>
           ))}
         </div>
@@ -201,7 +202,7 @@ export function TrendChart({
 
   if (!hasData && !mini) {
     return (
-      <section className="reign-trend-chart">
+      <section className={styles['reign-trend-chart']}>
         {title && <h3>{title}</h3>}
         <p style={{ color: 'oklch(47% .026 250)', fontSize: 'var(--font-note)', padding: '.5rem 0' }}>
           暂无趋势数据，运行一个完整王月后将生成趋势曲线。
@@ -215,10 +216,10 @@ export function TrendChart({
   const allSeries = [...leftSeries, ...rightSeries]
 
   return (
-    <section className={mini ? 'palace-trend-mini' : 'reign-trend-chart'}>
+    <section className={mini ? styles['palace-trend-mini'] : styles['reign-trend-chart']}>
       {title && !mini && <h3>{title}</h3>}
       {!mini && (
-        <div className="reign-trend-legend">
+        <div className={styles['reign-trend-legend']}>
           {allSeries.map(s => (
             <span key={s.key}>
               <i style={{ background: s.color }} />

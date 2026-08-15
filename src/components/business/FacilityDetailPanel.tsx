@@ -19,6 +19,7 @@ import {
 import { ResourceDeltaRows, CostResourceList, ConstructionDaysPill, FlowArrowSvg } from '../resources'
 import { ProgressLine } from '../ui'
 import { FacilityOrderGlyph } from './FacilityOrderGlyph'
+import styles from './FacilityDetailPanel.module.css'
 import { displayCopy } from '../../utils/format'
 import { orderLabel } from '../../utils/game'
 import { scaleResourceBundle } from '../../utils/trade'
@@ -202,7 +203,7 @@ export function FacilityDetailPanel({
 
   return (
     <aside
-      className="inspector facility-detail-v2 standard-detail"
+      className={`inspector ${styles['facility-detail-v2']}`}
       onTouchStart={e => { touchStartX.current = e.changedTouches[0]?.clientX ?? null }}
       onTouchEnd={e => {
         const startX = touchStartX.current
@@ -215,40 +216,40 @@ export function FacilityDetailPanel({
         touchStartX.current = null
       }}
     >
-      <header className="detail-v2-header">
+      <header className={styles['detail-v2-header']}>
         <button className="back-button" onClick={onBack}><ChevronLeft size={16} />建筑名录</button>
-        <div className="detail-v2-title">
+        <div className={styles['detail-v2-title']}>
           <h2>{selectedRegion.name}</h2>
           <p>{selectedRegion.subtitle}</p>
         </div>
-        <div className={`building-status-chip ${statusTone}`}><span>{situationTitle}</span><small>{orderLabel(currentOrder)}</small></div>
+        <div className={`${styles['building-status-chip']} ${styles[statusTone]}`}><span>{situationTitle}</span><small>{orderLabel(currentOrder)}</small></div>
       </header>
 
-      <div className="detail-top-row">
-        <div className="detail-v2-art" aria-label={`${selectedRegion.name}建筑主视觉`}>
+      <div className={styles['detail-top-row']}>
+        <div className={styles['detail-v2-art']} aria-label={`${selectedRegion.name}建筑主视觉`}>
           <img src={getFacilityArt(selectedRegion.id)} alt={selectedRegion.name} />
         </div>
-        <section className="detail-command-column">
-          <article className="construction-card expand">
+        <section className={styles['detail-command-column']}>
+          <article className={`${styles['construction-card']} ${styles['expand']}`}>
             <h3>扩建 | 支付成本</h3>
-            <div className="construction-resources"><CostResourceList bundle={selectedCost} baseBundle={baseExpansionCost} empty="无需成本" /><ConstructionDaysPill days={constructionDays} /></div>
-            <div className="construction-actions">
-              <button className={currentOrder === 'expand' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand')} disabled={expandDisabled}><FacilityOrderGlyph mode="expand" />{expandButtonLabel}</button>
-              <button className={currentOrder === 'expand-continuous' ? 'selected' : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand-continuous')} disabled={expandDisabled}><FacilityOrderGlyph mode="expand-continuous" />{continuousExpandLabel}</button>
+            <div className={styles['construction-resources']}><CostResourceList bundle={selectedCost} baseBundle={baseExpansionCost} empty="无需成本" /><ConstructionDaysPill days={constructionDays} /></div>
+            <div className={styles['construction-actions']}>
+              <button className={currentOrder === 'expand' ? styles['selected'] : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand')} disabled={expandDisabled}><FacilityOrderGlyph mode="expand" />{expandButtonLabel}</button>
+              <button className={currentOrder === 'expand-continuous' ? styles['selected'] : ''} onClick={() => onUpgrade(selectedRegion.id, 'expand-continuous')} disabled={expandDisabled}><FacilityOrderGlyph mode="expand-continuous" />{continuousExpandLabel}</button>
             </div>
             <ProgressLine value={expandProgress} label={activeConstruction?.mode === 'expand' ? `扩建 ${expandProgress}%` : currentOrder === 'expand-continuous' ? '持续扩建已记录' : '等待扩建命令'} />
-            <hr className="construction-divider" />
+            <hr className={styles['construction-divider']} />
             <h3>缩减 | 回收资源</h3>
-            <div className="construction-resources"><CostResourceList bundle={shrinkRefund} baseBundle={baseShrinkRefund} empty="无可回收" /><ConstructionDaysPill days={constructionDays} /></div>
-            <div className="construction-actions">
-              <button className={currentOrder === 'shrink' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink')} disabled={shrinkDisabled}><FacilityOrderGlyph mode="shrink" />{shrinkButtonLabel}</button>
-              <button className={currentOrder === 'shrink-continuous' ? 'selected' : ''} onClick={() => onShrink(selectedRegion.id, 'shrink-continuous')} disabled={shrinkDisabled}><FacilityOrderGlyph mode="shrink-continuous" />{continuousShrinkLabel}</button>
+            <div className={styles['construction-resources']}><CostResourceList bundle={shrinkRefund} baseBundle={baseShrinkRefund} empty="无可回收" /><ConstructionDaysPill days={constructionDays} /></div>
+            <div className={styles['construction-actions']}>
+              <button className={currentOrder === 'shrink' ? styles['selected'] : ''} onClick={() => onShrink(selectedRegion.id, 'shrink')} disabled={shrinkDisabled}><FacilityOrderGlyph mode="shrink" />{shrinkButtonLabel}</button>
+              <button className={currentOrder === 'shrink-continuous' ? styles['selected'] : ''} onClick={() => onShrink(selectedRegion.id, 'shrink-continuous')} disabled={shrinkDisabled}><FacilityOrderGlyph mode="shrink-continuous" />{continuousShrinkLabel}</button>
             </div>
             <ProgressLine value={shrinkProgress} label={activeConstruction?.mode === 'shrink' ? `缩减 ${shrinkProgress}%` : currentOrder === 'shrink-continuous' ? '持续缩减已记录' : '等待缩减命令'} />
           </article>
-          <article className="construction-card building-desc-card">
+          <article className={`${styles['construction-card']} ${styles['building-desc-card']}`}>
             <h3>建筑描述</h3>
-            <div className="building-desc-card-body">
+            <div className={styles['building-desc-card-body']}>
               <span className="eyebrow">{selectedRegion.subtitle}</span>
               <p>{displayCopy(selectedRegion.note)}</p>
             </div>
@@ -256,9 +257,9 @@ export function FacilityDetailPanel({
         </section>
       </div>
 
-      <section className="method-ledger">
-        <div className="method-ledger-head">
-          <div className="method-book-tabs" role="tablist" aria-label="切换生产方式">
+      <section className={styles['method-ledger']}>
+        <div className={styles['method-ledger-head']}>
+          <div className={styles['method-book-tabs']} role="tablist" aria-label="切换生产方式">
             {selectedSpec.productionMethods.map(method => {
               const ready = availableMethodIds.includes(method.id)
               const techName = method.unlockedBy ? technologyCatalog[method.unlockedBy]?.name : undefined
@@ -268,7 +269,7 @@ export function FacilityDetailPanel({
                   type="button"
                   role="tab"
                   aria-selected={method.id === selectedMethod.id}
-                  className={method.id === selectedMethod.id ? 'active' : ''}
+                  className={method.id === selectedMethod.id ? styles['active'] : ''}
                   disabled={!ready}
                   title={ready ? method.name : `需要 ${techName ?? '科技'}`}
                   onClick={() => onMethod(selectedRegion.id, method.id)}
@@ -277,16 +278,16 @@ export function FacilityDetailPanel({
             })}
           </div>
         </div>
-        <article className="method-equation">
-          <div className="method-stage">
-            <span className="method-column-label">配方</span>
-            <div className="method-formula"><ResourceDeltaRows input={selectedMethod.input} output={selectedMethod.output} /></div>
+        <article className={styles['method-equation']}>
+          <div className={styles['method-stage']}>
+            <span className={styles['method-column-label']}>配方</span>
+            <div className={styles['method-formula']}><ResourceDeltaRows input={selectedMethod.input} output={selectedMethod.output} /></div>
           </div>
-          <div className="method-stage">
-            <span className="method-column-label">{staffColumnLabel}</span>
-            <div className="method-staff">
+          <div className={styles['method-stage']}>
+            <span className={styles['method-column-label']}>{staffColumnLabel}</span>
+            <div className={styles['method-staff']}>
               {!selectedFixed && staffingHardMax > 0 ? (
-                <div className="staffing-slider-row">
+                <div className={styles['staffing-slider-row']}>
                   <b><Users size={13} />{staffDisplay}</b>
                   <input
                     type="range"
@@ -301,7 +302,7 @@ export function FacilityDetailPanel({
                         onStaffingSet?.(selectedRegion.id, v)
                       }
                     }}
-                    className="staffing-slider"
+                    className={styles['staffing-slider']}
                     disabled={!!activeConstruction || isStaffingAuto}
                     style={{
                       background: staffingHardMax > staffingReachableMax
@@ -313,7 +314,7 @@ export function FacilityDetailPanel({
                     }}
                   />
                   {isHousing && (
-                    <label className="staffing-auto-toggle">
+                    <label className={styles['staffing-auto-toggle']}>
                       <input
                         type="checkbox"
                         checked={isStaffingAuto}
@@ -328,25 +329,25 @@ export function FacilityDetailPanel({
               )}
             </div>
           </div>
-          <div className="method-stage">
-            <span className="method-column-label">吞吐率</span>
-            <div className="method-throughput">
+          <div className={styles['method-stage']}>
+            <span className={styles['method-column-label']}>吞吐率</span>
+            <div className={styles['method-throughput']}>
               <b>{throughputText}</b>
               {!selectedFixed && !isHousingFacility(selectedRegion.id) && (
-                <div className="throughput-inline-breakdown">
-                  <div className="breakdown-row"><span>基础效率</span><span className="throughput-base">88%</span></div>
-                  <div className="breakdown-row"><span>└ 栖息地</span><span className={`throughput-${habitatLevel > 0 ? 'bonus' : 'neutral'}`}>{habitatLevel > 0 ? '+' : ''}{(habitatLevel * 2.5).toFixed(1)}%</span></div>
+                <div className={styles['throughput-inline-breakdown']}>
+                  <div className={styles['breakdown-row']}><span>基础效率</span><span className={styles['throughput-base']}>88%</span></div>
+                  <div className={styles['breakdown-row']}><span>└ 栖息地</span><span className={habitatLevel > 0 ? styles['throughput-bonus'] : styles['throughput-neutral']}>{habitatLevel > 0 ? '+' : ''}{(habitatLevel * 2.5).toFixed(1)}%</span></div>
                 </div>
               )}
             </div>
           </div>
-          <div className="method-stage">
-            <span className="method-column-label">总产量</span>
-            <div className="method-output"><ResourceDeltaRows input={selectedFlow.consumption} output={selectedFlow.production} /></div>
+          <div className={styles['method-stage']}>
+            <span className={styles['method-column-label']}>总产量</span>
+            <div className={styles['method-output']}><ResourceDeltaRows input={selectedFlow.consumption} output={selectedFlow.production} /></div>
           </div>
         </article>
         {!selectedFixed && !isHousingFacility(selectedRegion.id) && (
-          <p className="method-equation-note">总产量 = 配方产出 × 在岗人数 × 吞吐率</p>
+          <p className={styles['method-equation-note']}>总产量 = 配方产出 × 在岗人数 × 吞吐率</p>
         )}
       </section>
 
@@ -354,7 +355,7 @@ export function FacilityDetailPanel({
 
       <button
         type="button"
-        className={`facility-nav facility-nav-prev ${prevRegion ? 'available' : ''}`}
+        className={`${styles['facility-nav']} ${styles['facility-nav-prev']} ${prevRegion ? styles['available'] : ''}`}
         aria-label={prevRegion ? `上一个：${prevRegion.name}` : '无上一个设施'}
         title={prevRegion ? prevRegion.name : undefined}
         disabled={!prevRegion}
@@ -364,7 +365,7 @@ export function FacilityDetailPanel({
       </button>
       <button
         type="button"
-        className={`facility-nav facility-nav-next ${nextRegion ? 'available' : ''}`}
+        className={`${styles['facility-nav']} ${styles['facility-nav-next']} ${nextRegion ? styles['available'] : ''}`}
         aria-label={nextRegion ? `下一个：${nextRegion.name}` : '无下一个设施'}
         title={nextRegion ? nextRegion.name : undefined}
         disabled={!nextRegion}

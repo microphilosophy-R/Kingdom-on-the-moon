@@ -1,0 +1,258 @@
+/* Phase 3 m5: Visitors 迁移。
+ * 规则来源：00-base-shell.css（行 19/30 旧版布局 + 489-580 新版）、10-resources-events.css、
+ * 40-layout-components.css、45-typography.css、50-theme-overrides.css、62-settings-modal.css。
+ * 按加载顺序合并 cascade 取最终生效值。eyebrow / visitor-portrait-slot 为共享类保留全局。
+ * visitor-layout 与 greyscale 保留原字符串类名。 */
+
+/* ---- 布局 ---- */
+.visitor-layout {
+  display: grid;
+  grid-template-columns: .85fr 1.55fr;
+  gap: .9rem;
+}
+
+/* ---- hero ---- */
+.visitor-hero {
+  min-height: 410px;
+  padding: 1.6rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--ui-parchment), var(--ui-surface) 64%);
+  color: var(--ui-ink);
+  box-shadow: 0 8px 22px var(--ui-shadow);
+}
+
+.visitor-hero h2 {
+  margin: .55rem 0;
+  color: var(--ui-ink-strong);
+  font-family: var(--ui-serif);
+  font-weight: 700;
+  letter-spacing: 0;
+  font-size: var(--font-page);
+  line-height: 1.32;
+}
+
+.visitor-hero p {
+  color: var(--ui-muted);
+  font-size: var(--font-body);
+  line-height: 1.7;
+}
+
+/* ---- 待定访客 ---- */
+.pending-visitor {
+  display: flex;
+  gap: .6rem;
+  align-items: center;
+  margin-top: .5rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .5rem;
+  background: var(--ui-raised);
+}
+
+.pending-visitor > div {
+  display: grid;
+  gap: .1rem;
+}
+
+.pending-visitor b {
+  display: block;
+  font-size: var(--font-label);
+}
+
+.pending-visitor small {
+  color: oklch(48% .023 250);
+  font-size: var(--font-note);
+  line-height: 1.45;
+}
+
+/* ---- 头像 ---- */
+.visitor-portrait-frame {
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid var(--ui-line-strong);
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.visitor-portrait-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---- 名录板 ---- */
+.roster-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: .6rem;
+  margin-top: .8rem;
+  overflow: hidden;
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  box-shadow: 0 8px 22px var(--ui-shadow);
+}
+
+/* ---- 留任卡片 ---- */
+.retainer {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: .6rem;
+  align-items: center;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  padding: .55rem;
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+}
+
+.retainer:last-child {
+  border-bottom: 0;
+}
+
+.retainer.active {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+}
+
+.retainer.locked {
+  opacity: .45;
+  filter: grayscale(1);
+}
+
+.greyscale {
+  filter: grayscale(1);
+}
+
+.retainer-portrait {
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid var(--ui-line-strong);
+  background: oklch(95% .01 84);
+  aspect-ratio: 3 / 4;
+  color: var(--ui-brass);
+}
+
+.retainer-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---- 文案区 ---- */
+.retainer-copy {
+  display: flex;
+  flex-direction: column;
+  gap: .18rem;
+}
+
+.retainer-copy > span {
+  color: var(--ui-muted);
+  font-family: var(--ui-font);
+  font-size: var(--font-label);
+  line-height: 1.18;
+}
+
+.retainer-copy h3 {
+  margin: .1rem 0;
+  color: var(--ui-ink-strong);
+  font-size: var(--font-card);
+  line-height: 1.32;
+}
+
+.retainer-copy p {
+  margin: 0 0 .35rem;
+  color: var(--ui-muted);
+  font-size: var(--font-body);
+  line-height: 1.7;
+}
+
+.retainer-copy button {
+  display: inline-flex;
+  gap: .25rem;
+  align-items: center;
+  border: 0;
+  padding: 0;
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: var(--font-button);
+  line-height: 1.18;
+  transition: background .18s cubic-bezier(.16, 1, .3, 1), border-color .18s cubic-bezier(.16, 1, .3, 1), color .18s cubic-bezier(.16, 1, .3, 1), transform .18s cubic-bezier(.16, 1, .3, 1);
+}
+
+.retainer-copy button:hover {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+  color: var(--ui-ink-strong);
+}
+
+/* ---- 执勤区 ---- */
+.retainer-duty {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: .4rem;
+  align-items: center;
+  border-top: 1px solid var(--ui-line);
+  padding-top: .45rem;
+  margin-top: .05rem;
+}
+
+.retainer-duty b {
+  color: var(--ui-brass-dark);
+  font-family: var(--ui-mono);
+  font-size: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: 0 !important;
+}
+
+.retainer-duty small {
+  color: var(--ui-muted);
+  font-family: var(--ui-font);
+  font-size: var(--font-label);
+  line-height: 1.18;
+}
+
+.retainer-duty button {
+  --button-tone: oklch(43% .040 250);
+  margin-top: .25rem;
+  border: 1px solid color-mix(in oklab, var(--button-tone) 34%, var(--ui-line));
+  border-radius: 3px;
+  padding: .35rem .5rem;
+  background: color-mix(in oklab, var(--button-tone) 10%, var(--ui-raised));
+  color: color-mix(in oklab, var(--button-tone) 50%, var(--ui-ink));
+  font-size: var(--font-button);
+  line-height: 1.18;
+  transition: background .18s cubic-bezier(.16, 1, .3, 1), border-color .18s cubic-bezier(.16, 1, .3, 1), color .18s cubic-bezier(.16, 1, .3, 1), transform .18s cubic-bezier(.16, 1, .3, 1);
+}
+
+.retainer-duty button:hover {
+  border-color: var(--button-tone);
+  background: color-mix(in oklab, var(--button-tone) 18%, var(--ui-raised));
+  color: var(--ui-ink-strong);
+}
+
+/* ---- 响应式 ---- */
+@media (max-width: 760px) {
+  .visitor-hero h2 {
+    font-size: var(--font-data-lg);
+  }
+}
+
+@media (max-width: 680px) {
+  .retainer {
+    grid-template-columns: 62px 1fr;
+    padding: .8rem;
+  }
+
+  .retainer-duty {
+    grid-column: 2;
+    justify-items: start;
+    text-align: left;
+  }
+}

@@ -1,0 +1,153 @@
+/* 迁移自 62-settings-modal.css 623-767 + 845-849（900px 断点）+ 45-typography.css 197（合并 cascade：strong 以 62 为准） */
+.reign-report-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: oklch(21% .025 250 / .48);
+  backdrop-filter: blur(10px);
+}
+
+.reign-report-modal {
+  width: min(920px, 100%);
+  max-height: min(86vh, 760px);
+  overflow: auto;
+  border: 1px solid oklch(62% .07 76);
+  border-radius: 8px;
+  padding: 1.1rem;
+  background: linear-gradient(180deg, oklch(98% .011 86), oklch(94% .012 86));
+  box-shadow: 0 28px 90px oklch(18% .03 250 / .34);
+}
+
+.reign-report-modal header,
+.reign-report-modal footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.reign-report-modal h2,
+.reign-report-modal h3 {
+  margin: .15rem 0 0;
+  color: oklch(28% .035 250);
+}
+
+.reign-report-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .7rem;
+  margin: 1rem 0;
+}
+
+.reign-report-kpis > div,
+.reign-report-grid > section {
+  min-width: 0;
+  border: 1px solid oklch(75% .03 80);
+  border-radius: 7px;
+  padding: .75rem;
+  background: oklch(99% .01 86 / .78);
+}
+
+.reign-report-kpis span {
+  display: block;
+  color: oklch(48% .045 73);
+  font-size: var(--font-micro);
+  font-weight: 700;
+}
+
+.reign-report-kpis strong {
+  display: block;
+  margin-top: .15rem;
+  color: oklch(31% .04 250);
+  font-family: var(--ui-mono);
+  font-size: var(--font-page);
+}
+
+.reign-report-kpis small {
+  color: oklch(47% .026 250);
+  font-family: var(--ui-mono);
+  font-size: var(--font-label);
+}
+
+.reign-report-kpis .negative {
+  color: oklch(54% .12 25);
+}
+
+.reign-phase-guidance {
+  margin: 0 0 1rem;
+  border: 1px solid oklch(65% .08 76 / .5);
+  border-radius: 8px;
+  padding: .85rem 1rem;
+  background: linear-gradient(135deg, oklch(97% .018 76 / .5), oklch(99% .01 86 / .6));
+}
+
+.reign-phase-guidance h3 {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  margin: 0 0 .3rem;
+  color: oklch(42% .085 76);
+  font-size: var(--font-data);
+}
+
+.reign-phase-guidance h3 svg {
+  flex-shrink: 0;
+}
+
+.reign-phase-guidance > p {
+  margin: 0 0 .45rem;
+  color: oklch(38% .03 250);
+  font-size: var(--font-note);
+  line-height: 1.55;
+}
+
+.reign-phase-guidance ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: .15rem;
+}
+
+.reign-phase-guidance li {
+  color: oklch(36% .035 250);
+  font-size: var(--font-note);
+  line-height: 1.5;
+}
+
+.reign-phase-guidance li::marker {
+  color: oklch(55% .09 76);
+}
+
+.reign-report-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(240px, .8fr);
+  gap: .8rem;
+}
+
+.reign-suggestion-list {
+  margin: .65rem 0 0;
+  padding-left: 1.1rem;
+  color: oklch(36% .03 250);
+  font-size: var(--font-button);
+  line-height: 1.65;
+}
+
+.reign-report-modal footer {
+  margin-top: 1rem;
+}
+
+.reign-charts-panel {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+
+@media (max-width: 900px) {
+  .reign-report-kpis,
+  .reign-report-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -3,6 +3,7 @@ import { hasTech, technologyCatalog } from '../../economy'
 import { displayCopy } from '../../utils/format'
 import { hasResearchPrerequisites, techLabel, technologyCategoryLabel } from '../../utils/game'
 import type { TechnologyId } from '../../economy'
+import styles from './TechnologyCard.module.css'
 
 export interface TechnologyCardProps {
   techId: TechnologyId
@@ -26,28 +27,28 @@ export function TechnologyCard({ techId, techs, activeResearch, researchProgress
 
   return (
     <button
-      className={`tech-card-compact ${completed ? 'completed' : ''} ${active ? 'researching' : ''} ${locked ? 'locked' : ''}`}
+      className={`${styles['tech-card-compact']} ${completed ? styles.completed : ''} ${active ? styles.researching : ''} ${locked ? styles.locked : ''}`}
       onClick={() => !completed && prerequisitesReady && onResearch(techId)}
       disabled={completed || locked}
     >
-      <div className="tech-card-compact-top">
+      <div className={styles['tech-card-compact-top']}>
         <TechIcon category={tech.category ?? 'global'} active={active} />
-        <div className="tech-card-compact-head">
+        <div className={styles['tech-card-compact-head']}>
           <h3>{tech.name}</h3>
           <span>{categoryLabel}</span>
         </div>
       </div>
-      <p className="tech-card-compact-note">{displayCopy(tech.note)}</p>
-      <div className="tech-card-compact-meta">
+      <p className={styles['tech-card-compact-note']}>{displayCopy(tech.note)}</p>
+      <div className={styles['tech-card-compact-meta']}>
         {prerequisites.length > 0 && <small>前置：{prerequisites.map(techLabel).join('、')}</small>}
-        <span className="tech-card-compact-cost">
+        <span className={styles['tech-card-compact-cost']}>
           <FlaskConical size={11} />{requiredKnowledge}
         </span>
-        <span className="tech-card-compact-status">
+        <span className={styles['tech-card-compact-status']}>
           {locked ? <><Lock size={10} />前置未满足</> : completed ? <><BookOpen size={10} />已完成</> : active ? <>研究中 {progressPercent}%</> : <>可研究</>}
         </span>
       </div>
-      <div className="tech-progress-mini"><span style={{ width: `${progressPercent}%` }} /></div>
+      <div className={styles['tech-progress-mini']}><span style={{ width: `${progressPercent}%` }} /></div>
     </button>
   )
 }

@@ -1,0 +1,329 @@
+/* Phase 3 中件批：PlanetFacilities 迁移。
+ * 规则来源：00-base-shell.css、30-special-systems.css、40-layout-components.css、
+ * 45-typography.css、50-theme-overrides.css、62-settings-modal.css。
+ * 按加载顺序合并 cascade 取最终生效值。
+ * 保留全局：planet-scene（PlanetScene.tsx 私有）、king-portrait-slot（PortraitSlot className 参数）、
+ * eyebrow、facility-ledger（被 .planet-workbench.dock-collapsed 布局依赖的 shell 类）。
+ * keyframes（planetWorkbenchReveal/planetDockIn/dockCopyIn）原在 00-base，仅本模块引用；
+ * 迁入模块以保持 CSS Modules 哈希一致（全局 keyframes 不会被重命名）。 */
+
+/* ---- 未停靠：星球主视图 ---- */
+.planet-home {
+  display: grid;
+  min-height: calc(100vh - 280px);
+  place-items: center;
+}
+
+.planet-stage {
+  position: relative;
+  width: min(920px, 94vw);
+  height: min(680px, 68vh);
+  min-height: 480px;
+}
+
+.planet-title {
+  position: absolute;
+  left: 50%;
+  bottom: 1.2rem;
+  display: grid;
+  justify-items: center;
+  width: min(520px, 92%);
+  padding: .85rem 1rem;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+  background: oklch(95% .014 86 / .78);
+  border-radius: 8px;
+}
+
+.planet-title h2 {
+  margin: .1rem 0 .2rem;
+  color: var(--ui-ink-strong);
+  font-family: var(--ui-serif);
+  font-weight: 700;
+  letter-spacing: 0;
+  font-size: var(--font-display);
+  line-height: 1.32;
+}
+
+.planet-title p {
+  margin: 0 0 .75rem;
+  color: oklch(41% .027 250);
+  font-size: var(--font-note);
+}
+
+.planet-title button {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 4px;
+  padding: .62rem .78rem;
+  background: var(--ui-brass);
+  color: oklch(97% .012 86);
+  font-size: var(--font-label);
+  transition: background .18s cubic-bezier(.16, 1, .3, 1), border-color .18s cubic-bezier(.16, 1, .3, 1), color .18s cubic-bezier(.16, 1, .3, 1), transform .18s cubic-bezier(.16, 1, .3, 1);
+}
+
+.planet-title button:hover {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+  color: var(--ui-ink-strong);
+}
+
+/* ---- 停靠：工作台 ---- */
+.planet-workbench {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(220px, .48fr) minmax(420px, 1.55fr);
+  gap: 1.15rem;
+  align-items: start;
+  animation: planetWorkbenchReveal .42s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.planet-workbench.detail-mode {
+  display: block;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.planet-workbench.dock-collapsed {
+  grid-template-columns: 1fr;
+}
+
+.planet-workbench.dock-collapsed > .dock-expand-toggle {
+  position: absolute;
+  z-index: 2;
+  top: .55rem;
+  left: .55rem;
+}
+
+.planet-workbench.dock-collapsed :global(.facility-ledger) {
+  grid-column: 1 / -1;
+}
+
+/* ---- 左侧信息坞 ---- */
+.planet-dock {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  justify-items: center;
+  gap: .7rem;
+  overflow: visible;
+  border: 0;
+  border-radius: 7px;
+  padding: .2rem 0 0;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  box-shadow: 0 8px 22px var(--ui-shadow);
+}
+
+.planet-dock h2 {
+  margin: .15rem 0 .25rem;
+  font-size: var(--font-data-lg);
+}
+
+.planet-dock p {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--font-body);
+  line-height: 1.62;
+}
+
+.planet-dock > .dock-collapse-toggle {
+  justify-self: end;
+}
+
+.dock-expand-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  flex: 0 0 auto;
+  border: 1px solid oklch(73% .022 250);
+  border-radius: 5px;
+  padding: .42rem .58rem;
+  background: oklch(98% .01 86);
+  color: oklch(43% .027 250);
+  font-size: var(--font-label);
+  white-space: nowrap;
+  transition: background .18s ease-out, border-color .18s ease-out, color .18s ease-out;
+}
+
+.dock-expand-toggle:hover {
+  border-color: oklch(55% .095 76);
+  background: oklch(95% .036 78);
+  color: oklch(31% .035 250);
+}
+
+.dock-expand-toggle svg {
+  color: oklch(52% .095 76);
+}
+
+.dock-collapse-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  flex: 0 0 auto;
+  border: 1px solid oklch(73% .022 250);
+  border-radius: 5px;
+  padding: .42rem .58rem;
+  background: oklch(98% .01 86);
+  color: oklch(43% .027 250);
+  font-size: var(--font-label);
+  white-space: nowrap;
+  transition: background .18s ease-out, border-color .18s ease-out, color .18s ease-out;
+}
+
+.dock-collapse-toggle:hover {
+  border-color: oklch(55% .095 76);
+  background: oklch(95% .036 78);
+  color: oklch(31% .035 250);
+}
+
+.dock-collapse-toggle svg {
+  color: oklch(52% .095 76);
+}
+
+.docked-orbit {
+  width: min(240px, 100%);
+  animation: planetDockIn .58s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.planet-dock-copy {
+  width: min(260px, 100%);
+  text-align: center;
+  animation: dockCopyIn .32s ease-out .22s both;
+}
+
+/* ---- 国王档案 ---- */
+.king-profile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .65rem;
+  align-items: start;
+  width: min(300px, 100%);
+  margin-top: .2rem;
+  padding: .45rem 0 0;
+  animation: dockCopyIn .32s ease-out .28s both;
+  color: var(--ui-ink);
+}
+
+.king-profile h3 {
+  margin: .12rem 0 .18rem;
+  color: oklch(30% .034 250);
+  font-size: var(--font-card);
+  line-height: 1.28;
+}
+
+.king-profile p {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--font-body);
+  line-height: 1.62;
+}
+
+.compact-player {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  width: min(260px, 100%);
+  padding: .62rem .7rem;
+}
+
+.compact-player :global(.king-portrait-slot) {
+  width: 54px;
+  height: 54px;
+}
+
+.compact-player h3 {
+  margin: .12rem 0 0;
+}
+
+/* ---- 响应式（顺序模拟原级联：00 的 680px 早于 50 的 760px 加载，
+ *     故 760px 块置于 680px 之后以保持重叠区间取 760px 生效值）---- */
+@media (max-width: 1100px) {
+  .planet-workbench,
+  .planet-workbench.detail-mode {
+    grid-template-columns: 1fr;
+  }
+
+  .planet-dock {
+    position: static;
+  }
+
+  .docked-orbit {
+    width: min(220px, 70vw);
+  }
+
+  .king-profile {
+    width: min(360px, 100%);
+  }
+}
+
+@media (max-width: 680px) {
+  .planet-stage {
+    min-height: 390px;
+    height: 58vh;
+  }
+
+  .planet-title {
+    bottom: .2rem;
+  }
+
+  .planet-title h2 {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 760px) {
+  .planet-title h2 {
+    font-size: var(--font-data-lg);
+  }
+
+  .planet-title {
+    width: min(420px, 92%);
+    bottom: 12.2rem;
+  }
+
+  .planet-home {
+    padding-bottom: 8rem;
+  }
+
+  .planet-stage {
+    height: 520px;
+    min-height: 420px;
+  }
+}
+
+/* ---- 入场动画（原 00-base，迁入模块保证哈希一致）---- */
+@keyframes planetWorkbenchReveal {
+  from {
+    opacity: .76;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes planetDockIn {
+  from {
+    transform: translate3d(42vw, 18vh, 0) scale(2.45);
+    opacity: .96;
+  }
+  to {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes dockCopyIn {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

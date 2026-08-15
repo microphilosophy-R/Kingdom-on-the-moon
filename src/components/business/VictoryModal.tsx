@@ -1,6 +1,7 @@
 import { Crown, Rocket, Building2, Users, BookOpen } from 'lucide-react'
 import { Button } from '../ui'
 import { fmtAmount } from '../../utils/format'
+import styles from './VictoryModal.module.css'
 
 interface VictoryModalProps {
   score: number
@@ -36,40 +37,40 @@ export function VictoryModal({
   const knowledgeScore = Math.round(knowledge * 2)
 
   return (
-    <div className="victory-scrim" role="presentation">
-      <section className="victory-modal" role="dialog" aria-modal="true" aria-label="国祚评定">
-        <header className="victory-header">
-          <div className="brand-seal victory-seal"><Crown size={28} /></div>
+    <div className={styles['victory-scrim']} role="presentation">
+      <section className={styles['victory-modal']} role="dialog" aria-modal="true" aria-label="国祚评定">
+        <header className={styles['victory-header']}>
+          <div className={`brand-seal ${styles['victory-seal']}`}><Crown size={28} /></div>
           <span className="eyebrow">千日试验终结 · 御日 {day}</span>
           <h1>国祚评定</h1>
         </header>
 
-        <div className="victory-score-area">
-          <span className="victory-number">{score}</span>
-          <span className="victory-rating">{rating.title}</span>
-          <p className="victory-flavor">{rating.subtitle}</p>
+        <div className={styles['victory-score-area']}>
+          <span className={styles['victory-number']}>{score}</span>
+          <span className={styles['victory-rating']}>{rating.title}</span>
+          <p className={styles['victory-flavor']}>{rating.subtitle}</p>
         </div>
 
-        <div className="victory-breakdown">
-          <div className="victory-dim">
+        <div className={styles['victory-breakdown']}>
+          <div className={styles['victory-dim']}>
             <Rocket size={18} />
             <span>御座号星舰完成度</span>
             <strong>{shipProgress}% × 8</strong>
             <b>{shipScore}</b>
           </div>
-          <div className="victory-dim">
+          <div className={styles['victory-dim']}>
             <Building2 size={18} />
             <span>设施总等级</span>
             <strong>{facilityTotalLevel} × 12</strong>
             <b>{facilityScore}</b>
           </div>
-          <div className="victory-dim">
+          <div className={styles['victory-dim']}>
             <Users size={18} />
             <span>招募异客角色</span>
             <strong>{roleCount} × 25</strong>
             <b>{roleScore}</b>
           </div>
-          <div className="victory-dim">
+          <div className={styles['victory-dim']}>
             <BookOpen size={18} />
             <span>知识储量</span>
             <strong>{fmtAmount(knowledge)} × 2</strong>
@@ -77,7 +78,7 @@ export function VictoryModal({
           </div>
         </div>
 
-        <footer className="victory-footer">
+        <footer className={styles['victory-footer']}>
           <Button variant="primary" onClick={onRestart}>重返起点</Button>
         </footer>
       </section>

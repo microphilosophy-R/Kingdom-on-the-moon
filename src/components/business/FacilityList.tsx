@@ -19,6 +19,7 @@ import type { ReactNode } from 'react'
 import { facilityEra, facilityEraSections, specialFacilityViews } from '../../data/eraSections'
 import type { ProductionMethodId, Resources } from '../../economy'
 import type { FacilityOrderMode, Region, RegionId } from '../../types/game'
+import styles from './FacilityList.module.css'
 
 export interface FacilityListProps {
   regions: Region[]
@@ -60,13 +61,13 @@ export function FacilityList({
   return (
     <section className="facility-ledger">
       <SectionHeading eyebrow="主要设施" title="建筑名录" description="D/R/S/K/L 进入专属系统页。">{children}</SectionHeading>
-      <div className="facility-era-list">
+      <div className={styles['facility-era-list']}>
         {facilityEraSections.map(section => {
           const sectionRegions = regions.filter(region => facilityEra[region.id] === section.id)
           return (
-            <section key={section.id} className="facility-era-section">
+            <section key={section.id} className={styles['facility-era-section']}>
               <header><span>{section.label}</span><small>{section.note}</small></header>
-              <div className="facility-ledger-list">
+              <div className={styles['facility-ledger-list']}>
                 {sectionRegions.map(region => {
                   const RegionIcon = region.icon
                   const worker = roster.find(item => item.id === assigned[region.id])
@@ -89,18 +90,18 @@ export function FacilityList({
                   const populationText = fixed ? '固定' : housingCapacity ? `${residentsByFacility[region.id] ?? 0}/${housingCapacity}` : capacity ? `${assignedPop}/${capacity}` : '未建'
                   const throughputText = fixed ? '在线' : region.level === 0 ? '未建' : `${Math.round(throughput * 100)}%`
                   return (
-                    <div key={region.id} className={`ledger-card ${selected === region.id ? 'selected' : ''} ${special ? 'special' : ''} throughput-${throughputClass(throughput)}`}>
-                      <div className="ledger-block ledger-identity">
-                        <div className="ledger-icon-square"><img src={artwork} alt={region.name} /></div>
+                    <div key={region.id} className={`${styles['ledger-card']} ${selected === region.id ? styles['selected'] : ''} ${special ? styles['special'] : ''} throughput-${throughputClass(throughput)}`}>
+                      <div className={`${styles['ledger-block']} ${styles['ledger-identity']}`}>
+                        <div className={styles['ledger-icon-square']}><img src={artwork} alt={region.name} /></div>
                         <b>{region.name}</b>
                         {worker && <i title={`${worker.name} 执勤`}>{worker.glyph}</i>}
                       </div>
-                      <div className="ledger-block ledger-economy-block">
-                        <div className="ledger-stat-row"><span className="ledger-stat-label">{fixed ? '岗位' : housingCapacity ? '居住容量' : '岗位占用'}</span><span className="ledger-stat-value"><em className="ledger-pop-count"><Users size={13} /><strong>{populationText}</strong></em></span></div>
+                      <div className={`${styles['ledger-block']} ${styles['ledger-economy-block']}`}>
+                        <div className={styles['ledger-stat-row']}><span className={styles['ledger-stat-label']}>{fixed ? '岗位' : housingCapacity ? '居住容量' : '岗位占用'}</span><span className={styles['ledger-stat-value']}><em className="ledger-pop-count"><Users size={13} /><strong>{populationText}</strong></em></span></div>
                         <FacilityNetRow net={actualNet} compact empty="-" />
                       </div>
-                      <div className="ledger-block ledger-action-block">
-                        <label className="ledger-method-switch" onClick={event => event.stopPropagation()}>
+                      <div className={`${styles['ledger-block']} ${styles['ledger-action-block']}`}>
+                        <label className={styles['ledger-method-switch']} onClick={event => event.stopPropagation()}>
                           <select value={method.id} onChange={event => onMethod(region.id, event.target.value as ProductionMethodId)} aria-label={`${region.name}生产方式`}>
                             {spec.productionMethods.map(candidate => {
                               const ready = hasTech(techs, candidate.unlockedBy) && candidate.autoSelect !== false
@@ -110,10 +111,10 @@ export function FacilityList({
                           </select>
                           <ChevronDown size={14} aria-hidden="true" />
                         </label>
-                        <button className="ledger-quick-upgrade" type="button" disabled={!canQuickUpgrade} onClick={event => { event.stopPropagation(); onUpgrade(region.id, 'expand') }}>
+                        <button className={styles['ledger-quick-upgrade']} type="button" disabled={!canQuickUpgrade} onClick={event => { event.stopPropagation(); onUpgrade(region.id, 'expand') }}>
                           <ArrowUpRight size={14} />单次升级
                         </button>
-                        <button className="ledger-detail" type="button" onClick={event => { event.stopPropagation(); onSelect(region.id) }}>
+                        <button className={styles['ledger-detail']} type="button" onClick={event => { event.stopPropagation(); onSelect(region.id) }}>
                           <Info size={14} />建筑详情
                         </button>
                       </div>

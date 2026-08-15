@@ -1,0 +1,15 @@
+/* 迁移自 62-settings-modal.css 2086-2099 */
+.facility-order-glyph {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.15;
+}
+
+.facility-order-glyph.continuous {
+  stroke-width: 1.9;
+}

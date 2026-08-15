@@ -4,6 +4,7 @@ import { fmt, fmtAmount } from '../../utils/format'
 import type { ReignReport } from '../../types/game'
 import { Button, IconButton } from '../ui'
 import { TrendChart, type TrendSeries } from './TrendChart'
+import styles from './ReignReportModal.module.css'
 
 export interface ReignReportModalProps {
   report: ReignReport
@@ -51,8 +52,8 @@ export function ReignReportModal({ report, onClose }: ReignReportModalProps) {
   ]
 
   return (
-    <div className="reign-report-scrim" role="presentation">
-      <section className="reign-report-modal" role="dialog" aria-modal="true" aria-label="王月报告">
+    <div className={styles['reign-report-scrim']} role="presentation">
+      <section className={styles['reign-report-modal']} role="dialog" aria-modal="true" aria-label="王月报告">
         <header>
           <div>
             <span className="eyebrow">{gameCalendar.monthName} {report.monthNumber} · {formatDay(report.startDay)} 至 {formatDay(report.endDay)}</span>
@@ -61,14 +62,14 @@ export function ReignReportModal({ report, onClose }: ReignReportModalProps) {
           <IconButton label="关闭王月报告" onClick={onClose}><X size={16} /></IconButton>
         </header>
 
-        <div className="reign-report-kpis">
+        <div className={styles['reign-report-kpis']}>
           <div><span>人口变化</span><strong>{populationDelta}</strong><small>{fmt(report.populationEnd)}/{fmtAmount(report.housingCapacity)} 人</small></div>
-          <div><span>GDP</span><strong>{report.gdp.toFixed(1)}</strong><small className={report.gdpDelta < 0 ? 'negative' : ''}>{gdpDelta} 星海货币/日</small></div>
+          <div><span>GDP</span><strong>{report.gdp.toFixed(1)}</strong><small className={report.gdpDelta < 0 ? styles.negative : ''}>{gdpDelta} 星海货币/日</small></div>
           <div><span>阶段长度</span><strong>{report.endDay - report.startDay + 1}</strong><small>御日，50 御日为一王月</small></div>
         </div>
 
         {report.phaseGuidance && (
-          <div className="reign-phase-guidance">
+          <div className={styles['reign-phase-guidance']}>
             <h3><Target size={15} />当前阶段目标：{report.phaseGuidance.title}</h3>
             <p>{report.phaseGuidance.description}</p>
             <ul>
@@ -77,8 +78,8 @@ export function ReignReportModal({ report, onClose }: ReignReportModalProps) {
           </div>
         )}
 
-        <div className="reign-report-grid">
-          <div className="reign-charts-panel">
+        <div className={styles['reign-report-grid']}>
+          <div className={styles['reign-charts-panel']}>
             <TrendChart
               data={report.trendPoints}
               series={populationSeries}
@@ -102,7 +103,7 @@ export function ReignReportModal({ report, onClose }: ReignReportModalProps) {
 
           <section>
             <h3>下个王月方向</h3>
-            <ol className="reign-suggestion-list">
+            <ol className={styles['reign-suggestion-list']}>
               {report.suggestions.map(item => <li key={item}>{item}</li>)}
             </ol>
           </section>

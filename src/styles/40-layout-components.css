@@ -64,10 +64,6 @@
   color: oklch(34% .06 150);
 }
 
-.facility-ledger-list button::before {
-  display: none;
-}
-
 .technology-tree-scroll {
   border: 1px solid var(--ui-line);
   border-radius: 7px;
@@ -160,11 +156,6 @@
   align-items: start;
 }
 
-.tech-image-placeholder {
-  width: 96px;
-  height: 60px;
-}
-
 .tech-card-copy {
   display: grid;
   align-content: start;
@@ -184,16 +175,6 @@
 }
 
 @media (max-width: 1100px) {
-  .start-gate {
-    grid-template-columns: 1fr;
-  }
-
-  .start-console {
-    position: absolute;
-    right: clamp(1rem, 4vw, 3rem);
-    bottom: clamp(1rem, 4vw, 3rem);
-  }
-
   .facility-detail-page {
     grid-template-columns: 1fr;
   }
@@ -216,26 +197,6 @@
 
   .page-content {
     padding-bottom: 9rem;
-  }
-
-  .start-gate {
-    padding: .75rem;
-  }
-
-  .start-orbit {
-    min-height: 520px;
-  }
-
-  .start-console {
-    right: .75rem;
-    bottom: .75rem;
-    left: .75rem;
-    max-width: none;
-    padding: 1rem;
-  }
-
-  .start-console h1 {
-    font-size: 28px;
   }
 
   .resource-rail {
@@ -353,14 +314,11 @@ h3,
 .group-label,
 .resource small,
 .resource-atom small,
-.facility-ledger-list small,
 .policy-cards small,
 .tech-card-top > span,
 .technology-book > div:first-child small,
 .event-transmission-head span,
 .event-transmission-head small,
-.retainer-copy > span,
-.retainer-duty small,
 .special-facility-stats span,
 .special-production-row span,
 .research-rule-box > span {
@@ -380,10 +338,6 @@ h3,
 .policy-report-body small,
 .tech-card-copy p,
 .research-rule-box p,
-.visitor-hero p,
-.retainer-copy p,
-.planet-dock p,
-.king-profile p,
 .letter-body {
   color: var(--ui-muted);
   font-size: var(--font-body);
@@ -394,14 +348,11 @@ h3,
 .letter-symbol,
 .signal-being,
 .facility-icon,
-.ledger-icon,
 .node-icon,
 .special-panel-icon,
 .palace-mark,
 .policy-cards button > span,
-.retainer-portrait,
 .king-portrait-slot,
-.tech-image-placeholder,
 .visitor-portrait-slot {
   border-color: var(--ui-line-strong);
   color: var(--ui-brass);
@@ -415,9 +366,6 @@ h3,
 .inspector,
 .policy-board,
 .tech-cabinet,
-.visitor-hero,
-.roster-board,
-.planet-dock,
 .facility-ledger,
 .system-panel,
 .special-system-main,
@@ -437,8 +385,7 @@ h3,
 }
 
 .welcome-panel,
-.signal-panel,
-.visitor-hero {
+.signal-panel {
   background: linear-gradient(135deg, var(--ui-parchment), var(--ui-surface) 64%);
 }
 
@@ -462,7 +409,6 @@ h3,
 .resource,
 .facility-summary button,
 .facility-node,
-.facility-ledger-list button,
 .policy-cards button,
 .ship-stage-list article,
 .trade-board p,
@@ -472,7 +418,6 @@ h3,
 .production-methods article,
 .action-facts > div,
 .phase-list > p,
-.retainer,
 .worker-card,
 .palace-output,
 .special-facility-stats > div,
@@ -491,10 +436,7 @@ h3,
 .staffing-buttons button,
 .facility-actions button,
 .special-secondary-action,
-.retainer-duty button,
-.retainer-copy button,
 .art-button,
-.planet-title button,
 .system-hero button,
 .palace-hero button {
   border-color: var(--ui-line-strong);
@@ -513,14 +455,10 @@ h3,
 .staffing-buttons button:hover:not(:disabled),
 .facility-actions button:hover:not(:disabled),
 .special-secondary-action:hover,
-.retainer-duty button:hover,
-.retainer-copy button:hover,
 .art-button:hover,
-.planet-title button:hover,
 .system-hero button:hover,
 .palace-hero button:hover,
 .facility-summary button:hover,
-.facility-ledger-list button:hover,
 .policy-cards button:hover:not(:disabled),
 .tech-card:hover:not(:disabled),
 .production-methods article:hover {
@@ -538,8 +476,7 @@ h3,
 .policy-cards button.selected,
 .tech-card.researching,
 .production-methods article.active,
-.facility-node.selected,
-.facility-ledger-list button.selected {
+.facility-node.selected {
   border-color: var(--ui-brass-dark);
   background: var(--ui-brass-soft);
   color: var(--ui-ink-strong);

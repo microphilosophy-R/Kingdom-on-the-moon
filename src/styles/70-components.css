@@ -3,23 +3,3 @@
   --ui-panel-shadow: 0 8px 22px var(--ui-shadow);
 }
 
-.ui-panel {
-  border: 1px solid var(--ui-line);
-  border-radius: var(--ui-panel-radius);
-  background: var(--ui-surface);
-  color: var(--ui-ink);
-  box-shadow: var(--ui-panel-shadow);
-}
-
-.ui-panel-parchment {
-  background: linear-gradient(135deg, var(--ui-parchment), var(--ui-surface) 64%);
-}
-
-.ui-panel-hero {
-  background: linear-gradient(150deg, oklch(29% .042 250), oklch(35% .042 248));
-  color: oklch(94% .018 83);
-}
-
-.ui-panel-raised {
-  background: var(--ui-raised);
-}

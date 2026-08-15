@@ -5,6 +5,7 @@ import { PortraitSlot } from '../ui'
 import { FacilityList } from './FacilityList'
 import { FacilityDetailPanel } from './FacilityDetailPanel'
 import { formatDay } from '../../utils/format'
+import styles from './PlanetFacilities.module.css'
 import charChenlin from '../../assets/char-00.jpg'
 import type { AutomationPlan, PopulationProjection, ProductionMethodId, Resources } from '../../economy'
 import type { Role } from '../../events'
@@ -107,10 +108,10 @@ export function PlanetFacilities({
 }: PlanetFacilitiesProps) {
   if (!docked) {
     return (
-      <div className="planet-home">
-        <div className="planet-stage">
+      <div className={styles['planet-home']}>
+        <div className={styles['planet-stage']}>
           <PlanetScene texture={planetTexture} onActivate={onDock} />
-          <div className="planet-title">
+          <div className={styles['planet-title']}>
             <span className="eyebrow">殖民星球 · {planetTexture.name}</span>
             <h2>静海王国</h2>
             <p>{formatDay(year)} · 已启动 {regions.filter(region => region.level > 0).length}/{regions.length} 座设施</p>
@@ -122,11 +123,11 @@ export function PlanetFacilities({
   }
 
   return (
-    <div className={`planet-workbench ${detailOpen ? 'detail-mode' : ''} ${dockCollapsed ? 'dock-collapsed' : ''}`}>
+    <div className={`${styles['planet-workbench']} ${detailOpen ? styles['detail-mode'] : ''} ${dockCollapsed ? styles['dock-collapsed'] : ''}`}>
       {dockCollapsed && !detailOpen && (
         <button
           type="button"
-          className="dock-expand-toggle"
+          className={styles['dock-expand-toggle']}
           onClick={onToggleDockCollapse}
           aria-label="展开左侧信息"
           title="展开左侧信息"
@@ -136,10 +137,10 @@ export function PlanetFacilities({
         </button>
       )}
       {!detailOpen && !dockCollapsed && (
-        <section className="planet-dock">
+        <section className={styles['planet-dock']}>
           <button
             type="button"
-            className="dock-collapse-toggle"
+            className={styles['dock-collapse-toggle']}
             onClick={onToggleDockCollapse}
             aria-label="收起左侧信息"
             title="收起左侧信息"
@@ -147,9 +148,9 @@ export function PlanetFacilities({
             <PanelLeftClose size={14} />
             <span>收起</span>
           </button>
-          <div className="docked-orbit"><PlanetScene texture={planetTexture} compact onActivate={() => onBack()} /></div>
-          <div className="planet-dock-copy"><span className="eyebrow">殖民星球</span><h2>{planetTexture.name}</h2><p>{formatDay(year)}，国祚仍在设施、报告与星舰之间被重新分配。</p></div>
-          <aside className="king-profile compact-player">
+          <div className={styles['docked-orbit']}><PlanetScene texture={planetTexture} compact onActivate={() => onBack()} /></div>
+          <div className={styles['planet-dock-copy']}><span className="eyebrow">殖民星球</span><h2>{planetTexture.name}</h2><p>{formatDay(year)}，国祚仍在设施、报告与星舰之间被重新分配。</p></div>
+          <aside className={`${styles['king-profile']} ${styles['compact-player']}`}>
             <PortraitSlot src={charChenlin} alt="陈林 · 月面王" className="king-portrait-slot" />
             <div><span className="eyebrow">玩家国王</span><h3>月冠执政者</h3></div>
           </aside>

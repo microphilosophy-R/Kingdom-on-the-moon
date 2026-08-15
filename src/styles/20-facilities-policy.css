@@ -1,4 +1,4 @@
-﻿.special-staffing-meter > span {
+.special-staffing-meter > span {
   display: block;
   height: 100%;
   background: oklch(72% .105 78 / .56);
@@ -204,21 +204,6 @@
   font-size: var(--font-micro);
   white-space: nowrap;
 }
-.tech-image-placeholder {
-  width: 120px;
-  height: 74px;
-  color: oklch(52% .09 76);
-}
-.tech-image-placeholder rect,
-.tech-image-placeholder circle,
-.tech-image-placeholder path {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-}
-.tech-image-placeholder .active-line {
-  stroke: oklch(48% .1 205);
-}
 .tech-card-copy h3 {
   margin: 0 0 .32rem;
   color: oklch(28% .035 250);
@@ -230,22 +215,6 @@
   color: oklch(43% .026 250);
   font-size: var(--font-label);
   line-height: 1.62;
-}
-.tech-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .28rem;
-}
-.tech-tags span {
-  display: inline-flex;
-  align-items: center;
-  gap: .18rem;
-  border: 1px solid oklch(74% .019 250);
-  border-radius: 4px;
-  padding: .24rem .34rem;
-  background: oklch(98% .008 86);
-  color: oklch(39% .03 250);
-  font-size: var(--font-micro);
 }
 .tech-prerequisites {
   display: grid;

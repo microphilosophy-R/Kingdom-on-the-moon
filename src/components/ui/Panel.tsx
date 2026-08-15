@@ -1,4 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react'
+import styles from './Panel.module.css'
 
 export type PanelVariant = 'surface' | 'parchment' | 'hero' | 'raised'
 export type PanelAs = 'div' | 'section' | 'aside' | 'article' | 'header' | 'footer'
@@ -10,10 +11,10 @@ export interface PanelProps extends HTMLAttributes<HTMLElement> {
 }
 
 const variantClass: Record<PanelVariant, string> = {
-  surface: 'ui-panel',
-  parchment: 'ui-panel ui-panel-parchment',
-  hero: 'ui-panel ui-panel-hero',
-  raised: 'ui-panel ui-panel-raised',
+  surface: styles['ui-panel'],
+  parchment: `${styles['ui-panel']} ${styles['ui-panel-parchment']}`,
+  hero: `${styles['ui-panel']} ${styles['ui-panel-hero']}`,
+  raised: `${styles['ui-panel']} ${styles['ui-panel-raised']}`,
 }
 
 export function Panel({

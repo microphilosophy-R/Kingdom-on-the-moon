@@ -1,0 +1,51 @@
+/* 迁移自 30-special-systems.css 325-374 */
+.info-toggle {
+  position: relative;
+  display: inline-grid;
+  justify-items: end;
+}
+
+.info-toggle > button {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 50%;
+  background: var(--ui-raised);
+  color: var(--ui-brass-dark);
+  cursor: help;
+}
+
+.info-toggle.open > button,
+.info-toggle > button:hover,
+.info-toggle > button:focus-visible {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+  outline: none;
+}
+
+.info-toggle > div {
+  position: absolute;
+  top: calc(100% + .35rem);
+  right: 0;
+  z-index: 20;
+  width: min(330px, 78vw);
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 6px;
+  padding: .68rem .75rem;
+  background: var(--ui-surface);
+  box-shadow: 0 14px 34px var(--ui-shadow);
+  text-align: left;
+}
+
+.info-toggle p {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--font-note);
+  line-height: 1.65;
+}
+
+.info-toggle p + p {
+  margin-top: .45rem;
+}

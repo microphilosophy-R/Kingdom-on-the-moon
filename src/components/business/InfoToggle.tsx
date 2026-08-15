@@ -1,5 +1,6 @@
 import { Info } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import styles from './InfoToggle.module.css'
 
 export interface InfoToggleProps {
   title: string
@@ -48,7 +49,7 @@ export function InfoToggle({ title, children, autoCloseMs = 7200 }: InfoTogglePr
   }, [open, autoCloseMs])
 
   return (
-    <span ref={hostRef} className={`info-toggle ${open ? 'open' : ''}`} onPointerDownCapture={() => open && scheduleClose()}>
+    <span ref={hostRef} className={`${styles['info-toggle']} ${open ? styles.open : ''}`} onPointerDownCapture={() => open && scheduleClose()}>
       <button type="button" aria-label={title} aria-expanded={open} title={title} onClick={() => setOpen(previous => !previous)}><Info size={13} /></button>
       {open && <div role="tooltip">{children}</div>}
     </span>

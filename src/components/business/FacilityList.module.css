@@ -1,0 +1,401 @@
+/* Phase 3 m4: FacilityList 迁移。
+ * 规则来源：00-base-shell.css / 10-resources-events.css / 40-layout-components.css /
+ * 45-typography.css / 50-theme-overrides.css / 62-settings-modal.css（按加载顺序合并 cascade）。
+ * facility-ledger 为共享 shell 类（被 .planet-workbench.dock-collapsed 布局与 TutorialOverlay
+ * targetSelector 引用），保留全局；本节其余类全部局部化。
+ * throughput-* 为全局共享类，以 :global() 组合引用。 */
+
+/* ---- 结构 ---- */
+.facility-era-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.facility-era-section {
+  display: grid;
+  gap: .55rem;
+  container-type: inline-size;
+  container-name: facility-era;
+}
+
+.facility-era-section > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid oklch(78% .016 250);
+  padding-bottom: .38rem;
+}
+
+.facility-era-section > header span {
+  color: oklch(35% .034 250);
+  font-family: var(--ui-serif);
+  font-size: var(--font-data);
+  font-weight: 700;
+}
+
+.facility-era-section > header small {
+  color: oklch(49% .024 250);
+  font-size: var(--font-micro);
+}
+
+.facility-ledger-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
+  margin-top: 1rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ---- 卡片（10-resources 76-115 与 62-settings 1761-1766 合并，62 后加载覆盖生效） ---- */
+.ledger-card {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(74px, .68fr) minmax(0, 1.18fr) minmax(124px, .84fr);
+  gap: .48rem;
+  align-items: stretch;
+  min-height: 108px;
+  border: 1px solid oklch(76% .018 250);
+  border-radius: 6px;
+  padding: .58rem;
+  background: oklch(99% .006 85);
+  text-align: left;
+  overflow: visible;
+  box-shadow: 0 4px 12px oklch(30% .03 250 / .06), 0 1px 3px oklch(30% .03 250 / .04);
+}
+
+.ledger-card:hover {
+  border-color: oklch(55% .095 76);
+  background: oklch(96% .025 80);
+}
+
+.ledger-card.selected {
+  border-color: oklch(50% .1 76);
+  box-shadow: inset 0 0 0 1px oklch(50% .1 76);
+}
+
+.ledger-card.special {
+  background: linear-gradient(135deg, oklch(97% .016 86), oklch(93% .027 79));
+}
+
+.ledger-card::before {
+  position: absolute;
+  content: '';
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: oklch(70% .02 250);
+}
+
+.ledger-card:global(.throughput-idle)::before { background: oklch(68% .018 250); }
+.ledger-card:global(.throughput-thin)::before { background: oklch(65% .14 28); }
+.ledger-card:global(.throughput-steady)::before { background: var(--ui-success); }
+.ledger-card:global(.throughput-surged)::before { background: var(--ui-brass); }
+
+/* ---- 卡片块 ---- */
+.ledger-block {
+  display: grid;
+  align-content: start;
+  gap: .42rem;
+  min-width: 0;
+}
+
+.ledger-identity {
+  grid-template-rows: 1fr auto;
+  justify-items: center;
+  text-align: center;
+  position: relative;
+  padding: .4rem .35rem;
+}
+
+.ledger-icon-square {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 80px;
+  place-items: center;
+  border: 1px solid oklch(59% .095 76);
+  border-radius: 6px;
+  background: var(--ui-raised);
+  color: oklch(48% .1 76);
+  box-shadow: inset 0 -3px 0 oklch(60% .1 76 / .18);
+  overflow: hidden;
+}
+
+.ledger-icon-square img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ledger-icon-square svg {
+  color: oklch(48% .1 76);
+}
+
+/* b 合并：00:96 + 10:155 + 45:90-91 + 50:27-38（font-size/line-height 取 50 后加载值） */
+.ledger-identity b {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
+  font-size: var(--font-card);
+  line-height: 1.32;
+  color: var(--ui-ink-strong);
+  font-family: var(--ui-serif);
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ledger-identity i {
+  position: absolute;
+  top: .22rem;
+  right: .22rem;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid oklch(57% .1 76);
+  border-radius: 50%;
+  background: var(--ui-raised);
+  color: oklch(48% .09 76);
+  font-size: var(--font-micro);
+  font-style: normal;
+}
+
+/* ---- 经济块（62:1768-1786；stat-row 在 JSX 中仅出现在 economy 块内，合并两处规则） ---- */
+.ledger-economy-block {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: .34rem;
+  padding: .32rem .5rem;
+  border-left: 1px solid oklch(80% .018 84);
+  border-right: 1px solid oklch(80% .018 84);
+}
+
+.ledger-stat-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .32rem;
+  align-items: start;
+  min-height: 26px;
+  padding: 0;
+  min-width: 0;
+}
+
+.ledger-stat-label {
+  color: var(--ui-muted);
+  font-size: var(--font-label);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* value 合并 45:181-191 的 mono/data 排版 */
+.ledger-stat-value {
+  display: inline-flex;
+  gap: .28rem;
+  align-items: center;
+  justify-content: flex-end;
+  font-family: var(--ui-mono);
+  font-size: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.ledger-stat-value em {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .28rem;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  min-width: auto;
+  height: auto;
+  background: transparent;
+  color: oklch(31% .032 250);
+  font-family: var(--ui-mono);
+  font-size: var(--font-body);
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.ledger-stat-value em svg {
+  flex: 0 0 auto;
+  color: oklch(48% .08 76);
+  margin-top: .05rem;
+}
+
+.ledger-stat-value em strong {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ---- 操作块（10:230-322 与 62:1788-1844 合并） ---- */
+.ledger-action-block {
+  grid-template-rows: auto 1fr 1fr;
+  justify-items: stretch;
+  align-items: stretch;
+  gap: .38rem;
+  padding: .35rem .35rem .35rem .6rem;
+}
+
+.ledger-method-switch {
+  position: relative;
+  display: grid;
+  gap: .18rem;
+  min-width: 0;
+}
+
+.ledger-method-switch select {
+  width: 100%;
+  height: 34px;
+  min-height: 34px;
+  appearance: none;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 5px;
+  padding: 0 1.72rem 0 .48rem;
+  background: var(--ui-parchment);
+  color: var(--ui-brass-dark);
+  font-size: var(--font-button);
+  font-weight: 800;
+  line-height: 1;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.ledger-method-switch select:hover,
+.ledger-method-switch select:focus-visible {
+  border-color: var(--ui-brass-dark);
+  background: var(--ui-brass-soft);
+  color: var(--ui-ink-strong);
+  outline: none;
+}
+
+.ledger-method-switch svg {
+  position: absolute;
+  right: .44rem;
+  bottom: .64rem;
+  pointer-events: none;
+  color: var(--ui-brass-dark);
+}
+
+.ledger-action-block .ledger-quick-upgrade,
+.ledger-action-block .ledger-detail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .28rem;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 .6rem;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 5px;
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: var(--font-label);
+  font-weight: 700;
+  line-height: 1;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+
+.ledger-action-block .ledger-quick-upgrade:hover:not(:disabled),
+.ledger-action-block .ledger-detail:hover:not(:disabled) {
+  border-color: var(--ui-brass);
+  background: var(--ui-brass-soft);
+  color: var(--ui-ink-strong);
+}
+
+.ledger-action-block .ledger-quick-upgrade:not(:disabled) {
+  border-color: var(--ui-brass-dark);
+  background: var(--ui-brass);
+  color: oklch(97% .012 86);
+}
+
+.ledger-action-block .ledger-quick-upgrade:hover:not(:disabled) {
+  background: oklch(60% .11 76);
+  color: oklch(98% .01 86);
+}
+
+.ledger-action-block .ledger-quick-upgrade:disabled,
+.ledger-action-block .ledger-detail:disabled {
+  border-color: oklch(80% .012 84);
+  background: oklch(92% .012 86);
+  color: var(--ui-muted-2);
+  cursor: not-allowed;
+}
+
+/* ---- 响应式（00:157/160 + 10:414-432 + 62:1912-1964 合并） ---- */
+@media (max-width: 900px) {
+  .facility-ledger-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .ledger-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "identity"
+      "economy"
+      "action";
+    min-height: 0;
+  }
+
+  .ledger-identity {
+    grid-area: identity;
+  }
+
+  .ledger-economy-block {
+    grid-area: economy;
+    border: 1px solid var(--ui-line);
+    border-radius: 5px;
+    padding: .48rem;
+  }
+
+  .ledger-action-block {
+    grid-area: action;
+    min-width: 0;
+    padding: .48rem 0 0;
+  }
+}
+
+@container facility-era (max-width: 760px) {
+  .facility-ledger-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@container facility-era (max-width: 560px) {
+  .ledger-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "identity"
+      "economy"
+      "action";
+  }
+
+  .ledger-identity {
+    grid-area: identity;
+  }
+
+  .ledger-economy-block {
+    grid-area: economy;
+    border: 1px solid var(--ui-line);
+    border-radius: 5px;
+    padding: .48rem;
+  }
+
+  .ledger-action-block {
+    grid-area: action;
+    min-width: 0;
+    padding: .48rem 0 0;
+  }
+}

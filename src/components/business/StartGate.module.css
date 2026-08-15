@@ -1,0 +1,213 @@
+/* 迁移自 30-special-systems.css 70-247 + 40-layout-components.css 180-233（响应式） */
+.start-gate {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(360px, 1.35fr) minmax(320px, .75fr);
+  min-height: 100vh;
+  overflow: hidden;
+  padding: clamp(1.2rem, 4vw, 3.2rem);
+  background:
+    linear-gradient(180deg, var(--ui-shell), var(--ui-shell-2));
+}
+
+.start-gate::before {
+  position: fixed;
+  content: '';
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(oklch(52% .025 78 / .16) .55px, transparent .75px),
+    linear-gradient(90deg, transparent 49.9%, oklch(58% .02 84 / .08) 50%, transparent 50.1%);
+  background-size: 12px 12px, 180px 180px;
+}
+
+.start-orbit {
+  position: relative;
+  min-height: min(760px, calc(100vh - 6rem));
+}
+
+.start-orbit :global(.planet-scene) {
+  min-height: 520px;
+}
+
+.start-console {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  display: grid;
+  gap: .9rem;
+  max-width: 420px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  padding: 1.45rem;
+  background: oklch(97% .01 86 / .94);
+  box-shadow: 0 20px 54px var(--ui-shadow);
+}
+
+.start-console h1 {
+  margin: .05rem 0 0;
+  font-size: 36px;
+  line-height: 1.12;
+}
+
+.start-console p {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--font-body);
+  line-height: 1.75;
+}
+
+.start-options {
+  display: grid;
+  gap: .7rem;
+  padding: .85rem 0 .25rem;
+  border-top: 1px dashed var(--ui-line);
+}
+
+.start-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+}
+
+.start-option-label {
+  font-size: var(--font-note);
+  font-weight: 700;
+  color: var(--ui-muted);
+  display: grid;
+  gap: .15rem;
+}
+
+.start-option-label small {
+  font-weight: 500;
+  color: oklch(52% .02 84);
+  font-size: calc(var(--font-note) - 1px);
+}
+
+.difficulty-picker {
+  display: inline-flex;
+  border: 1px solid var(--ui-line);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.difficulty-chip {
+  border: none;
+  border-right: 1px solid var(--ui-line);
+  padding: .42rem .7rem;
+  background: var(--ui-raised);
+  color: var(--ui-muted);
+  font-size: var(--font-note);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .16s ease-out, color .16s ease-out;
+}
+
+.difficulty-chip:last-child {
+  border-right: none;
+}
+
+.difficulty-chip:hover {
+  background: oklch(95% .036 78);
+}
+
+.difficulty-chip:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+.difficulty-chip:disabled:hover {
+  background: var(--ui-raised);
+}
+
+.difficulty-chip.active {
+  background: var(--ui-brass);
+  color: oklch(20% .03 78);
+}
+
+.toggle-row {
+  cursor: pointer;
+}
+
+.toggle-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ui-brass);
+  cursor: pointer;
+}
+
+.toggle-row input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+.start-autosave-hint {
+  margin: .1rem 0 0;
+  color: oklch(50% .05 205);
+  font-size: var(--font-note);
+  line-height: 1.55;
+}
+
+.start-actions {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+.settings-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  padding: .7rem .9rem;
+  background: var(--ui-raised);
+  color: var(--ui-muted);
+  font-size: var(--font-note);
+  font-weight: 700;
+  cursor: pointer;
+  transition: color .18s ease-out, border-color .18s ease-out, background .18s ease-out, box-shadow .18s ease-out;
+}
+
+.settings-secondary-btn:hover {
+  border-color: var(--ui-brass);
+  color: var(--ui-brass);
+  background: oklch(95% .036 78);
+  box-shadow: 0 4px 12px oklch(52% .105 76 / .15);
+}
+
+@media (max-width: 1100px) {
+  .start-gate {
+    grid-template-columns: 1fr;
+  }
+
+  .start-console {
+    position: absolute;
+    right: clamp(1rem, 4vw, 3rem);
+    bottom: clamp(1rem, 4vw, 3rem);
+  }
+}
+
+@media (max-width: 680px) {
+  .start-gate {
+    padding: .75rem;
+  }
+
+  .start-orbit {
+    min-height: 520px;
+  }
+
+  .start-console {
+    right: .75rem;
+    bottom: .75rem;
+    left: .75rem;
+    max-width: none;
+    padding: 1rem;
+  }
+
+  .start-console h1 {
+    font-size: 28px;
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '../ui'
+import styles from './TutorialOverlay.module.css'
 
 interface TutorialStep {
   targetSelector: string
@@ -188,21 +189,21 @@ export function TutorialOverlay({ onComplete }: TutorialOverlayProps) {
   const tooltip = computeTooltip(targetRect, current.placement)
 
   return createPortal(
-    <div className="tutorial-overlay" role="dialog" aria-modal="true" aria-label="新手引导">
+    <div className={styles['tutorial-overlay']} role="dialog" aria-modal="true" aria-label="新手引导">
       {/* Scrim with cutout */}
 
       {/* Scrim top area */}
-      <div className="tutorial-scrim-block" style={{ top: 0, left: 0, right: 0, height: highlight.top }} />
+      <div className={styles['tutorial-scrim-block']} style={{ top: 0, left: 0, right: 0, height: highlight.top }} />
       {/* Scrim bottom area */}
-      <div className="tutorial-scrim-block" style={{ top: highlight.top + highlight.height, left: 0, right: 0, bottom: 0 }} />
+      <div className={styles['tutorial-scrim-block']} style={{ top: highlight.top + highlight.height, left: 0, right: 0, bottom: 0 }} />
       {/* Scrim left area */}
-      <div className="tutorial-scrim-block" style={{ top: highlight.top, left: 0, width: highlight.left, height: highlight.height }} />
+      <div className={styles['tutorial-scrim-block']} style={{ top: highlight.top, left: 0, width: highlight.left, height: highlight.height }} />
       {/* Scrim right area */}
-      <div className="tutorial-scrim-block" style={{ top: highlight.top, left: highlight.left + highlight.width, right: 0, height: highlight.height }} />
+      <div className={styles['tutorial-scrim-block']} style={{ top: highlight.top, left: highlight.left + highlight.width, right: 0, height: highlight.height }} />
 
       {/* Highlight box */}
       <div
-        className="tutorial-highlight"
+        className={styles['tutorial-highlight']}
         style={{
           left: highlight.left,
           top: highlight.top,
@@ -213,14 +214,14 @@ export function TutorialOverlay({ onComplete }: TutorialOverlayProps) {
 
       {/* Tooltip */}
       <div
-        className={`tutorial-tooltip ${tooltip.arrowClass}`}
+        className={`${styles['tutorial-tooltip']} ${styles[tooltip.arrowClass]}`}
         style={{ left: tooltip.left, top: tooltip.top }}
       >
-        <span className="tutorial-step-badge">{step + 1} / {tutorialSteps.length}</span>
+        <span className={styles['tutorial-step-badge']}>{step + 1} / {tutorialSteps.length}</span>
         <h3>{current.title}</h3>
         <p>{current.body}</p>
-        <div className="tutorial-actions">
-          <button className="tutorial-skip" onClick={onComplete}>跳过</button>
+        <div className={styles['tutorial-actions']}>
+          <button className={styles['tutorial-skip']} onClick={onComplete}>跳过</button>
           {isLast ? (
             <Button variant="primary" onClick={onComplete}>开始执政</Button>
           ) : (

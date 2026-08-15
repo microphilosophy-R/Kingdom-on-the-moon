@@ -88,14 +88,18 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
 
 export interface EcologyPhaseBlockProps {
   phaseNotes: { name: string; note: string }[] | undefined
+  progress?: number
 }
 
-export function EcologyPhaseBlock({ phaseNotes }: EcologyPhaseBlockProps) {
+export function EcologyPhaseBlock({ phaseNotes, progress = 0 }: EcologyPhaseBlockProps) {
+  const pct = Math.max(0, Math.min(100, progress))
   return (
     <section className="special-content-block phase-list">
       <div className="tech-tree-toolbar">
         <h3><Waves size={18} />生态阶段</h3>
+        <span className="tech-tree-scale">{pct}%</span>
       </div>
+      <div className="eco-progress-v2"><i style={{ width: `${pct}%` }} /></div>
       {phaseNotes?.map(phase => (
         <p key={phase.name} style={{ border: '1px solid var(--ui-line)', borderRadius: '5px', padding: '.55rem .62rem', background: 'var(--ui-surface)', marginBottom: '.42rem' }}>
           <b style={{ display: 'block', marginBottom: '.18rem', color: 'var(--ui-ink-strong)', fontSize: 'var(--font-card)' }}>{phase.name}</b>

@@ -4,6 +4,7 @@ import { regionLayout } from '../../data/regionLayout'
 import { displayCopy } from '../../utils/format'
 import { resourceUiMeta } from '../resources'
 import type { TechnologyId } from '../../economy'
+import styles from './TechnologyTags.module.css'
 
 export interface TechnologyTagsProps {
   tech: (typeof technologyCatalog)[TechnologyId]
@@ -15,7 +16,7 @@ export function TechnologyTags({ tech }: TechnologyTagsProps) {
   const resourceTags = resourceOrder.filter(key => displayCopy(tech.note).includes(resourceMeta[key].label)).slice(0, 3)
 
   return (
-    <div className="tech-tags">
+    <div className={styles['tech-tags']}>
       <span><ScopeIcon size={13} />{tech.scope === 'G' ? '全局' : facilityEconomySpecs[tech.scope].name}</span>
       {facilityTags.filter(id => id !== tech.scope).map(id => {
         const TagIcon = regionLayout[id].icon

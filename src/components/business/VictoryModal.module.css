@@ -1,0 +1,158 @@
+/* 迁移自 80-tutorial-victory.css 132-265 + 285-304（响应式）；eyebrow/brand-seal 共享保留全局 */
+.victory-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: oklch(14% .025 250 / .72);
+  backdrop-filter: blur(12px);
+}
+
+.victory-modal {
+  width: min(560px, 100%);
+  max-height: min(90vh, 680px);
+  overflow-y: auto;
+  border: 1px solid oklch(58% .08 76 / .65);
+  border-radius: 10px;
+  padding: 1.6rem 1.8rem;
+  background: linear-gradient(180deg, oklch(24% .03 250), oklch(17% .02 250));
+  box-shadow: 0 32px 100px oklch(10% .02 250 / .6);
+  text-align: center;
+}
+
+.victory-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+}
+
+.victory-seal {
+  width: 56px;
+  height: 56px;
+  margin-bottom: .3rem;
+  border-color: oklch(58% .1 76);
+  color: oklch(55% .11 76);
+  transform: rotate(-5deg);
+  font-size: 0;
+}
+
+.victory-header :global(.eyebrow) {
+  color: oklch(65% .04 76);
+}
+
+.victory-header h1 {
+  color: oklch(85% .04 86);
+  font-size: 26px;
+  letter-spacing: .14em;
+}
+
+.victory-score-area {
+  margin: 1.3rem 0 1.5rem;
+}
+
+.victory-number {
+  display: block;
+  color: oklch(82% .07 76);
+  font-family: var(--ui-mono);
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.victory-rating {
+  display: inline-block;
+  margin-top: .45rem;
+  border: 1px solid oklch(58% .1 76 / .55);
+  border-radius: 6px;
+  padding: .25rem 1rem;
+  background: oklch(55% .1 76 / .12);
+  color: oklch(75% .08 76);
+  font-family: var(--ui-serif);
+  font-size: 19px;
+  letter-spacing: .1em;
+}
+
+.victory-flavor {
+  margin: .55rem 0 0;
+  color: oklch(62% .03 250);
+  font-size: var(--font-button);
+  line-height: 1.6;
+}
+
+.victory-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .7rem;
+  margin-bottom: 1.4rem;
+}
+
+.victory-dim {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+  border: 1px solid oklch(40% .025 250 / .5);
+  border-radius: 8px;
+  padding: .8rem .6rem;
+  background: oklch(22% .02 250 / .4);
+}
+
+.victory-dim svg {
+  color: oklch(62% .05 76);
+  margin-bottom: .15rem;
+}
+
+.victory-dim span {
+  color: oklch(62% .03 76);
+  font-size: var(--font-micro);
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+
+.victory-dim strong {
+  color: oklch(72% .04 250);
+  font-family: var(--ui-mono);
+  font-size: var(--font-note);
+  font-weight: 600;
+}
+
+.victory-dim b {
+  color: oklch(78% .06 76);
+  font-family: var(--ui-mono);
+  font-size: var(--font-data-lg);
+}
+
+.victory-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.victory-footer button {
+  min-width: 160px;
+}
+
+@media (max-width: 680px) {
+  .victory-modal {
+    padding: 1.2rem 1rem;
+  }
+
+  .victory-number {
+    font-size: 40px;
+  }
+
+  .victory-breakdown {
+    grid-template-columns: 1fr;
+    gap: .5rem;
+  }
+
+  .victory-dim {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .4rem .8rem;
+    padding: .6rem .8rem;
+  }
+}

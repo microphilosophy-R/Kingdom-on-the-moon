@@ -1,0 +1,18 @@
+/* 迁移自 20-facilities-policy.css 234-249 + 50-theme-overrides.css 260（合并 cascade：border/background/color 以 50 为准） */
+.tech-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .28rem;
+}
+
+.tech-tags span {
+  display: inline-flex;
+  align-items: center;
+  gap: .18rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  padding: .24rem .34rem;
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: var(--font-micro);
+}
