@@ -230,7 +230,7 @@ describe('economy catalog', () => {
     expect(shipProjectStages).toEqual([
       expect.objectContaining({ id: 1, input: { alloy: 6000, oxygen: 6000 } }),
       expect.objectContaining({ id: 2, input: { alloy: 12000, regolith: 30000, biomass: 12000 } }),
-      expect.objectContaining({ id: 3, input: { quantumCore: 400, luxury: 12, alloy: 18000, water: 12000, biomass: 18000 } }),
+      expect.objectContaining({ id: 3, input: { quantumCore: 800, luxury: 12, alloy: 18000, water: 12000, biomass: 18000 } }),
     ])
     shipProjectStages.forEach(stage => {
       expect(stage.input.currency).toBeUndefined()

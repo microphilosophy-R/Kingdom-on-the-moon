@@ -91,13 +91,13 @@ type SimulationResult = {
 }
 
 const initialResources: Resources = {
-  power: 24,
-  water: 20,
-  oxygen: 24,
-  biomass: 16,
-  regolith: 80,
-  alloy: 60,
-  quantumCore: 2,
+  power: 0,
+  water: 90,
+  oxygen: 80,
+  biomass: 80,
+  regolith: 260,
+  alloy: 220,
+  quantumCore: 10,
   currency: 1000,
   population: 10,
   knowledge: 0,

@@ -23,14 +23,14 @@ import type { AppView, ConstructionProject, Icon, Region, RegionId, StaffingPrio
 import { ArrowLeftRight, FlaskConical, Landmark, Orbit, Rocket, Sparkles, Waves } from 'lucide-react'
 
 export const initialResources: Resources = {
-  power: 24,
-  water: 12,
-  oxygen: 14,
-  biomass: 10,
-  regolith: 22,
-  alloy: 14,
-  quantumCore: 2,
-  currency: 10,
+  power: 0,
+  water: 180,
+  oxygen: 120,
+  biomass: 160,
+  regolith: 400,
+  alloy: 400,
+  quantumCore: 10,
+  currency: 200,
   population: 12,
   knowledge: 0,
   luxury: 0,

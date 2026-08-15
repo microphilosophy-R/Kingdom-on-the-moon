@@ -42,8 +42,7 @@
   margin: 1rem 0;
 }
 
-.reign-report-kpis > div,
-.reign-report-grid > section {
+.reign-report-kpis > div {
   min-width: 0;
   border: 1px solid oklch(75% .03 80);
   border-radius: 7px;
@@ -123,16 +122,8 @@
 
 .reign-report-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(240px, .8fr);
+  grid-template-columns: 1fr;
   gap: .8rem;
-}
-
-.reign-suggestion-list {
-  margin: .65rem 0 0;
-  padding-left: 1.1rem;
-  color: oklch(36% .03 250);
-  font-size: var(--font-button);
-  line-height: 1.65;
 }
 
 .reign-report-modal footer {

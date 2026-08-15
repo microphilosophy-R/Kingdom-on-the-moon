@@ -17,7 +17,7 @@ import {
 } from '../../economy'
 import type { PopulationProjection, ResourceKey, Resources, StarportTradeOffer, TechnologyId } from '../../economy'
 import { researchLines, researchLineProgress } from '../../data/researchLines'
-import type { ReignReport } from '../../types/game'
+import type { ReignReport, TrendPoint } from '../../types/game'
 import { displayCopy, fmtAmount, formatDay } from '../../utils/format'
 import { completedTechnologyIds, hasResearchPrerequisites, techLabel, technologyCategoryLabel } from '../../utils/game'
 import { scaleResourceBundle } from '../../utils/trade'
@@ -26,7 +26,7 @@ import pillStyles from '../resources/ConstructionDaysPill.module.css'
 import { SectionHeading } from '../layout'
 import { InfoToggle } from './InfoToggle'
 import { TechnologyCard } from './TechnologyCard'
-import { TrendChart, type TrendSeries } from './TrendChart'
+import { TrendChart } from './TrendChart'
 import styles from './SpecialBlocks.module.css'
 
 /* ===================== PalaceReportBlock ===================== */
@@ -53,20 +53,20 @@ const RESOURCE_TREND_COLORS: Record<ReportTrendResource, string> = {
 export interface PalaceReportBlockProps {
   day: number
   lastReignReport: ReignReport | null
+  /** 运行中的每日趋势点：月度报告未归档时不足 50 点，仍可预览趋势 */
+  trendPoints: TrendPoint[]
   onOpenReport: (report: ReignReport) => void
 }
 
-export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: PalaceReportBlockProps) {
+export function PalaceReportBlock({ day, lastReignReport, trendPoints, onOpenReport }: PalaceReportBlockProps) {
   const reportProgress = Math.round((day % gameCalendar.reignMonthDays) / gameCalendar.reignMonthDays * 100)
   const [selectedTrend, setSelectedTrend] = useState<ReportTrendResource>('alloy')
 
-  const populationMiniSeries: TrendSeries[] = [
-    { key: 'population', label: '人口', color: 'oklch(55% .14 142)', accessor: p => p.population },
-  ]
-
-  const points = lastReignReport?.trendPoints ?? []
-  const first = points[0]
-  const lastPt = points[points.length - 1]
+  // 首份月度报告（御日 50）归档后使用完整快照；未归档时使用运行中的每日趋势，报告相关区块置灰
+  const hasMonthlyReport = lastReignReport !== null && lastReignReport.trendPoints.length > 0
+  const chartData = hasMonthlyReport && lastReignReport ? lastReignReport.trendPoints : trendPoints
+  const first = chartData[0]
+  const lastPt = chartData[chartData.length - 1]
   const startVal = first ? first[selectedTrend] : null
   const currentVal = lastPt ? lastPt[selectedTrend] : null
   const delta = startVal !== null && currentVal !== null ? currentVal - startVal : null
@@ -79,86 +79,79 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
       })
     : []
 
+  const daysLeft = gameCalendar.reignMonthDays - (day % gameCalendar.reignMonthDays)
+
   return (
     <section className={`${styles['special-content-block']} ${styles['palace-report-v2']}`}>
       <div className={styles['tech-tree-toolbar']}>
         <h3><Crown size={18} />{gameCalendar.monthName}报告</h3>
         <span className={styles['tech-tree-scale']}>{reportProgress}%</span>
-        {lastReignReport && <span style={{ color: 'var(--ui-muted)', fontSize: '10px' }}>{formatDay(lastReignReport.startDay)} 至 {formatDay(lastReignReport.endDay)}</span>}
+        {hasMonthlyReport && lastReignReport ? (
+          <span style={{ color: 'var(--ui-muted)', fontSize: '10px' }}>{formatDay(lastReignReport.startDay)} 至 {formatDay(lastReignReport.endDay)}</span>
+        ) : (
+          <span style={{ color: 'var(--ui-muted)', fontSize: '10px' }}>距首份报告归档还有 {daysLeft} 御日</span>
+        )}
       </div>
-      {lastReignReport ? <>
-        <div className={styles['palace-report-preview']}>
-          <div className={styles['report-main-col']}>
-            <div className={styles['report-chips']} role="group" aria-label="选择趋势资源">
-              {REPORT_TREND_RESOURCES.map(key => {
-                const meta = resourceUiMeta[key]
-                const Icon = meta.icon
-                const active = key === selectedTrend
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`${styles['report-chip']} ${active ? styles.active : ''}`}
-                    style={{ '--chip-color': RESOURCE_TREND_COLORS[key] } as CSSProperties}
-                    aria-pressed={active}
-                    onClick={() => setSelectedTrend(key)}
-                  >
-                    <Icon size={12} />{meta.label}
-                  </button>
-                )
-              })}
-            </div>
-            <div className={styles['report-summary']}>
-              <div><span>当前值</span><b>{currentVal !== null ? fmtAmount(currentVal) : '—'}</b></div>
-              <div><span>本王月变化</span>
-                <b className={delta !== null && delta < 0 ? styles.negative : ''}>
-                  {delta !== null ? `${delta >= 0 ? '+' : ''}${fmtAmount(delta)}` : '—'}
-                </b>
-              </div>
-              <div><span>变化速率</span>
-                <b className={rate !== null && rate < 0 ? styles.negative : ''}>
-                  {rate !== null ? `${rate >= 0 ? '+' : ''}${rate.toFixed(1)}%` : '—'}
-                </b>
-              </div>
-            </div>
-            <TrendChart
-              data={lastReignReport.trendPoints}
-              series={[{ key: selectedTrend, label: resourceUiMeta[selectedTrend].label, color: RESOURCE_TREND_COLORS[selectedTrend], accessor: p => p[selectedTrend] }]}
-              title={`${resourceUiMeta[selectedTrend].label}库存趋势`}
-              fallbackRows={fallbackRows}
-            />
-            {lastReignReport.trendPoints.length > 0 && (
-              <section className={styles['report-population-card']}>
-                <h3>人口趋势</h3>
-                <TrendChart data={lastReignReport.trendPoints} series={populationMiniSeries} mini />
-              </section>
-            )}
-          </div>
-          <aside className={styles['report-side-col']}>
-            <section className={styles['report-side-card']}>
-              <h3>本期建议</h3>
-              {lastReignReport.suggestions.length > 0 ? (
-                <ol>{lastReignReport.suggestions.slice(0, 2).map(item => <li key={item}>{item}</li>)}</ol>
-              ) : (
-                <p className={styles['report-suggestions-empty']}>本期无新增建议，各系统运转平稳。</p>
-              )}
-            </section>
-          </aside>
+      <div className={styles['report-chips']} role="group" aria-label="选择趋势资源">
+        {REPORT_TREND_RESOURCES.map(key => {
+          const meta = resourceUiMeta[key]
+          const Icon = meta.icon
+          const active = key === selectedTrend
+          return (
+            <button
+              key={key}
+              type="button"
+              className={`${styles['report-chip']} ${active ? styles.active : ''}`}
+              style={{ '--chip-color': RESOURCE_TREND_COLORS[key] } as CSSProperties}
+              aria-pressed={active}
+              onClick={() => setSelectedTrend(key)}
+            >
+              <Icon size={12} />{meta.label}
+            </button>
+          )
+        })}
+      </div>
+      <div className={`${styles['report-summary']} ${hasMonthlyReport ? '' : styles['report-summary-gray']}`}>
+        <div><span>当前值</span><b>{currentVal !== null ? fmtAmount(currentVal) : '—'}</b></div>
+        <div><span>本王月变化</span>
+          <b className={delta !== null && delta < 0 ? styles.negative : ''}>
+            {delta !== null ? `${delta >= 0 ? '+' : ''}${fmtAmount(delta)}` : '—'}
+          </b>
         </div>
-        <div className={styles['palace-report-actions']}>
-          <button className="primary-action" onClick={() => onOpenReport(lastReignReport)}><BookOpen size={15} />打开完整报告</button>
+        <div><span>变化速率</span>
+          <b className={rate !== null && rate < 0 ? styles.negative : ''}>
+            {rate !== null ? `${rate >= 0 ? '+' : ''}${rate.toFixed(1)}%` : '—'}
+          </b>
         </div>
-      </> : (
-        <div className={styles['palace-report-empty']}>
-          <BookOpen size={22} />
-          <span>尚未形成可复核的{gameCalendar.monthName}报告</span>
-          <div className={styles['report-countdown-bar']}><i style={{ width: `${reportProgress}%` }} /></div>
-          <small>
-            距首份报告归档还有 {gameCalendar.reignMonthDays - (day % gameCalendar.reignMonthDays)} 御日
-            · 已推进 御日 {day % gameCalendar.reignMonthDays} / {gameCalendar.reignMonthDays}
-          </small>
+      </div>
+      <TrendChart
+        data={chartData}
+        series={[{ key: selectedTrend, label: resourceUiMeta[selectedTrend].label, color: RESOURCE_TREND_COLORS[selectedTrend], accessor: p => p[selectedTrend] }]}
+        title={`${resourceUiMeta[selectedTrend].label}库存趋势`}
+        fallbackRows={fallbackRows}
+      />
+      <div className={styles['palace-report-footer']}>
+        <section className={`${styles['report-suggestions']} ${hasMonthlyReport ? '' : styles['report-suggestions-gray']}`}>
+          <h3>本期建议</h3>
+          {hasMonthlyReport && lastReignReport ? (
+            <ol>
+              {lastReignReport.suggestions.slice(0, 2).map(item => <li key={item}>{item}</li>)}
+            </ol>
+          ) : (
+            <p className={styles['report-suggestions-empty']}>首份报告归档后生成本期建议。</p>
+          )}
+        </section>
+        <div className={styles['report-footer-action']}>
+          <button
+            type="button"
+            className={`primary-action ${hasMonthlyReport ? '' : styles['report-action-disabled']}`}
+            disabled={!hasMonthlyReport}
+            onClick={() => { if (lastReignReport) onOpenReport(lastReignReport) }}
+          >
+            <BookOpen size={15} />打开完整报告
+          </button>
         </div>
-      )}
+      </div>
     </section>
   )
 }

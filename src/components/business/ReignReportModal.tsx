@@ -100,13 +100,6 @@ export function ReignReportModal({ report, onClose }: ReignReportModalProps) {
               fallbackRows={fallbackRows}
             />
           </div>
-
-          <section>
-            <h3>下个王月方向</h3>
-            <ol className={styles['reign-suggestion-list']}>
-              {report.suggestions.map(item => <li key={item}>{item}</li>)}
-            </ol>
-          </section>
         </div>
 
         <footer>

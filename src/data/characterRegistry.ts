@@ -139,7 +139,7 @@ export const characterRegistry: CharacterRecord[] = [
     portraitText: '数十条细小波纹在王冠形扬声器中彼此回答，没有身体，只有被器物收容的共鸣',
     specialty: 'H',
     boost: 0.04,
-    retainerCost: { power: 6, luxury: 2 },
+    retainerCost: { knowledge: 6, luxury: 2 },
     quote: '“我听见你们把孤独叫作秩序，所以来收集一点。孤独是会回声的，你们知道吗？”',
     portraitImage: imgChar06,
   },
