@@ -324,13 +324,15 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
     // 采购目标 = 储备线 + 「生命维持 + 满员星舰/生态环材料」的当日需求。
     // 关键是把库存补到储备线之上（available>0），computeSinkReadiness 才会放行 D/R 岗位；
     // 否则「缺材料 → 撤人 → 更缺材料」的死锁会一直卡住生态环与星舰。
+    // 稀有资源（量子核心/奢侈品）与实机一致不自动购入：QC 由 L 自产（星港单价极高，
+    // 自动购入会按满编 D 的日耗制造大额货币流失，且自产供给不存在采购死锁）。
     const autoTradeTargets = {
       water: defaultReserveFloors.water + (preliminaryPopulationProjection.lifeSupportCost.water ?? 0) + (shipMaterialDaily.water ?? 0) + (ringMaterialDaily.water ?? 0),
       oxygen: defaultReserveFloors.oxygen + (preliminaryPopulationProjection.lifeSupportCost.oxygen ?? 0) + (shipMaterialDaily.oxygen ?? 0) + (ringMaterialDaily.oxygen ?? 0),
       biomass: defaultReserveFloors.biomass + (preliminaryPopulationProjection.lifeSupportCost.biomass ?? 0) + (shipMaterialDaily.biomass ?? 0) + (ringMaterialDaily.biomass ?? 0),
       regolith: defaultReserveFloors.regolith + (shipMaterialDaily.regolith ?? 0) + (ringMaterialDaily.regolith ?? 0),
       alloy: defaultReserveFloors.alloy + (shipMaterialDaily.alloy ?? 0) + (ringMaterialDaily.alloy ?? 0),
-      quantumCore: defaultReserveFloors.quantumCore + (shipMaterialDaily.quantumCore ?? 0) + (ringMaterialDaily.quantumCore ?? 0),
+      quantumCore: 0,
       luxury: 0,
     }
     // 近似每日净增长 = 设施生产净产出 + 人口生命维持消耗，用于售卖盈余时判断哪些资源在净消耗
@@ -511,7 +513,7 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
   findings.push(
     shipWinDay > 0
       ? `Ship victory achieved at day ${shipWinDay} (target: ${difficultyConfigs[difficulty].targetWinDay}).`
-      : `Ship not completed by day 1000 (D level ${final.levels.D}).`,
+      : `Ship not completed by day 1000 (D level ${final.levels.D}, stage ${shipStageIndex + 1}/${shipStages.length}, progress ${JSON.stringify(roundResources(shipStageProgress))} / ${JSON.stringify(shipStages[shipStageIndex]?.input)}).`,
     `Ecology ring: phase ${rPhaseIndex + 1} (${productionMethods.R}), staffing ${staffing.R}/${getFacilityWorkCapacity('R', levels.R)}.`,
   )
 

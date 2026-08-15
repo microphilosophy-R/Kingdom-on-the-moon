@@ -55,6 +55,16 @@ function computeYRange(values: number[]): [number, number] {
   return [floor, ceil]
 }
 
+/** 生成「美观」刻度步长：1 / 2 / 2.5 / 5 / 10 × 10^n，使刻度均匀铺满绘图区 */
+function niceStep(span: number, target = 5): number {
+  if (span <= 0) return 1
+  const raw = span / target
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)))
+  const norm = raw / mag
+  const nice = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10
+  return nice * mag
+}
+
 /** 为 polyline 生成 SVG path d 属性 */
 function buildPolyline(
   points: { x: number; y: number }[],
@@ -122,8 +132,10 @@ export function TrendChart({
     const points = data.map(p => ({
       x: toX(p.day),
       y: toY(s.accessor(p), leftRange),
+      day: p.day,
+      value: s.accessor(p),
     }))
-    return { key: s.key, color: s.color, d: buildPolyline(points) }
+    return { key: s.key, color: s.color, d: buildPolyline(points), points }
   })
 
   // Build right-side polyline points
@@ -131,55 +143,60 @@ export function TrendChart({
     const points = data.map(p => ({
       x: toX(p.day),
       y: toY(s.accessor(p), rightRange),
+      day: p.day,
+      value: s.accessor(p),
     }))
-    return { key: s.key, color: s.color, d: buildPolyline(points) }
+    return { key: s.key, color: s.color, d: buildPolyline(points), points }
   })
 
-  // Y-axis ticks
+  // Y-axis ticks（美观步长，均匀铺满全高，而非只落在数据密集区）
   const leftTicks = useMemo(() => {
-    const [min, max] = leftRange
     if (mini) return []
-    const span = max - min
-    const step = span <= 0 ? 1 : Math.pow(10, Math.floor(Math.log10(span)) - 1)
+    const [min, max] = leftRange
+    const step = niceStep(max - min)
     const ticks: number[] = []
     let t = Math.floor(min / step) * step
-    while (t <= max + step * 0.5) {
-      if (t >= min - step * 0.5) ticks.push(t)
+    while (t <= max + step * 0.25) {
+      if (t >= min - step * 0.25) ticks.push(Number(t.toFixed(6)))
       t += step
     }
-    return ticks.slice(0, 6)
+    return ticks
   }, [leftRange, mini])
 
   const rightTicks = useMemo(() => {
     if (mini || rightSeries.length === 0) return []
     const [min, max] = rightRange
-    const span = max - min
-    const step = span <= 0 ? 1 : Math.pow(10, Math.floor(Math.log10(span)) - 1)
+    const step = niceStep(max - min)
     const ticks: number[] = []
     let t = Math.floor(min / step) * step
-    while (t <= max + step * 0.5) {
-      if (t >= min - step * 0.5) ticks.push(t)
+    while (t <= max + step * 0.25) {
+      if (t >= min - step * 0.25) ticks.push(Number(t.toFixed(6)))
       t += step
     }
-    return ticks.slice(0, 6)
+    return ticks
   }, [mini, rightRange, rightSeries])
 
-  // X-axis ticks (show ~5 labels)
+  // X-axis ticks（每 10 御日一格；数据不足一格时退化为首尾两天）
   const xTicks = useMemo(() => {
     if (mini || data.length === 0) return []
+    const first = data[0].day
+    const last = data[data.length - 1].day
     const result: { day: number; x: number }[] = []
-    const step = Math.max(1, Math.floor(data.length / 5))
-    for (let i = 0; i < data.length; i += step) {
-      result.push({ day: data[i].day, x: toX(data[i].day) })
+    const start = Math.ceil(first / 10) * 10
+    for (let d = start; d <= last; d += 10) {
+      result.push({ day: d, x: toX(d) })
     }
-    // Always include last
-    const last = data[data.length - 1]
-    const lastX = toX(last.day)
-    if (result.length === 0 || result[result.length - 1].day !== last.day) {
-      result.push({ day: last.day, x: lastX })
+    if (result.length === 0) {
+      result.push({ day: first, x: toX(first) })
+      if (first !== last) result.push({ day: last, x: toX(last) })
     }
     return result
   }, [data, mini])
+
+  // 数据标签：仅单 series 非 mini（多线图避免标签重叠），10 御日一格 + 首尾
+  const valueLabels = !mini && leftSeries.length === 1 && rightSeries.length === 0 && leftPolylines.length > 0
+    ? leftPolylines[0].points.filter(pt => pt.day % 10 === 0 || pt.day === data[0].day || pt.day === data[data.length - 1].day)
+    : []
 
   // Fallback table
   if (!hasData && !mini && fallbackRows && fallbackRows.length > 0) {
@@ -321,6 +338,32 @@ export function TrendChart({
             strokeLinejoin="round"
             strokeDasharray="4 3"
           />
+        ))}
+        {/* Data points */}
+        {!mini && [...leftPolylines, ...rightPolylines].map(pl =>
+          pl.points.map(pt => (
+            <circle
+              key={`${pl.key}-${pt.day}`}
+              cx={pt.x}
+              cy={pt.y}
+              r={2}
+              fill={pl.color}
+            />
+          ))
+        )}
+        {/* Value labels（顶部溢出时移到点下方） */}
+        {valueLabels.map(pt => (
+          <text
+            key={`vl-${pt.day}`}
+            x={pt.x}
+            y={pt.y - 6 < 10 ? pt.y + 12 : pt.y - 6}
+            textAnchor="middle"
+            fill={leftPolylines[0].color}
+            fontSize={8}
+            fontFamily="var(--ui-mono)"
+          >
+            {fmtShort(pt.value)}
+          </text>
         ))}
       </svg>
     </section>

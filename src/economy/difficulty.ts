@@ -1,6 +1,6 @@
 import type { Resources } from './types'
 import { shipProjectStages } from './facilities'
-import { resourceOrder } from './resources'
+import { rareResourceKeys, resourceOrder } from './resources'
 
 export type Difficulty = 'easy' | 'normal' | 'hard' | 'ultimate'
 
@@ -38,13 +38,16 @@ export const difficultyConfigs: Record<Difficulty, DifficultyConfig> = {
 
 export const defaultDifficulty: Difficulty = 'normal'
 
-/** 返回难度调整后的星舰阶段资源需求 */
+/** 返回难度调整后的星舰阶段资源需求。稀有资源（量子核心/奢侈品）产能不随难度缩放，需求同样不缩放；大宗资源按 shipResourceMultiplier 缩放。 */
 export const getDifficultyShipStages = (difficulty: Difficulty) => {
   const config = difficultyConfigs[difficulty]
   return shipProjectStages.map(stage => ({
     ...stage,
     input: Object.fromEntries(
-      resourceOrder.map(key => [key, (stage.input[key] ?? 0) * config.shipResourceMultiplier]),
+      resourceOrder.map(key => [
+        key,
+        rareResourceKeys.includes(key) ? (stage.input[key] ?? 0) : (stage.input[key] ?? 0) * config.shipResourceMultiplier,
+      ]),
     ) as Partial<Resources>,
   }))
 }

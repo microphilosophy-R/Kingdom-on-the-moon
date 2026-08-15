@@ -299,7 +299,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     productionMethods: [
       { id: 'MD-1', name: '龙骨与生命舱', input: { power: 16, alloy: 10, oxygen: 10 }, output: {}, note: '第一阶段：消耗电力运行，并每日投入合金与氧气（阶段总量见 shipProjectStages）。' },
       { id: 'MD-2', name: '远航壳层与循环农场', input: { power: 18, alloy: 20, regolith: 50, biomass: 20 }, output: {}, unlockedBy: 'TD-1', note: '第二阶段：消耗电力运行，并每日投入合金、月壤与生物质。' },
-      { id: 'MD-3', name: '王座核心与深空储备', input: { power: 11, quantumCore: 0.32, luxury: 0.02, alloy: 30, water: 20, biomass: 30 }, output: {}, unlockedBy: 'TD-2', note: '第三阶段：消耗电力运行，并每日投入量子核心（大量）、奢侈品（少量点缀）与合金、水、生物质。' },
+      { id: 'MD-3', name: '王座核心与深空储备', input: { power: 11, quantumCore: 0.5, luxury: 0.02, alloy: 30, water: 20, biomass: 30 }, output: {}, unlockedBy: 'TD-2', note: '第三阶段：消耗电力运行，并每日投入量子核心（大量）、奢侈品（少量点缀）与合金、水、生物质。' },
     ],
     phaseNotes: [
       { name: '第一阶段：龙骨与生命舱', note: '投入合金、氧气和电力，完成星舰基础结构与维生舱段。' },
@@ -329,7 +329,7 @@ export const shipProjectStages: ShipProjectStage[] = [
   {
     id: 3,
     name: '王座核心与深空储备',
-    input: { quantumCore: 192, luxury: 12, alloy: 18000, water: 12000, biomass: 18000 },
+    input: { quantumCore: 400, luxury: 12, alloy: 18000, water: 12000, biomass: 18000 },
     cycleDays: 600,
     note: '第三阶段投入量子计算核心（大量，消耗后期产能）、艺术奢侈品（少量点缀）、电力、合金、水和生物质，完成御座号核心。',
   },

@@ -70,6 +70,7 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
   const startVal = first ? first[selectedTrend] : null
   const currentVal = lastPt ? lastPt[selectedTrend] : null
   const delta = startVal !== null && currentVal !== null ? currentVal - startVal : null
+  const rate = startVal !== null && startVal !== 0 && currentVal !== null ? ((currentVal - startVal) / startVal) * 100 : null
 
   const fallbackRows = lastReignReport
     ? resourceOrder.filter(key => lastReignReport.resourceRows[key]).map(key => {
@@ -86,9 +87,6 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
         {lastReignReport && <span style={{ color: 'var(--ui-muted)', fontSize: '10px' }}>{formatDay(lastReignReport.startDay)} 至 {formatDay(lastReignReport.endDay)}</span>}
       </div>
       {lastReignReport ? <>
-        <div className={styles['palace-report-actions']}>
-          <button className="primary-action" onClick={() => onOpenReport(lastReignReport)}><BookOpen size={15} />打开完整报告</button>
-        </div>
         <div className={styles['palace-report-preview']}>
           <div className={styles['report-main-col']}>
             <div className={styles['report-chips']} role="group" aria-label="选择趋势资源">
@@ -111,11 +109,15 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
               })}
             </div>
             <div className={styles['report-summary']}>
-              <div><span>起始值</span><b>{startVal !== null ? fmtAmount(startVal) : '—'}</b></div>
               <div><span>当前值</span><b>{currentVal !== null ? fmtAmount(currentVal) : '—'}</b></div>
               <div><span>本王月变化</span>
                 <b className={delta !== null && delta < 0 ? styles.negative : ''}>
                   {delta !== null ? `${delta >= 0 ? '+' : ''}${fmtAmount(delta)}` : '—'}
+                </b>
+              </div>
+              <div><span>变化速率</span>
+                <b className={rate !== null && rate < 0 ? styles.negative : ''}>
+                  {rate !== null ? `${rate >= 0 ? '+' : ''}${rate.toFixed(1)}%` : '—'}
                 </b>
               </div>
             </div>
@@ -125,14 +127,14 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
               title={`${resourceUiMeta[selectedTrend].label}库存趋势`}
               fallbackRows={fallbackRows}
             />
-          </div>
-          <aside className={styles['report-side-col']}>
             {lastReignReport.trendPoints.length > 0 && (
-              <section className={styles['report-side-card']}>
+              <section className={styles['report-population-card']}>
                 <h3>人口趋势</h3>
                 <TrendChart data={lastReignReport.trendPoints} series={populationMiniSeries} mini />
               </section>
             )}
+          </div>
+          <aside className={styles['report-side-col']}>
             <section className={styles['report-side-card']}>
               <h3>本期建议</h3>
               {lastReignReport.suggestions.length > 0 ? (
@@ -142,6 +144,9 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
               )}
             </section>
           </aside>
+        </div>
+        <div className={styles['palace-report-actions']}>
+          <button className="primary-action" onClick={() => onOpenReport(lastReignReport)}><BookOpen size={15} />打开完整报告</button>
         </div>
       </> : (
         <div className={styles['palace-report-empty']}>

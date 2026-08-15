@@ -32,8 +32,20 @@
 
 .palace-report-actions {
   display: flex;
-  justify-content: flex-end;
-  margin: .7rem 0;
+  justify-content: center;
+  margin: .15rem 0 0;
+}
+
+.report-population-card {
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  padding: .6rem .75rem;
+  background: var(--ui-raised);
+}
+.report-population-card h3 {
+  margin: 0 0 .45rem;
+  color: var(--ui-ink-strong);
+  font-size: var(--font-card);
 }
 
 .palace-report-preview {
@@ -1000,7 +1012,7 @@
 }
 
 @media (max-width: 680px) {
-  .policy-status {
+  .report-summary {
     grid-template-columns: 1fr;
   }
 }
