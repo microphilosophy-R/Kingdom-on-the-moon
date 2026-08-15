@@ -1,20 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  ArrowDownRight, ArrowLeftRight, ArrowUpRight, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleDot, Clock, Crown, Droplet, Factory,
-  Coins, FlaskConical, FolderOpen, Gauge, House, Info, Landmark, Leaf, LogOut, Minus, Mountain, Orbit,
-  Pause, Pickaxe, Play, Rocket, Save, Settings, Sparkles, Sprout, Sun, Theater, Users, Volume2, Waves, X, Zap,
-  type LucideProps,
-} from 'lucide-react'
-import {
-  applyBundle,
   autoCorrectStaffing,
   buildFacilityModifiers,
   calculateCurrencyDebtInterest,
   canBuildFacility,
-  canAfford,
   canExecuteStarportTrade,
   defaultReserveFloors,
   defaultStartingTechs,
+  defaultDifficulty,
   facilityEconomySpecs,
   facilityOrder,
   gameCalendar,
@@ -26,23 +19,17 @@ import {
   isHousingFacility,
   projectDailyFlow,
   projectFacilityCost,
-  projectFacilityFlow,
-  projectFacilityNet,
   projectPopulationSystem,
-  resourceGroups,
   resourceMeta,
   resourceOrder,
-  selectProductionMethod,
   settleDailyResources,
   planAutoTradesForDeficits,
   shipProjectStages,
   starportTradeOffers,
   technologyCatalog,
   weightedValue,
-  defaultDifficulty,
   type AutomationPlan,
   type Difficulty,
-  type FacilityId,
   type FacilityState,
   type PopulationProjection,
   type ProductionMethodId,
@@ -59,31 +46,10 @@ import {
   type Role,
 } from './events'
 import { createDisabledAutomationPlan, gameOptimizers, type OptimizerId } from './optimizers'
-import { Button, IconButton, PortraitSlot, ProgressLine } from './components/ui'
 import {
-  ConstructionDaysPill,
-  CostResourceList,
-  FlowArrowSvg,
-  ProductionFlow,
-  ResourceAtom,
-  ResourceBundle,
-  ResourceDeltaRows,
-  ResourceSymbolStrip,
-  resourceUiMeta,
-} from './components/resources'
-import { LetterActions, Modal, SectionHeading, TabNav } from './components/layout'
-import {
-  FacilityList,
-  FacilityOrderGlyph,
-  InfoToggle,
   PlanetFacilities,
   ReignReportModal,
   SettingsPanel,
-  StartGate,
-  TechnologyCard,
-  TechnologyImagePlaceholder,
-  TechnologyTags,
-  TutorialOverlay,
   VictoryModal,
   Visitors,
   type StartOptions,
@@ -95,258 +61,62 @@ import {
   ShipProgressBlock,
   TradeBoardBlock,
 } from './components/business/SpecialBlocks'
-import { displayCopy, fmt, fmtAmount, fmtCompactAmount, fmtSignedCompactAmount, formatDay } from './utils/format'
-import { getPhaseGuidance, hasResearchPrerequisites, orderLabel, summarizeOptimizerDirections, techLabel, technologyCategoryLabel, throughputClass } from './utils/game'
+import {
+  CommandDeck,
+  GameHeader,
+  ResourceRail,
+  StartScreen,
+  TutorialScreen,
+  VisitorLetterModal,
+} from './components/game'
+import { useSaveSystem } from './hooks/useSaveSystem'
+import {
+  autoAllocateStaffing,
+  apply,
+  canPay,
+  initialConstruction,
+  initialProductionMethods,
+  initialResources,
+  initialStaffingPriorities,
+  milestoneLogs,
+  musicSource,
+  navItems,
+  regionTemplate,
+  specialTabFacility,
+} from './game/appData'
+import {
+  clearAutoSave,
+  loadStoredMusicVolume,
+  musicVolumeKey,
+  readAllSaveSlotMetas,
+  readAutoSave,
+  tutorialSeenKey,
+} from './game/appPersistence'
+import {
+  flowFromPopulation,
+  flowFromTrades,
+  mergeResourceChanges,
+  summarizeResourceRows,
+  weightedShipReadiness,
+} from './game/appFlow'
+import { formatDay } from './utils/format'
+import { getPhaseGuidance, hasResearchPrerequisites, summarizeOptimizerDirections } from './utils/game'
 import { scaleResourceBundle } from './utils/trade'
-import { regionLayout } from './data/regionLayout'
-import { facilityEra, facilityEraSections, facilityOrderIndex, researchableTechIds } from './data/eraSections'
-import { visitorPortraits } from './data/visitorPortraits'
-import { PlanetScene, planetTextures } from './PlanetScene'
-import charChenlin from './assets/char-00.jpg'
-import type { AppView, ConstructionProject, FacilityOrderMode, GameSaveState, Icon, ReignReport, ReignReportBaseline, Region, RegionId, SaveSlotMeta, StaffingPriority, TrendPoint } from './types/game'
-
-type FacilityEra = 'early' | 'mid' | 'late'
-type TechnologyEra = 'early' | 'mid' | 'late'
-
-const initialResources: Resources = {
-  power: 24,
-  water: 12,
-  oxygen: 14,
-  biomass: 10,
-  regolith: 22,
-  alloy: 14,
-  quantumCore: 2,
-  currency: 10,
-  population: 12,
-  knowledge: 0,
-  luxury: 0,
-}
-
-const initialLevels: Partial<Record<RegionId, number>> = { E1: 1, C1: 1, K: 2, S: 1 }
-const initialConstruction = Object.fromEntries(facilityOrder.map(id => [id, null])) as Record<RegionId, ConstructionProject | null>
-const initialProductionMethods = Object.fromEntries(
-  facilityOrder.map(id => [id, selectProductionMethod(facilityEconomySpecs[id].productionMethods, defaultStartingTechs).id]),
-) as Record<RegionId, ProductionMethodId>
-
-const priorityLevels: StaffingPriority[] = [1, 2, 3, 4, 5]
-const defaultPriorityForFacility = (id: RegionId): StaffingPriority => {
-  const priority = facilityEconomySpecs[id].priority
-  if (priority >= 12) return 5
-  if (priority >= 9) return 4
-  if (priority >= 7) return 3
-  if (priority >= 5) return 2
-  return 1
-}
-const initialStaffingPriorities = Object.fromEntries(
-  facilityOrder.map(id => [id, defaultPriorityForFacility(id)]),
-) as Record<RegionId, StaffingPriority>
-const normalizeStaffingPriority = (value: unknown, fallback: StaffingPriority): StaffingPriority => {
-  const numeric = typeof value === 'number' ? value : Number(value)
-  return priorityLevels.includes(numeric as StaffingPriority) ? numeric as StaffingPriority : fallback
-}
-const normalizeStaffingPriorities = (saved?: Partial<Record<RegionId, unknown>>) => Object.fromEntries(
-  facilityOrder.map(id => [id, normalizeStaffingPriority(saved?.[id], initialStaffingPriorities[id])]),
-) as Record<RegionId, StaffingPriority>
-/** 【L2 automation】人口自动分配：按设施岗位优先级（staffingPriorities）贪心分配劳动力到生产设施。 */
-const autoAllocateStaffingFromLevels = (
-  levels: Partial<Record<RegionId, number>>,
-  population: number,
-  priorities: Record<RegionId, StaffingPriority>,
-) => {
-  const next = Object.fromEntries(facilityOrder.map(id => [id, 0])) as Record<RegionId, number>
-  let remainingPopulation = Math.max(0, Math.floor(population))
-  const assignable = facilityOrder
-    .filter(id => !isHousingFacility(id) && !isFixedFacility(id) && getFacilityWorkCapacity(id, levels[id] ?? 0) > 0)
-    .sort((a, b) =>
-      (priorities[b] ?? initialStaffingPriorities[b]) - (priorities[a] ?? initialStaffingPriorities[a])
-      || facilityEconomySpecs[b].priority - facilityEconomySpecs[a].priority
-      || facilityOrderIndex[a] - facilityOrderIndex[b],
-    )
-  assignable.forEach(id => {
-    const capacity = getFacilityWorkCapacity(id, levels[id] ?? 0)
-    const assigned = Math.min(capacity, remainingPopulation)
-    next[id] = assigned
-    remainingPopulation -= assigned
-  })
-  return next
-}
-/** 【L2 automation】同上：从 Region[] 提取等级后调用 autoAllocateStaffingFromLevels。 */
-const autoAllocateStaffing = (
-  regions: Pick<Region, 'id' | 'level'>[],
-  population: number,
-  priorities: Record<RegionId, StaffingPriority>,
-) => autoAllocateStaffingFromLevels(
-  Object.fromEntries(regions.map(region => [region.id, region.level])) as Partial<Record<RegionId, number>>,
-  population,
-  priorities,
-)
-const initialStaffing = autoAllocateStaffingFromLevels(initialLevels, initialResources.population, initialStaffingPriorities)
-
-const regionTemplate: Region[] = facilityOrder.map(id => {
-  const spec = facilityEconomySpecs[id]
-  const layout = regionLayout[id]
-  const level = initialLevels[id] ?? 0
-  return {
-    id,
-    level,
-    icon: layout.icon,
-    name: spec.name,
-    subtitle: spec.subtitle,
-    max: spec.maxLevel,
-    note: spec.note,
-    interfaceDuty: spec.interfaceDuty,
-    phaseNotes: spec.phaseNotes,
-    yields: projectFacilityNet(spec, level, {}, defaultStartingTechs),
-    cost: projectFacilityCost(spec, level),
-    parentIds: layout.parentIds,
-    position: layout.position,
-  }
-})
-
-const navItems: { id: AppView; label: string; icon: Icon; color: string }[] = [
-  { id: 'facilities', label: '设施', icon: Orbit, color: 'oklch(52% .1 76)' },
-  { id: 'palace', label: '王城', icon: Landmark, color: 'oklch(45% .08 250)' },
-  { id: 'research', label: '科技', icon: FlaskConical, color: 'oklch(55% .09 300)' },
-  { id: 'ecology', label: '生态', icon: Waves, color: 'oklch(50% .1 160)' },
-  { id: 'starport', label: '贸易', icon: ArrowLeftRight, color: 'oklch(58% .1 40)' },
-  { id: 'ship', label: '星舰', icon: Rocket, color: 'oklch(50% .12 330)' },
-  { id: 'visitors', label: '异客', icon: Sparkles, color: 'oklch(60% .11 85)' },
-]
-
-const milestoneLogs: Record<number, string> = {
-  100: '百日已过，月面设施初具规模。关注资源盈余，规划科技方向。',
-  200: '二百御日，殖民地进入成长期。星海贸易港可补充稀缺资源，异客来访值得留意。',
-  300: '三百御日，检查各设施等级是否均衡。御座号星舰坞应已启动建造。',
-  400: '四百御日，千日试验已过五分之二。科技树的中层突破将解锁关键生产方式。',
-  500: '五百御日过半。评估 GDP 增速与人口承载力是否匹配星舰需求。',
-  600: '六百御日，试验进入后半程。确保星舰三阶段物资储备进度。',
-  700: '七百御日，时间紧迫。审视王月报告中的优化建议，补齐短板。',
-  800: '八百御日，距试验到期仅剩二百御日。御座号完成度应过半。',
-  900: '九百御日，最后百御日冲刺。将所有资源向星舰倾斜。',
-  950: '九百五十御日，仅剩五十御日。检查是否有遗漏的科技或设施可瞬间提升国祚。',
-}
-
-const specialTabFacility: Record<string, AppView> = {
-  K: 'palace', L: 'research', R: 'ecology', S: 'starport', D: 'ship',
-}
-
-const canPay = canAfford
-const apply = applyBundle
-const musicSource = '/audio/Gravity_s_Edge.mp3'
-const saveKey = (slotIndex: number) => `lunar-crown-save-v4-${slotIndex}`
-const saveMetaKey = (slotIndex: number) => `lunar-crown-save-meta-${slotIndex}`
-const maxSaveSlots = 6
-const musicVolumeKey = 'lunar-crown-music-volume'
-const tutorialSeenKey = 'lunar-crown-tutorial-seen'
-const autoSaveKey = 'lunar-crown-autosave-v6'
-
-const readAutoSave = (): GameSaveState | null => {
-  try {
-    const raw = window.localStorage.getItem(autoSaveKey)
-    if (!raw) return null
-    return JSON.parse(raw) as GameSaveState
-  } catch {
-    return null
-  }
-}
-
-const writeAutoSave = (save: GameSaveState) => {
-  window.localStorage.setItem(autoSaveKey, JSON.stringify(save))
-}
-
-const clearAutoSave = () => {
-  window.localStorage.removeItem(autoSaveKey)
-}
-
-const readSaveSlotMeta = (slotIndex: number): SaveSlotMeta | null => {
-  try {
-    const raw = window.localStorage.getItem(saveMetaKey(slotIndex))
-    if (!raw) return null
-    return JSON.parse(raw) as SaveSlotMeta
-  } catch {
-    return null
-  }
-}
-
-const readAllSaveSlotMetas = (): (SaveSlotMeta | null)[] =>
-  Array.from({ length: maxSaveSlots }, (_, i) => readSaveSlotMeta(i))
-
-const writeSaveSlotMeta = (slotIndex: number, meta: SaveSlotMeta) => {
-  window.localStorage.setItem(saveMetaKey(slotIndex), JSON.stringify(meta))
-}
-
-const formatSaveSlotDay = (day: number) => {
-  const monthNumber = Math.max(1, Math.ceil(day / gameCalendar.reignMonthDays))
-  return `第 ${monthNumber} 个${gameCalendar.monthName}·御日 ${day}`
-}
-const allResourceKeys = resourceGroups.flatMap(group => group.keys)
-const weightedShipReadiness = (resources: Resources) => {
-  const ratios = shipProjectStages.flatMap(stage =>
-    Object.entries(stage.input).map(([key, required]) => Math.min(1, resources[key as ResourceKey] / (required || 1))),
-  )
-  return ratios.length ? ratios.reduce((sum, ratio) => sum + ratio, 0) / ratios.length * 24 : 0
-}
-const mergeResourceChanges = (...bundles: Partial<Resources>[]): Resources => {
-  const total = Object.fromEntries(resourceOrder.map(key => [key, 0])) as Resources
-  bundles.forEach(bundle => {
-    resourceOrder.forEach(key => {
-      total[key] += bundle[key] ?? 0
-    })
-  })
-  return total
-}
-const flowFromPopulation = (projection: PopulationProjection) => {
-  const production = mergeResourceChanges()
-  const consumption = mergeResourceChanges()
-
-  resourceOrder.forEach(key => {
-    const net = projection.net[key] ?? 0
-    const lifeSupport = projection.lifeSupportCost[key] ?? 0
-    if (lifeSupport > 0) consumption[key] += lifeSupport
-    if (key === 'water' || key === 'oxygen' || key === 'biomass') return
-    if (net > 0) production[key] += net
-    if (net < 0) consumption[key] += Math.abs(net)
-  })
-
-  return { production, consumption }
-}
-const flowFromTrades = (trades: ReturnType<typeof planAutoTradesForDeficits>['trades'], currencyInterest = 0) => {
-  const production = mergeResourceChanges()
-  const consumption = mergeResourceChanges()
-  const net = mergeResourceChanges()
-
-  trades.forEach(trade => {
-    resourceOrder.forEach(key => {
-      const input = trade.input[key] ?? 0
-      const output = trade.output[key] ?? 0
-      if (output > 0) production[key] += output
-      if (input > 0) consumption[key] += input
-      net[key] += output - input
-    })
-  })
-  if (currencyInterest > 0) {
-    consumption.currency += currencyInterest
-    net.currency -= currencyInterest
-  }
-
-  return { production, consumption, net }
-}
-const summarizeResourceRows = (production: Resources, consumption: Resources): ReignReport['resourceRows'] => {
-  const rows: ReignReport['resourceRows'] = {}
-  resourceOrder.forEach(key => {
-    const produced = production[key] ?? 0
-    const consumed = consumption[key] ?? 0
-    const net = produced - consumed
-    if (produced || consumed || net) rows[key] = { produced, consumed, net }
-  })
-  return rows
-}
-const loadStoredMusicVolume = () => {
-  if (typeof window === 'undefined') return 0.42
-  const stored = window.localStorage.getItem(musicVolumeKey)
-  const parsed = stored === null ? 0.42 : Number(stored)
-  return Number.isFinite(parsed) ? Math.max(0, Math.min(1, parsed)) : 0.42
-}
+import { researchableTechIds } from './data/eraSections'
+import { planetTextures } from './PlanetScene'
+import type {
+  AppView,
+  ConstructionProject,
+  FacilityOrderMode,
+  GameSaveState,
+  ReignReport,
+  ReignReportBaseline,
+  Region,
+  RegionId,
+  SaveSlotMeta,
+  StaffingPriority,
+  TrendPoint,
+} from './types/game'
 
 function App() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -705,205 +475,6 @@ function App() {
     setReignReportBaseline({ day: report.endDay, resources: reportResources, gdp: reportGdp })
     setRunning(false)
     writeLog(`${formatDay(report.endDay)}：第 ${report.monthNumber} 个${gameCalendar.monthName}报告已归档，日 GDP ${report.gdp.toFixed(1)}。`)
-  }
-
-  const currentSave = (): GameSaveState => ({
-    version: 6,
-    savedAt: new Date().toISOString(),
-    gameStarted,
-    resources,
-    regionLevels: Object.fromEntries(regions.map(region => [region.id, region.level])) as Record<RegionId, number>,
-    day,
-    isRunning,
-    speed,
-    view,
-    selected,
-    planetDocked,
-    detailOpen,
-    dockCollapsed,
-    planetTextureId: planetTexture.id,
-    visitor,
-    roster,
-    assigned,
-    chainProgress,
-    techs,
-    activeResearch,
-    researchProgress,
-    productionMethods,
-    staffing,
-    staffingPriorities,
-    facilityOrders,
-    facilityOrderStarted,
-    construction,
-    populationPressureDays,
-    activeOptimizerId,
-    difficulty,
-    observerMode,
-    autoEventsEnabled,
-    autoTradeProtectionEnabled,
-    autoTradeEnabled,
-    tradeSourcedResources,
-    lastAutomatedAction,
-    policy,
-    policyLastChangedDay: 1,
-    policyReportStartedDay: 1,
-    policyReportBaseline: initialResources,
-    lastPolicyReport: null,
-    reignReportBaseline,
-    lastReignReport,
-    activeReignReport,
-    log,
-    pendingMonthlyReport,
-  })
-
-  const applySave = (save: GameSaveState) => {
-    setResources(save.resources)
-    setRegions(regionTemplate.map(region => ({ ...region, level: save.regionLevels[region.id] ?? region.level })))
-    setDay(save.day)
-    setRunning(save.isRunning)
-    setSpeed(save.speed)
-    setView(save.view)
-    setSelected(save.selected)
-    setPlanetDocked(save.planetDocked)
-    setDetailOpen(save.detailOpen)
-    setDockCollapsed(save.dockCollapsed ?? false)
-    setPlanetTexture(planetTextures.find(texture => texture.id === save.planetTextureId) ?? planetTexture)
-    setVisitor(save.visitor)
-    setRoster(save.roster)
-    setAssigned(save.assigned)
-    setChainProgress(save.chainProgress)
-    setTechs(save.techs)
-    setActiveResearch(save.activeResearch)
-    setResearchProgress(save.researchProgress)
-    setProductionMethods(save.productionMethods)
-    setStaffingPriorities(normalizeStaffingPriorities(save.staffingPriorities))
-    setFacilityOrders(save.facilityOrders)
-    setFacilityOrderStarted(save.facilityOrderStarted)
-    setConstruction(save.construction)
-    setPopulationPressureDays(save.populationPressureDays)
-    setActiveOptimizerId(save.activeOptimizerId ?? 'none')
-    setDifficulty(save.difficulty ?? defaultDifficulty)
-    setObserverMode(save.observerMode ?? false)
-    setAutoEventsEnabled(save.autoEventsEnabled ?? false)
-    setAutoTradeProtectionEnabled(save.autoTradeProtectionEnabled ?? true)
-    setAutoTradeEnabled(save.autoTradeEnabled ?? {})
-    setTradeSourcedResources(save.tradeSourcedResources ?? {})
-    setLastAutomatedAction(save.lastAutomatedAction)
-    setReignReportBaseline(save.reignReportBaseline)
-    setLastReignReport(save.lastReignReport)
-    setActiveReignReport(save.activeReignReport)
-    setLog(save.log)
-    setPendingMonthlyReport(save.pendingMonthlyReport)
-    setGameStarted(true)
-  }
-
-  const saveGame = (slotIndex: number, slotName?: string) => {
-    const snapshot = currentSave()
-    try {
-      window.localStorage.setItem(saveKey(slotIndex), JSON.stringify(snapshot))
-      const meta: SaveSlotMeta = {
-        name: slotName ?? `存档 ${slotIndex + 1}`,
-        day: snapshot.day,
-        score,
-        savedAt: new Date().toISOString(),
-      }
-      writeSaveSlotMeta(slotIndex, meta)
-      setSaveSlotMetas(readAllSaveSlotMetas())
-      setToastMessage(`已存档至槽位 ${slotIndex + 1}：${meta.name}`)
-      setSaveStatus(`已存档：${formatSaveSlotDay(meta.day)}`)
-    } catch {
-      setToastMessage('存档失败：浏览器存储异常')
-    }
-  }
-
-  const loadGame = (slotIndex: number) => {
-    try {
-      const rawSave = window.localStorage.getItem(saveKey(slotIndex))
-      if (!rawSave) {
-        setToastMessage(`槽位 ${slotIndex + 1} 为空，没有可读取的存档`)
-        return
-      }
-      const parsed = JSON.parse(rawSave) as GameSaveState
-      if (![4, 5, 6].includes(parsed.version) || !parsed.resources || !parsed.regionLevels || !parsed.construction || !parsed.reignReportBaseline) throw new Error('invalid save')
-      applySave(parsed)
-      setSettingsOpen(false)
-      setStartSettingsOpen(false)
-      const meta = readSaveSlotMeta(slotIndex)
-      setToastMessage(`已读取槽位 ${slotIndex + 1}：${meta?.name ?? `存档 ${slotIndex + 1}`}`)
-      setSaveStatus(`已读档：${formatSaveSlotDay(parsed.day)}`)
-    } catch {
-      setToastMessage('读档失败：存档格式损坏')
-    }
-  }
-
-  const renameSaveSlot = (slotIndex: number, newName: string) => {
-    const meta = readSaveSlotMeta(slotIndex)
-    if (!meta) return
-    const updated: SaveSlotMeta = { ...meta, name: newName }
-    writeSaveSlotMeta(slotIndex, updated)
-    setSaveSlotMetas(readAllSaveSlotMetas())
-    setToastMessage(`槽位 ${slotIndex + 1} 已重命名为「${newName}」`)
-  }
-
-  const saveAutoSave = () => {
-    const snapshot = currentSave()
-    try {
-      writeAutoSave(snapshot)
-      setAutoSaveState(snapshot)
-      setToastMessage(`已自动存档：${formatSaveSlotDay(snapshot.day)}`)
-      setSaveStatus(`已自动存档：${formatSaveSlotDay(snapshot.day)}`)
-    } catch {
-      setToastMessage('自动存档失败：浏览器存储异常')
-    }
-  }
-
-  const continueGame = (options: Pick<StartOptions, 'observerMode'>) => {
-    const save = readAutoSave()
-    if (!save) return
-    if (![4, 5, 6].includes(save.version) || !save.resources || !save.regionLevels || !save.construction || !save.reignReportBaseline) {
-      clearAutoSave()
-      setAutoSaveState(null)
-      setToastMessage('自动存档损坏，已清除')
-      return
-    }
-    const savedObserverMode = save.observerMode ?? false
-    applySave({ ...save, observerMode: options.observerMode })
-    // 仅当玩家在开始界面改变了观察者开关时调整接管状态
-    if (options.observerMode && !savedObserverMode) {
-      setActiveOptimizerId('crown-steward')
-      setRunning(true)
-    } else if (!options.observerMode && savedObserverMode) {
-      setActiveOptimizerId('none')
-      setRunning(false)
-    }
-    setSettingsOpen(false)
-    setStartSettingsOpen(false)
-    setShowVictory(false)
-    setToastMessage(`已读档：自动存档（${formatSaveSlotDay(save.day)}）`)
-    setSaveStatus(`已读档：${formatSaveSlotDay(save.day)}`)
-  }
-
-  const exitToHome = () => {
-    setRunning(false)
-    setSettingsOpen(false)
-    setShowVictory(false)
-    setGameStarted(false)
-    setActiveOptimizerId('none')
-    setObserverMode(false)
-    setDifficulty(defaultDifficulty)
-    audioRef.current?.pause()
-  }
-
-  const exitGame = (save = true) => {
-    if (save) saveAutoSave()
-    exitToHome()
-  }
-
-  const handleClearAndExit = () => {
-    clearAutoSave()
-    setAutoSaveState(null)
-    exitToHome()
-    setToastMessage('自动存档已清除，可开始新的试验')
   }
 
   const chooseVisitor = () => {
@@ -1372,213 +943,182 @@ function App() {
     if (options.tutorialEnabled) setTutorialOpen(true)
   }
 
+  const {
+    saveGame,
+    loadGame,
+    renameSaveSlot,
+    continueGame,
+    exitGame,
+    handleClearAndExit,
+  } = useSaveSystem({
+    gameStarted, resources, regions, day, isRunning, speed, view, selected,
+    planetDocked, detailOpen, dockCollapsed, planetTexture, visitor, roster, assigned,
+    chainProgress, techs, activeResearch, researchProgress, productionMethods,
+    staffing, staffingPriorities, facilityOrders, facilityOrderStarted, construction,
+    populationPressureDays, activeOptimizerId, difficulty, observerMode, autoEventsEnabled,
+    autoTradeProtectionEnabled, autoTradeEnabled, tradeSourcedResources, lastAutomatedAction,
+    policy, reignReportBaseline, lastReignReport, activeReignReport, log, pendingMonthlyReport,
+  }, {
+    setGameStarted, setResources, setRegions, setDay, setRunning, setSpeed, setView, setSelected,
+    setPlanetDocked, setDetailOpen, setDockCollapsed, setPlanetTexture, setVisitor, setRoster,
+    setAssigned, setChainProgress, setTechs, setActiveResearch, setResearchProgress,
+    setProductionMethods, setStaffingPriorities, setFacilityOrders, setFacilityOrderStarted,
+    setConstruction, setPopulationPressureDays, setActiveOptimizerId, setDifficulty,
+    setObserverMode, setAutoEventsEnabled, setAutoTradeProtectionEnabled, setAutoTradeEnabled,
+    setTradeSourcedResources, setLastAutomatedAction, setReignReportBaseline,
+    setLastReignReport, setActiveReignReport, setLog, setPendingMonthlyReport,
+    setSaveSlotMetas, setToastMessage, setSaveStatus, setAutoSaveState,
+    setSettingsOpen, setStartSettingsOpen, setShowVictory,
+  }, { score, audioRef })
+
   if (!gameStarted) {
     return (
-      <>
-        <StartGate
-          planetTexture={planetTexture}
-          autoSave={autoSaveState ? {
-            difficulty: autoSaveState.difficulty ?? defaultDifficulty,
-            observerMode: autoSaveState.observerMode ?? false,
-            day: autoSaveState.day,
-          } : null}
-          onStart={startGame}
-          onContinue={continueGame}
-          onSettings={() => setStartSettingsOpen(true)}
-        />
-        {startSettingsOpen && (
-          <SettingsPanel
-            volume={musicVolume}
-            saveSlotMetas={saveSlotMetas}
-            autoTradeProtectionEnabled={autoTradeProtectionEnabled}
-            onAutoTradeProtection={setAutoTradeProtectionEnabled}
-            onVolume={setMusicVolume}
-            onContinue={() => setStartSettingsOpen(false)}
-            onSave={saveGame}
-            onLoad={loadGame}
-            onRename={renameSaveSlot}
-            onExit={() => setStartSettingsOpen(false)}
-          />
-        )}
-        {toastMessage && <div className="save-toast" role="status" aria-live="polite">{toastMessage}</div>}
-      </>
-    )
-  }
-
-  if (tutorialOpen) {
-    return (
-      <>
-        <main className="app-shell">
-          {toastMessage && <div className="save-toast" role="status" aria-live="polite">{toastMessage}</div>}
-          <header className="site-header">
-            <div className="brand-block">
-              <div className="brand-seal"><Crown size={23} /></div>
-              <div><p>月面主权局 · 1000御日试验</p><h1>月冠纪元</h1></div>
-            </div>
-          </header>
-          <TutorialOverlay onComplete={() => { window.localStorage.setItem(tutorialSeenKey, '1'); setTutorialOpen(false); }} />
-        </main>
-        {settingsOpen && (
-          <SettingsPanel
-            volume={musicVolume}
-            saveSlotMetas={saveSlotMetas}
-            autoTradeProtectionEnabled={autoTradeProtectionEnabled}
-            onAutoTradeProtection={setAutoTradeProtectionEnabled}
-            onVolume={setMusicVolume}
-            onContinue={() => setSettingsOpen(false)}
-            onSave={saveGame}
-            onLoad={loadGame}
-            onRename={renameSaveSlot}
-            onExit={exitGame}
-            onSaveAndExit={() => exitGame(true)}
-            onClearAndExit={handleClearAndExit}
-          />
-        )}
-      </>
-    )
-  }
-
-  return <main className="app-shell">
-    {toastMessage && <div className="save-toast" role="status" aria-live="polite">{toastMessage}</div>}
-    <header className="site-header">
-      <div className="brand-block">
-        <div className="brand-seal"><Crown size={23} /></div>
-        <div><p>月面主权局 · 1000御日试验</p><h1>月冠纪元</h1></div>
-      </div>
-      <button className="settings-button" onClick={() => setSettingsOpen(true)}><Settings size={16} />设置</button>
-    </header>
-
-    <audio ref={audioRef} src={musicSource} loop preload="auto" />
-
-    <div className={`resource-rail-wrapper${railCollapsed ? ' rail-collapsed' : ''}`}>
-      <button
-        type="button"
-        className="rail-collapse-toggle"
-        onClick={() => setRailCollapsed(previous => !previous)}
-        aria-expanded={!railCollapsed}
-        aria-label={railCollapsed ? '展开资源栏' : '收起资源栏'}
-      >
-        {railCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-        <span className="rail-toggle-label">{railCollapsed ? '展开库存' : '收起'}</span>
-      </button>
-      <section className="resource-rail" aria-label="王国库存">
-        {allResourceKeys.map(key => {
-          const value = key === 'power' ? dailyProduction.power : resources[key]
-          const canCancelAutoTrade = Boolean(autoTradeProtectionEnabled && tradeSourcedResources[key] && autoTradeEnabled[key] !== false && selfProducedSurplus[key])
-          const detail = canCancelAutoTrade ? '自产盈余，可停购' : undefined
-          const isPower = key === 'power'
-          const isPopulation = key === 'population'
-          const subValue = isPower
-            ? `/${fmtCompactAmount(dailyConsumption.power)}`
-            : isPopulation
-              ? `/${fmtSignedCompactAmount(dailyNet.population)}`
-              : `/${fmtSignedCompactAmount(dailyNet[key])}`
-          return <ResourceAtom
-            key={key}
-            resourceKey={key}
-            value={isPopulation ? allocatedPopulation : value}
-            detail={detail}
-            subValue={subValue}
-            actionLabel={canCancelAutoTrade ? '停购' : undefined}
-            onAction={canCancelAutoTrade ? () => setAutoTradeEnabled(previous => ({ ...previous, [key]: false })) : undefined}
-          />
-        })}
-      </section>
-    </div>
-
-    {activeReignReport && <ReignReportModal report={activeReignReport} onClose={() => setActiveReignReport(null)} />}
-
-    {showVictory && (
-      <VictoryModal
-        score={score}
-        shipProgress={shipProgress}
-        facilityTotalLevel={regions.reduce((sum, r) => sum + r.level, 0)}
-        roleCount={roster.length}
-        knowledge={resources.knowledge}
-        day={day}
-        onRestart={() => { clearAutoSave(); setAutoSaveState(null); exitGame(false) }}
-      />
-    )}
-
-    {visitor && !observerMode && <Modal scrimClassName="event-scrim" panelClassName="diplomatic-letter event-modal" ariaLabel="深空来讯" ariaLive="polite">
-      <PortraitSlot src={visitorPortraits[visitor.id]} alt={visitor.name} aria-label="访客肖像" />
-      <div className="letter-copy">
-        <div className="event-transmission-head">
-          <span>深空来讯</span>
-          <small>{visitor.species} · {visitor.chain.arc === 'long' ? `链 ${Math.min((chainProgress[visitor.chain.id] ?? 0) + 1, visitor.chain.events.length)}/${visitor.chain.events.length}` : '偶遇'}</small>
-        </div>
-        <strong>{visitor.event.title}</strong>
-        <p className="letter-body">{visitor.event.body}</p>
-        <p className="letter-portrait-text">{visitor.portrait}</p>
-        {visitor.event.note && <p className="letter-note">{visitor.event.note}</p>}
-        {visitor.event.concealed ? <div className="event-exchange concealed"><div><b>隐含风险</b><span className="resource-empty">从来函文字判断</span></div><div><b>留任</b><ResourceBundle bundle={visitor.retainerCost} /></div></div> : <div className="event-exchange">
-          <div><b>索取</b><ResourceBundle bundle={visitor.offer.take} /></div>
-          <div><b>回赠</b><ResourceBundle bundle={visitor.offer.give} /></div>
-          <div><b>留任</b><ResourceBundle bundle={visitor.retainerCost} /></div>
-        </div>}
-      </div>
-      <LetterActions>
-        <button onClick={dismiss}>礼送</button>
-        <button onClick={acceptTrade} disabled={!canPay(resources, visitor.offer.take) || Boolean(visitor.offer.give.population && (populationProjection.availableCapacity < visitor.offer.give.population || populationProjection.lifeSupportRatio < 1))}>{visitor.event.interaction === 'gift' ? '收下' : visitor.event.interaction === 'accident' ? '接入' : visitor.event.interaction === 'request' ? '准许' : '交换'}</button>
-        <button className="primary" onClick={employ} disabled={!canPay(resources, visitor.retainerCost)}>留任</button>
-      </LetterActions>
-      <IconButton className="letter-close" label="关闭来函" onClick={dismiss}><X size={16} /></IconButton>
-    </Modal>}
-
-    <section className="page-content">
-      {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} habitatLevel={habitatLevel} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} autoStaffingByFacility={autoStaffingByFacility} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={guarded((regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId })))} onStaffingSet={guarded((id, staff) => setManualStaffing(previous => ({ ...previous, [id]: staff })))} onClearAutoStaffing={handleToggleAutoStaffing} onHousingRedistribute={handleHousingRedistribute} onAssignment={guarded((visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId })))}>
-        {selected === 'K' && <PalaceReportBlock day={day} lastReignReport={lastReignReport} onOpenReport={setActiveReignReport} />}
-        {selected === 'L' && <ResearchTreeBlock techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={guarded(setActiveResearch)} />}
-        {selected === 'R' && <EcologyPhaseBlock phaseNotes={selectedRegion.phaseNotes} progress={selectedRegion.max > 0 ? Math.round(selectedRegion.level / selectedRegion.max * 100) : 0} />}
-        {selected === 'S' && <TradeBoardBlock resources={resources} populationProjection={populationProjection} techs={techs} autoTradeProtectionEnabled={autoTradeProtectionEnabled} autoTradeEnabled={autoTradeEnabled} dailyTrades={dailyManualTrades} onProtection={guarded(setAutoTradeProtectionEnabled)} onTrade={executeTrade} onScheduleDailyTrade={scheduleDailyTrade} onCancelDailyTrade={cancelDailyTrade} onAutoTrade={guarded((key, enabled) => setAutoTradeEnabled(previous => ({ ...previous, [key]: enabled })))} />}
-        {selected === 'D' && <ShipProgressBlock shipProgress={shipProgress} shipProjectStages={shipProjectStages} activeStage={activeStage} />}
-      </PlanetFacilities>}
-      {view === 'visitors' && <Visitors roster={roster} assigned={assigned} regions={regions} visitor={visitor} onSelect={selectFacility} onAssignment={guarded((regionId, visitorId) => setAssigned(previous => ({ ...previous, [regionId]: visitorId })))} />}
-    </section>
-
-    {settingsOpen && (
-      <SettingsPanel
+      <StartScreen
+        planetTexture={planetTexture}
+        autoSave={autoSaveState ? {
+          difficulty: autoSaveState.difficulty ?? defaultDifficulty,
+          observerMode: autoSaveState.observerMode ?? false,
+          day: autoSaveState.day,
+        } : null}
+        startSettingsOpen={startSettingsOpen}
+        toastMessage={toastMessage}
+        onStart={startGame}
+        onContinue={continueGame}
+        onOpenSettings={() => setStartSettingsOpen(true)}
+        onCloseSettings={() => setStartSettingsOpen(false)}
         volume={musicVolume}
         saveSlotMetas={saveSlotMetas}
         autoTradeProtectionEnabled={autoTradeProtectionEnabled}
         onAutoTradeProtection={setAutoTradeProtectionEnabled}
         onVolume={setMusicVolume}
-        onContinue={() => setSettingsOpen(false)}
         onSave={saveGame}
         onLoad={loadGame}
         onRename={renameSaveSlot}
+      />
+    )
+  }
+
+  if (tutorialOpen) {
+    return (
+      <TutorialScreen
+        settingsOpen={settingsOpen}
+        toastMessage={toastMessage}
+        onCompleteTutorial={() => { window.localStorage.setItem(tutorialSeenKey, '1'); setTutorialOpen(false); }}
+        onCloseSettings={() => setSettingsOpen(false)}
         onExit={exitGame}
         onSaveAndExit={() => exitGame(true)}
         onClearAndExit={handleClearAndExit}
+        volume={musicVolume}
+        saveSlotMetas={saveSlotMetas}
+        autoTradeProtectionEnabled={autoTradeProtectionEnabled}
+        onAutoTradeProtection={setAutoTradeProtectionEnabled}
+        onVolume={setMusicVolume}
+        onSave={saveGame}
+        onLoad={loadGame}
+        onRename={renameSaveSlot}
       />
-    )}
+    )
+  }
 
-    <footer className="command-deck bottom-tabs">
-      <div className="footer-row footer-row-left">
-        <div className="scoreline gdp-line"><span>GDP</span><strong>{gdp.toFixed(1)}</strong><small><Coins size={14} /></small></div>
-      </div>
-      <TabNav items={navItems} activeId={activeTabId} onSelect={(id) => {
-        if (id === 'facilities') { setView(id); setDetailOpen(false); return }
-        if (id === 'visitors') { setView(id); return }
-        if (id === 'palace') { selectFacility('K'); return }
-        if (id === 'research') { selectFacility('L'); return }
-        if (id === 'ecology') { selectFacility('R'); return }
-        if (id === 'starport') { selectFacility('S'); return }
-        if (id === 'ship') { selectFacility('D'); return }
-      }} />
-      <div className="footer-row footer-row-right">
-        <div className="time-card" aria-label="时间控制">
-          <div className="day-counter">
-            <span>御日</span>
-            <div><strong>{String(day).padStart(3, '0')}</strong></div>
-            <small>/ {gameCalendar.finalDay}</small>
-          </div>
-          <button className="time-control-btn" onClick={() => setSpeed(speed === 'normal' ? 'fast' : 'normal')} aria-label="切换时间速度"><Gauge size={15} /><span>{speed === 'normal' ? '正常' : '加速'}</span></button>
-          <button className="time-control-btn" onClick={() => setRunning(!isRunning)} aria-label={isRunning ? '暂停日历' : '恢复日历'} disabled={completed}>{isRunning ? <Pause size={15} /> : <Play size={15} />}<span>{isRunning ? '暂停' : '继续'}</span></button>
-        </div>
-      </div>
-    </footer>
-  </main>
+  return (
+    <main className="app-shell">
+      {toastMessage && <div className="save-toast" role="status" aria-live="polite">{toastMessage}</div>}
+      <GameHeader onOpenSettings={() => setSettingsOpen(true)} />
+
+      <audio ref={audioRef} src={musicSource} loop preload="auto" />
+
+      <ResourceRail
+        collapsed={railCollapsed}
+        resources={resources}
+        dailyProduction={dailyProduction}
+        dailyConsumption={dailyConsumption}
+        dailyNet={dailyNet}
+        allocatedPopulation={allocatedPopulation}
+        tradeSourcedResources={tradeSourcedResources}
+        autoTradeProtectionEnabled={autoTradeProtectionEnabled}
+        autoTradeEnabled={autoTradeEnabled}
+        selfProducedSurplus={selfProducedSurplus}
+        onToggleCollapsed={() => setRailCollapsed(previous => !previous)}
+        onStopAutoTrade={key => setAutoTradeEnabled(previous => ({ ...previous, [key]: false }))}
+      />
+
+      {activeReignReport && <ReignReportModal report={activeReignReport} onClose={() => setActiveReignReport(null)} />}
+
+      {showVictory && (
+        <VictoryModal
+          score={score}
+          shipProgress={shipProgress}
+          facilityTotalLevel={regions.reduce((sum, r) => sum + r.level, 0)}
+          roleCount={roster.length}
+          knowledge={resources.knowledge}
+          day={day}
+          onRestart={() => { clearAutoSave(); setAutoSaveState(null); exitGame(false) }}
+        />
+      )}
+
+      {visitor && !observerMode && (
+        <VisitorLetterModal
+          visitor={visitor}
+          chainProgress={chainProgress}
+          populationProjection={populationProjection}
+          resources={resources}
+          onDismiss={dismiss}
+          onAccept={acceptTrade}
+          onEmploy={employ}
+        />
+      )}
+
+      <section className="page-content">
+        {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} habitatLevel={habitatLevel} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} autoStaffingByFacility={autoStaffingByFacility} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} automationPlan={automationPlan} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={guarded((regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId })))} onStaffingSet={guarded((id, staff) => setManualStaffing(previous => ({ ...previous, [id]: staff })))} onClearAutoStaffing={handleToggleAutoStaffing} onHousingRedistribute={handleHousingRedistribute} onAssignment={guarded((visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId })))}>
+          {selected === 'K' && <PalaceReportBlock day={day} lastReignReport={lastReignReport} onOpenReport={setActiveReignReport} />}
+          {selected === 'L' && <ResearchTreeBlock techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={guarded(setActiveResearch)} />}
+          {selected === 'R' && <EcologyPhaseBlock phaseNotes={selectedRegion.phaseNotes} progress={selectedRegion.max > 0 ? Math.round(selectedRegion.level / selectedRegion.max * 100) : 0} />}
+          {selected === 'S' && <TradeBoardBlock resources={resources} populationProjection={populationProjection} techs={techs} autoTradeProtectionEnabled={autoTradeProtectionEnabled} autoTradeEnabled={autoTradeEnabled} dailyTrades={dailyManualTrades} onProtection={guarded(setAutoTradeProtectionEnabled)} onTrade={executeTrade} onScheduleDailyTrade={scheduleDailyTrade} onCancelDailyTrade={cancelDailyTrade} onAutoTrade={guarded((key, enabled) => setAutoTradeEnabled(previous => ({ ...previous, [key]: enabled })))} />}
+          {selected === 'D' && <ShipProgressBlock shipProgress={shipProgress} shipProjectStages={shipProjectStages} activeStage={activeStage} />}
+        </PlanetFacilities>}
+        {view === 'visitors' && <Visitors roster={roster} assigned={assigned} regions={regions} visitor={visitor} onSelect={selectFacility} onAssignment={guarded((regionId, visitorId) => setAssigned(previous => ({ ...previous, [regionId]: visitorId })))} />}
+      </section>
+
+      {settingsOpen && (
+        <SettingsPanel
+          volume={musicVolume}
+          saveSlotMetas={saveSlotMetas}
+          autoTradeProtectionEnabled={autoTradeProtectionEnabled}
+          onAutoTradeProtection={setAutoTradeProtectionEnabled}
+          onVolume={setMusicVolume}
+          onContinue={() => setSettingsOpen(false)}
+          onSave={saveGame}
+          onLoad={loadGame}
+          onRename={renameSaveSlot}
+          onExit={exitGame}
+          onSaveAndExit={() => exitGame(true)}
+          onClearAndExit={handleClearAndExit}
+        />
+      )}
+
+      <CommandDeck
+        gdp={gdp}
+        navItems={navItems}
+        activeTabId={activeTabId}
+        day={day}
+        isRunning={isRunning}
+        speed={speed}
+        completed={completed}
+        finalDay={gameCalendar.finalDay}
+        onSelectTab={id => {
+          if (id === 'facilities') { setView(id); setDetailOpen(false); return }
+          if (id === 'visitors') { setView(id); return }
+          if (id === 'palace') { selectFacility('K'); return }
+          if (id === 'research') { selectFacility('L'); return }
+          if (id === 'ecology') { selectFacility('R'); return }
+          if (id === 'starport') { selectFacility('S'); return }
+          if (id === 'ship') { selectFacility('D'); return }
+        }}
+        onToggleSpeed={() => setSpeed(speed === 'normal' ? 'fast' : 'normal')}
+        onToggleRunning={() => setRunning(!isRunning)}
+      />
+    </main>
+  )
 }
 
 export default App
