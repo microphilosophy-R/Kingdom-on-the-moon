@@ -88,12 +88,15 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
 /* ===================== EcologyPhaseBlock ===================== */
 
 export interface EcologyPhaseBlockProps {
-  phaseNotes: { name: string; note: string }[] | undefined
+  phases: { id: number; name: string; input: Partial<Resources>; output?: Partial<Resources>; note: string }[]
   progress?: number
+  activeStage?: number
 }
 
-export function EcologyPhaseBlock({ phaseNotes, progress = 0 }: EcologyPhaseBlockProps) {
+export function EcologyPhaseBlock({ phases, progress = 0, activeStage = 1 }: EcologyPhaseBlockProps) {
   const pct = Math.max(0, Math.min(100, progress))
+  const currentPhase = phases.find(phase => phase.id === activeStage)
+  const hasOutput = (phase: { output?: Partial<Resources> }) => Boolean(phase.output && Object.values(phase.output).some(value => value > 0))
   return (
     <section className={`${styles['special-content-block']} ${styles['phase-list']}`}>
       <div className={styles['tech-tree-toolbar']}>
@@ -101,12 +104,28 @@ export function EcologyPhaseBlock({ phaseNotes, progress = 0 }: EcologyPhaseBloc
         <span className={styles['tech-tree-scale']}>{pct}%</span>
       </div>
       <div className={styles['eco-progress-v2']}><i style={{ width: `${pct}%` }} /></div>
-      {phaseNotes?.map(phase => (
-        <p key={phase.name} style={{ border: '1px solid var(--ui-line)', borderRadius: '5px', padding: '.55rem .62rem', background: 'var(--ui-surface)', marginBottom: '.42rem' }}>
-          <b style={{ display: 'block', marginBottom: '.18rem', color: 'var(--ui-ink-strong)', fontSize: 'var(--font-card)' }}>{phase.name}</b>
-          <span style={{ color: 'var(--ui-muted)', fontSize: 'var(--font-note)', lineHeight: '1.55' }}>{displayCopy(phase.note)}</span>
-        </p>
-      ))}
+      <p className={styles['ship-progress-note']}>月穹生态环分四阶段改造月面环境：前期吸收多余资源、中期集中投入，进入回报阶段后持续产出。{currentPhase ? `当前阶段：${currentPhase.name}。` : ''}</p>
+      <div className={styles['ship-stage-list']}>
+        {phases.map(phase => {
+          const isActive = phase.id === activeStage
+          return (
+            <article key={phase.id} style={{ border: `1px solid ${isActive ? 'var(--ui-line-strong)' : 'var(--ui-line)'}`, borderRadius: '5px', padding: '.52rem .62rem', background: isActive ? 'color-mix(in oklab, var(--ui-brass) 12%, var(--ui-surface))' : 'var(--ui-surface)' }}>
+              <b>{phase.id}. {phase.name}{isActive ? <span className={pillStyles['construction-days-pill']} style={{ marginLeft: '.4rem' }}>当前阶段</span> : null}</b>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem', marginTop: '.3rem', flexWrap: 'wrap' }}>
+                <span style={{ color: 'var(--ui-muted)', fontSize: 'var(--font-micro)' }}>投入</span>
+                <ResourceBundle bundle={phase.input} empty="无消耗" />
+              </div>
+              {hasOutput(phase) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem', marginTop: '.15rem', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--ui-muted)', fontSize: 'var(--font-micro)' }}>产出</span>
+                  <ResourceBundle bundle={phase.output ?? {}} empty="无" />
+                </div>
+              )}
+              <small>{displayCopy(phase.note)}</small>
+            </article>
+          )
+        })}
+      </div>
     </section>
   )
 }
