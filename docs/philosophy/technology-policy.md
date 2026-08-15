@@ -1,6 +1,6 @@
 # 3. 科技与政策
 
-> 本文档说明 `src/economy/technologies.ts`、`src/game/policies.ts` 与 `src/App.tsx` 中的科技 / 政策实现。文档可能滞后，若与代码不一致，以代码为准。
+> 本文档说明 `src/economy/technologies.ts`、`src/legacy/policies.ts`（遗留，演示阶段不启用政策）与 `src/App.tsx` 中的科技 / 政策实现。文档可能滞后，若与代码不一致，以代码为准。
 
 ## 3.1 总则
 
@@ -129,7 +129,7 @@
 
 ## 3.7 政策系统
 
-政策由 `src/game/policies.ts` 定义，共 3 项：
+政策由 `src/legacy/policies.ts` 定义（LEGACY，演示阶段不引入政策玩法），共 3 项：
 
 | 代号 | 名称 | 效果 |
 | --- | --- | --- |
