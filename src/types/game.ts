@@ -2,7 +2,6 @@ import type { ComponentType } from 'react'
 import type { LucideProps } from 'lucide-react'
 import type { Difficulty, FacilityId, FacilityState, ProductionMethodId, ResourceKey, Resources, TechnologyId } from '../economy'
 import type { Encounter, Role } from '../events'
-import type { OptimizerId } from '../optimizers'
 
 export type Icon = ComponentType<LucideProps>
 
@@ -116,7 +115,6 @@ export type GameSaveState = {
   facilityOrderStarted: Record<RegionId, number>
   construction: Record<RegionId, ConstructionProject | null>
   populationPressureDays: number
-  activeOptimizerId: OptimizerId | 'none'
   difficulty?: Difficulty
   observerMode?: boolean
   autoEventsEnabled?: boolean

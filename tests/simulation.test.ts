@@ -458,11 +458,7 @@ function simulateToDay1000(difficulty: Difficulty = 'normal'): SimulationResult 
       startedIds.add(action.id)
     })
 
-    // 优化器人力重分配：将工人调到高边际产出岗位
-    plan.staffingActions.forEach(action => {
-      staffing[action.facilityId] = action.toStaff
-    })
-
+    // 人力分配已由每日 rebalanceStaffing（L3）在日循环内统一执行，优化器计划不再产出 staffingActions（C5）
     day = nextDay
     cumulative.maxPopulation = Math.max(cumulative.maxPopulation, resources.population)
     cumulative.minWater = Math.min(cumulative.minWater, resources.water)

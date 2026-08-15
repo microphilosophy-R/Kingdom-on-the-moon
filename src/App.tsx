@@ -150,8 +150,9 @@ function App() {
   const [construction, setConstruction] = useState<Record<RegionId, ConstructionProject | null>>(initialConstruction)
   const [populationPressureDays, setPopulationPressureDays] = useState(0)
   const [activeOptimizerId, setActiveOptimizerId] = useState<OptimizerId | 'none'>('none')
+  // 观察者模式 = 优化器开启状态（唯一事实来源 activeOptimizerId），此处派生，不再独立存储
+  const observerMode = activeOptimizerId !== 'none'
   const [difficulty, setDifficulty] = useState<Difficulty>(defaultDifficulty)
-  const [observerMode, setObserverMode] = useState(false)
   // 事件自动处理开关（L3 观察者模式通道）：由 StartGate 提供开关；开启后优化器按 defaultAction
   // 模拟事件效果（事件授予的科技经 technologyActions 真实落地，资源转移进入优化器投影）。
   // L1/L2 手动模式事件始终由玩家决策，本开关不生效。
@@ -946,7 +947,6 @@ function App() {
   /** 【L3 激活】开始/继续执政：observerMode=true 时激活 crown-steward 优化器并自动运行；否则回到 L1/L2 手动模式。 */
   const startGame = (options: StartOptions) => {
     setDifficulty(options.difficulty)
-    setObserverMode(options.observerMode)
     setAutoEventsEnabled(options.autoEventsEnabled)
     setActiveOptimizerId(options.observerMode ? 'crown-steward' : 'none')
     setRunning(options.observerMode)
@@ -970,7 +970,7 @@ function App() {
     planetDocked, detailOpen, dockCollapsed, planetTexture, visitor, roster, assigned,
     chainProgress, techs, activeResearch, researchProgress, productionMethods,
     staffing, staffingPriorities, facilityOrders, facilityOrderStarted, construction,
-    populationPressureDays, activeOptimizerId, difficulty, observerMode, autoEventsEnabled,
+    populationPressureDays, difficulty, observerMode, autoEventsEnabled,
     autoTradeProtectionEnabled, autoTradeEnabled, tradeSourcedResources, lastAutomatedAction,
     policy, reignReportBaseline, lastReignReport, activeReignReport, log, pendingMonthlyReport,
   }, {
@@ -979,7 +979,7 @@ function App() {
     setAssigned, setChainProgress, setTechs, setActiveResearch, setResearchProgress,
     setProductionMethods, setStaffingPriorities, setFacilityOrders, setFacilityOrderStarted,
     setConstruction, setPopulationPressureDays, setActiveOptimizerId, setDifficulty,
-    setObserverMode, setAutoEventsEnabled, setAutoTradeProtectionEnabled, setAutoTradeEnabled,
+    setAutoEventsEnabled, setAutoTradeProtectionEnabled, setAutoTradeEnabled,
     setTradeSourcedResources, setLastAutomatedAction, setReignReportBaseline,
     setLastReignReport, setActiveReignReport, setLog, setPendingMonthlyReport,
     setSaveSlotMetas, setToastMessage, setSaveStatus, setAutoSaveState,

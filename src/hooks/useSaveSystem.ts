@@ -60,7 +60,6 @@ export interface SaveSystemState {
   facilityOrderStarted: Record<RegionId, number>
   construction: Record<RegionId, ConstructionProject | null>
   populationPressureDays: number
-  activeOptimizerId: OptimizerId | 'none'
   difficulty: Difficulty
   observerMode: boolean
   autoEventsEnabled: boolean
@@ -104,7 +103,6 @@ export interface SaveSystemSetters {
   setPopulationPressureDays: (value: number) => void
   setActiveOptimizerId: (value: OptimizerId | 'none') => void
   setDifficulty: (value: Difficulty) => void
-  setObserverMode: (value: boolean) => void
   setAutoEventsEnabled: (value: boolean) => void
   setAutoTradeProtectionEnabled: (value: boolean) => void
   setAutoTradeEnabled: (value: Partial<Record<ResourceKey, boolean>>) => void
@@ -161,7 +159,6 @@ export function useSaveSystem(state: SaveSystemState, setters: SaveSystemSetters
     facilityOrderStarted: state.facilityOrderStarted,
     construction: state.construction,
     populationPressureDays: state.populationPressureDays,
-    activeOptimizerId: state.activeOptimizerId,
     difficulty: state.difficulty,
     observerMode: state.observerMode,
     autoEventsEnabled: state.autoEventsEnabled,
@@ -206,9 +203,9 @@ export function useSaveSystem(state: SaveSystemState, setters: SaveSystemSetters
     setters.setFacilityOrderStarted(save.facilityOrderStarted)
     setters.setConstruction(save.construction)
     setters.setPopulationPressureDays(save.populationPressureDays)
-    setters.setActiveOptimizerId(save.activeOptimizerId ?? 'none')
+    // 观察者模式 = 优化器开启状态：存档仅以 observerMode 为事实来源，activeOptimizerId 由此派生（避免两字段不同步）
+    setters.setActiveOptimizerId(save.observerMode ? 'crown-steward' : 'none')
     setters.setDifficulty(save.difficulty ?? defaultDifficulty)
-    setters.setObserverMode(save.observerMode ?? false)
     setters.setAutoEventsEnabled(save.autoEventsEnabled ?? false)
     setters.setAutoTradeProtectionEnabled(save.autoTradeProtectionEnabled ?? true)
     setters.setAutoTradeEnabled(save.autoTradeEnabled ?? {})
@@ -293,12 +290,10 @@ export function useSaveSystem(state: SaveSystemState, setters: SaveSystemSetters
     }
     const savedObserverMode = save.observerMode ?? false
     applySave({ ...save, observerMode: options.observerMode, autoEventsEnabled: options.autoEventsEnabled })
-    // 仅当玩家在开始界面改变了观察者开关时调整接管状态
+    // 观察者模式 = 优化器接管 = 自动运行；手动模式维持玩家控制的运行状态
     if (options.observerMode && !savedObserverMode) {
-      setters.setActiveOptimizerId('crown-steward')
       setters.setRunning(true)
     } else if (!options.observerMode && savedObserverMode) {
-      setters.setActiveOptimizerId('none')
       setters.setRunning(false)
     }
     setters.setSettingsOpen(false)
@@ -314,7 +309,6 @@ export function useSaveSystem(state: SaveSystemState, setters: SaveSystemSetters
     setters.setShowVictory(false)
     setters.setGameStarted(false)
     setters.setActiveOptimizerId('none')
-    setters.setObserverMode(false)
     setters.setDifficulty(defaultDifficulty)
     audioRef.current?.pause()
   }

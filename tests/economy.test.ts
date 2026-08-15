@@ -288,7 +288,7 @@ describe('automation planner', () => {
     expect(crownStewardOptimizer.purpose).toBe('test-baseline')
 
     const disabled = createDisabledAutomationPlan(richResources, baseFacilities)
-    expect(disabled.mode).toBe('manual')
+    expect(disabled.mode).toBe('inactive')
     expect(disabled.reason).toBe('optimizer disabled')
     expect(disabled.actions).toEqual([])
     expect(disabled.technologyActions).toEqual([])
@@ -315,7 +315,7 @@ describe('automation planner', () => {
       reserveFloors: defaultReserveFloors,
     })
 
-    expect(plan.mode).toBe('manual')
+    expect(plan.mode).toBe('inactive')
     expect(plan.actions).toHaveLength(0)
     expect(plan.reason).toContain('低于最低要求')
   })
@@ -330,7 +330,7 @@ describe('automation planner', () => {
       techs: [...defaultStartingTechs, 'TE1-1 纳米光催化剂', 'TF-1 重原子炼金术'],
     })
 
-    expect(plan.mode).toBe('auto')
+    expect(plan.mode).toBe('active')
     expect(plan.actions.length).toBeGreaterThan(0)
     expect(plan.actions[0].score).toBeGreaterThan(0)
     const first = plan.actions[0]
