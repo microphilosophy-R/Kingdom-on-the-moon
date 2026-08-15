@@ -60,7 +60,7 @@ const tutorialSteps: TutorialStep[] = [
     placement: 'bottom',
   },
   {
-    targetSelector: '.time-dock',
+    targetSelector: '.time-card',
     title: '时间控制',
     body: '暂停以从容决策，恢复则日历自动推进。点击可切换正常/加速。1000御日后试验终止。',
     placement: 'top',
@@ -68,7 +68,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     targetSelector: '.scoreline:nth-child(2)',
     title: '国祚评分',
-    body: '右侧实时显示当前评分。最终国祚由星舰完成度（权重最高）、设施规模、招募角色和知识储量共同决定。',
+    body: '底部导航栏实时显示当前评分。最终国祚由星舰完成度（权重最高）、设施规模、招募角色和知识储量共同决定。',
     placement: 'top',
   },
 ]

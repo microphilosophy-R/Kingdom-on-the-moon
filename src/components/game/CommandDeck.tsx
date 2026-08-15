@@ -11,6 +11,8 @@ export interface CommandNavItem {
 
 interface CommandDeckProps {
   gdp: number
+  /** 当前国祚评分；提供时在底部栏左侧 GDP 旁追加评分显示（新手引导第 10 步定位目标）。 */
+  score?: number
   navItems: CommandNavItem[]
   activeTabId: AppView
   day: number
@@ -25,6 +27,7 @@ interface CommandDeckProps {
 
 export function CommandDeck({
   gdp,
+  score,
   navItems,
   activeTabId,
   day,
@@ -40,6 +43,7 @@ export function CommandDeck({
     <footer className="command-deck bottom-tabs">
       <div className="footer-row footer-row-left">
         <div className="scoreline gdp-line"><span>GDP</span><strong>{gdp.toFixed(1)}</strong><small><Coins size={14} /></small></div>
+        {score != null && <div className="scoreline score-line"><span>国祚评分</span><strong>{score}</strong></div>}
       </div>
       <TabNav items={navItems} activeId={activeTabId} onSelect={onSelectTab} />
       <div className="footer-row footer-row-right">

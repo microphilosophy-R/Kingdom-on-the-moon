@@ -51,6 +51,7 @@ import {
   PlanetFacilities,
   ReignReportModal,
   SettingsPanel,
+  TutorialOverlay,
   VictoryModal,
   Visitors,
   type StartOptions,
@@ -67,7 +68,6 @@ import {
   GameHeader,
   ResourceRail,
   StartScreen,
-  TutorialScreen,
   VisitorLetterModal,
 } from './components/game'
 import { useSaveSystem } from './hooks/useSaveSystem'
@@ -1013,28 +1013,6 @@ function App() {
     )
   }
 
-  if (tutorialOpen) {
-    return (
-      <TutorialScreen
-        settingsOpen={settingsOpen}
-        toastMessage={toastMessage}
-        onCompleteTutorial={() => { window.localStorage.setItem(tutorialSeenKey, '1'); setTutorialOpen(false); }}
-        onCloseSettings={() => setSettingsOpen(false)}
-        onExit={exitGame}
-        onSaveAndExit={() => exitGame(true)}
-        onClearAndExit={handleClearAndExit}
-        volume={musicVolume}
-        saveSlotMetas={saveSlotMetas}
-        autoTradeProtectionEnabled={autoTradeProtectionEnabled}
-        onAutoTradeProtection={setAutoTradeProtectionEnabled}
-        onVolume={setMusicVolume}
-        onSave={saveGame}
-        onLoad={loadGame}
-        onRename={renameSaveSlot}
-      />
-    )
-  }
-
   return (
     <main className="app-shell">
       {toastMessage && <div className="save-toast" role="status" aria-live="polite">{toastMessage}</div>}
@@ -1113,6 +1091,7 @@ function App() {
 
       <CommandDeck
         gdp={gdp}
+        score={score}
         navItems={navItems}
         activeTabId={activeTabId}
         day={day}
@@ -1132,6 +1111,10 @@ function App() {
         onToggleSpeed={() => setSpeed(speed === 'normal' ? 'fast' : 'normal')}
         onToggleRunning={() => setRunning(!isRunning)}
       />
+
+      {tutorialOpen && (
+        <TutorialOverlay onComplete={() => { window.localStorage.setItem(tutorialSeenKey, '1'); setTutorialOpen(false); }} />
+      )}
     </main>
   )
 }
