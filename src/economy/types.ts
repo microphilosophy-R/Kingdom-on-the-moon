@@ -1,3 +1,17 @@
+/**
+ * 操作层级语义标签（L1 / L2 / L3）—— 用于标注「该操作由谁发起」，代码检索与冲突排查的基准。
+ *
+ * - L1 manual —— 基础手动操作：玩家直接执行的单次系统操作（单次扩建/缩减、单笔贸易、
+ *   切换生产方式、手动在岗/安置、研究目标、来访者交换等）。代表系统可执行的最小原语；
+ *   L3 优化器最终产出的动作与 L1 一一对应，只是改由算法代发。
+ * - L2 automation —— 批量便捷操作：玩家开启开关后按既定规则自动执行的批量操作
+ *   （人口按优先级分配、债务触发撤人、星港自动补货、每日重复交易、持续扩建/缩减、
+ *   事件自动处理）。L3 优化器激活时应停用与之冲突的 L2 工具，改由 L3 逻辑接管。
+ * - L3 optimizer —— 优化器高级操作：由优化器自主决策并发起（扩建/科技/生产方式/贸易计划、
+ *   人力评分再平衡）。一般会关闭对应的 L2 批量工具。
+ *
+ * 冲突判定：L3 与 L2 不得同时持有同一根杠杆（人力 / 贸易 / 事件 / 建设队列）。
+ */
 export type ResourceKey =
   | 'power'
   | 'water'
@@ -102,6 +116,7 @@ export type AnnualContext = {
   productionMethods?: Partial<Record<FacilityId, ProductionMethodId>>
 }
 
+/** L3 产物：一次设施扩建（与 L1 的 upgrade 一一对应）。 */
 export type AutomationAction = {
   id: FacilityId
   fromLevel: number
@@ -115,6 +130,7 @@ export type AutomationAction = {
   projectedResources: Resources
 }
 
+/** L3 产物：一次科技解锁（L1 的研究是逐日推进，此处为优化器直接完成解锁）。 */
 export type TechnologyAutomationAction = {
   techId: TechnologyId
   name: string
@@ -127,6 +143,7 @@ export type TechnologyAutomationAction = {
   projectedResources: Resources
 }
 
+/** L3 产物：一次生产方式切换（与 L1 的 onMethod 一一对应）。 */
 export type MethodAutomationAction = {
   facilityId: FacilityId
   fromMethodId: ProductionMethodId
@@ -136,6 +153,7 @@ export type MethodAutomationAction = {
   projectedResources: Resources
 }
 
+/** L3 产物：一次人力调整。当前恒为空数组（App 未接入 rebalanceStaffing，见 staffingTools/optimizer 冲突说明）。 */
 export type StaffingAction = {
   facilityId: FacilityId
   fromStaff: number
@@ -143,6 +161,10 @@ export type StaffingAction = {
   score: number
 }
 
+/**
+ * L3 优化器执行状态。注意：此处的 'manual' 表示「优化器让位（被禁用或资源缺口触发退守）」，
+ * 与 L1 玩家手动操作是不同语义——App 侧目前不消费该字段，仅做状态表达。
+ */
 export type AutomationPlan = {
   mode: 'auto' | 'manual'
   reason?: string
@@ -170,6 +192,7 @@ export type StarportTradeOffer = {
   canSell?: boolean
 }
 
+/** 星港交易批次。L2 自动补货与 L3 优化器贸易共用；L1 手动交易在 App 内联构造。 */
 export type AutoTrade = {
   offerId: string
   name: string

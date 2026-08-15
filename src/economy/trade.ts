@@ -318,7 +318,7 @@ export function estimateResourceDeficitPremium(
   return basePremium + hardConstraintPenalty
 }
 
-/** 货币不足时，售卖高于储备线的盈余物资换取货币，用于支付建设或采购，避免单纯依赖信贷。 */
+/** 【L2/L3 共享】货币不足时，售卖高于储备线的盈余物资换取货币，用于支付建设或采购，避免单纯依赖信贷。 */
 export function planSellSurplusForCurrency(
   resources: Resources,
   currencyShortage: number,

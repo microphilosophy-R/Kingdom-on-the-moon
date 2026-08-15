@@ -147,6 +147,7 @@ const normalizeStaffingPriority = (value: unknown, fallback: StaffingPriority): 
 const normalizeStaffingPriorities = (saved?: Partial<Record<RegionId, unknown>>) => Object.fromEntries(
   facilityOrder.map(id => [id, normalizeStaffingPriority(saved?.[id], initialStaffingPriorities[id])]),
 ) as Record<RegionId, StaffingPriority>
+/** 【L2 automation】人口自动分配：按设施岗位优先级（staffingPriorities）贪心分配劳动力到生产设施。 */
 const autoAllocateStaffingFromLevels = (
   levels: Partial<Record<RegionId, number>>,
   population: number,
@@ -169,6 +170,7 @@ const autoAllocateStaffingFromLevels = (
   })
   return next
 }
+/** 【L2 automation】同上：从 Region[] 提取等级后调用 autoAllocateStaffingFromLevels。 */
 const autoAllocateStaffing = (
   regions: Pick<Region, 'id' | 'level'>[],
   population: number,
@@ -379,6 +381,8 @@ function App() {
   const [activeOptimizerId, setActiveOptimizerId] = useState<OptimizerId | 'none'>('none')
   const [difficulty, setDifficulty] = useState<Difficulty>(defaultDifficulty)
   const [observerMode, setObserverMode] = useState(false)
+  // 事件自动处理开关：L2/L3 共用通道。优化器内按 defaultAction 模拟事件（optimizer.ts autoEventsEnabled），
+  // 当前无任何 UI 开关，新档恒为 false（见冲突汇报 C4）。
   const [autoEventsEnabled, setAutoEventsEnabled] = useState(false)
   const [autoTradeProtectionEnabled, setAutoTradeProtectionEnabled] = useState(true)
   const [autoTradeEnabled, setAutoTradeEnabled] = useState<Partial<Record<ResourceKey, boolean>>>({})
@@ -410,6 +414,11 @@ function App() {
   const habitatLevel = regions.find(region => region.id === 'M')?.level ?? 0
   const shipLevel = regions.find(region => region.id === 'D')!.level
   const completed = day >= gameCalendar.finalDay
+  // 人力最终配置 = 三层叠加：
+  //   L2 automation   autoAllocateStaffing（按优先级自动分配）为基底，每日全量重算；
+  //   L1 manual       手动在岗/安置值覆盖对应设施（handleToggleAutoStaffing/handleHousingRedistribute 写入）；
+  //   L2 automation   autoCorrectStaffing（债务触发撤人）仅在优化器未激活时兜底执行；
+  //                   优化器激活后本应改由 L3 rebalanceStaffing 接管，但该函数尚未接入（见 economy 冲突说明）。
   const staffing = useMemo(() => {
     const auto = autoAllocateStaffing(regions, resources.population, staffingPriorities)
     // 手动调配覆盖：保持手动值（不超过容量），自动分配补足其余
@@ -439,7 +448,7 @@ function App() {
   // 人口建筑手动调配重分配：总量不变，按优先级再平衡
   const housingIds = useMemo(() => facilityOrder.filter(id => isHousingFacility(id)), [])
 
-  /** 切换某建筑的自动/手动调配模式 */
+  /** 【L2 开关】切换某建筑的自动/手动调配模式（L2 autoAllocateStaffing ↔ L1 manualStaffing 覆盖） */
   const handleToggleAutoStaffing = (id: RegionId, auto: boolean) => {
     if (auto) {
       // 切回自动：清除手动值
@@ -452,7 +461,7 @@ function App() {
     }
   }
 
-  /** 人口建筑手动调配：重分配空闲人口到其它建筑以保持总量 */
+  /** 【L1 manual】人口建筑手动调配：重分配空闲人口到其它建筑以保持总量 */
   const handleHousingRedistribute = (id: RegionId, newValue: number) => {
     if (observerMode) return
     const oldValue = autoStaffingByFacility[id] === false ? (staffing[id] ?? 0) : (populationProjection.residentsByFacility[id] ?? 0)
@@ -552,6 +561,9 @@ function App() {
     quantumCore: 0,
     luxury: 0,
   }), [preliminaryPopulationProjection])
+  /** 【L2 automation】星港自动补货计划：按 autoTradeTargets（维生缺口）由 planAutoTradesForDeficits 计算，
+   *  受 autoTradeProtectionEnabled（总开关）与 autoTradeEnabled（分资源开关）控制。
+   *  注意：本计划每日执行，即使优化器（L3）激活也不会自动关闭（见冲突汇报）。 */
   const autoTradePlan = useMemo(() => planAutoTradesForDeficits(
     afterProductionResources,
     autoTradeTargets,
@@ -609,6 +621,7 @@ function App() {
     chainProgress,
     difficulty,
   }), [resources, regions, staffing, populationProjection, construction, facilityModifiers, techs, productionMethods, policy, day, autoEventsEnabled, chainProgress, difficulty])
+  /** 【L3 optimizer】优化器计划：未激活时用空计划（createDisabledAutomationPlan），激活时由 gameOptimizers 生成。 */
   const automationPlan = useMemo<AutomationPlan>(() => (
     activeOptimizerId === 'none'
       ? createDisabledAutomationPlan(resources, regions.map(region => ({ id: region.id, level: region.level })))
@@ -644,6 +657,7 @@ function App() {
 
   const writeLog = (line: string) => setLog(previous => [line, ...previous].slice(0, 5))
 
+  // 王月报告建议：以「只读」方式运行一次 L3 优化器（不改任何状态），供 summarizeOptimizerDirections 出建议。
   const createReignReport = (
     reportDay: number,
     reportResources: Resources = resources,
@@ -916,6 +930,7 @@ function App() {
     const isReportDay = nextDay % gameCalendar.reignMonthDays === 0
     const afterDailyNet = settleDailyResources(resources, dailyNet)
     let finalResources = afterDailyNet
+    // 【L2 automation】每日重复交易执行：玩家通过 scheduleDailyTrade 预约的固定买卖，逐日自动结算。
     const manualTradeEntries = Object.entries(dailyManualTrades) as [ResourceKey, { dir: 'buy' | 'sell'; qty: number }][]
     if (manualTradeEntries.length) {
       const doDailyTrade = (r: Resources, key: ResourceKey, dir: 'buy' | 'sell', qty: number): Resources | null => {
@@ -938,6 +953,7 @@ function App() {
     const startedActions: typeof automationPlan.actions = []
     const completedTechnologyActions: typeof automationPlan.technologyActions = []
 
+    // 【L2 自动研究】研究目标由 L1 选择（setActiveResearch），每日知识投入由本段自动执行，达标即解锁。
     if (activeResearchSpec && !hasTech(techs, activeResearch) && hasResearchPrerequisites(activeResearch, techs)) {
       const requiredKnowledge = activeResearchSpec.researchCost ?? 0
       const currentProgress = researchProgress[activeResearch] ?? 0
@@ -981,6 +997,7 @@ function App() {
     }
 
     const completedProjectById = Object.fromEntries(completedProjects) as Partial<Record<RegionId, ConstructionProject>>
+    // 【L2 automation】持续命令执行：expand-continuous / shrink-continuous 在无施工冲突时逐日自动下单。
     const manualContinuousProjects: [RegionId, ConstructionProject][] = []
     const manualImmediateLevels: Partial<Record<RegionId, number>> = {}
     facilityOrder.forEach(id => {
@@ -1037,6 +1054,8 @@ function App() {
       writeLog(`${formatDay(nextDay)}：持续命令继续执行 ${manualContinuousProjects.map(([id]) => regions.find(region => region.id === id)?.name ?? id).join('、')}。`)
     }
 
+    // 【L3 optimizer】王月日执行优化器计划：依次落地科技、贸易与扩建动作（此处才真正改状态）。
+    // 注意：此块只在 isReportDay 执行，且不与 L2 自动补货/持续命令互斥（见冲突汇报）。
     if (activeOptimizerId !== 'none' && isReportDay) {
     const startedIds = new Set<RegionId>()
     automationPlan.technologyActions.forEach(action => {
@@ -1167,11 +1186,13 @@ function App() {
     setDetailOpen(true)
   }
 
-  // 观察者模式下拦截一切玩家主动操作（建造/拆除/科研/贸易/人员/分配）
+  // 【L3 门禁】观察者模式下拦截一切 L1/L2 玩家主动操作（建造/拆除/科研/贸易/人员/分配）。
+  // 优化器（L3）接管期间，L1/L2 的 UI 入口全部失效，仅保留 L3 计划执行。
   const guarded = <Args extends unknown[]>(fn: (...args: Args) => void) => (...args: Args) => {
     if (!observerMode) fn(...args)
   }
 
+  /** 【L1 manual】单次扩建：立即扣费并写入施工队列（也可附带 expand-continuous 持续命令）。 */
   const upgrade = (id: RegionId, orderMode: Extract<FacilityOrderMode, 'expand' | 'expand-continuous'> = 'expand') => {
     if (observerMode) return
     const region = regions.find(item => item.id === id)!
@@ -1207,6 +1228,7 @@ function App() {
     writeLog(`${formatDay(day)}：${region.name}开工扩建，预计 ${getConstructionDays(techs)} 御日后升为第 ${region.level + 1} 阶。${orderMode === 'expand-continuous' ? '持续增加命令已记录。' : ''}`)
   }
 
+  /** 【L1 manual】维持现状：将该设施命令置为 hold。 */
   const holdFacility = (id: RegionId) => {
     if (observerMode) return
     const region = regions.find(item => item.id === id)!
@@ -1215,6 +1237,7 @@ function App() {
     writeLog(`${formatDay(day)}：${region.name}维持现行规模，等待下个王月报告复核。`)
   }
 
+  /** 【L1 manual】单次缩减：立即降级并回收 50% 建材（也可附带 shrink-continuous 持续命令）。 */
   const shrinkFacility = (id: RegionId, orderMode: Extract<FacilityOrderMode, 'shrink' | 'shrink-continuous'> = 'shrink') => {
     const region = regions.find(item => item.id === id)!
     if (isFixedFacility(id)) {
@@ -1245,6 +1268,7 @@ function App() {
     writeLog(`${formatDay(day)}：${region.name}缩小至第 ${Math.max(0, region.level - 1)} 阶，回收约 50% 建材并进入冷却。${orderMode === 'shrink-continuous' ? '持续收缩命令已记录。' : ''}`)
   }
 
+  /** 【L1 manual】设置岗位优先级：该配置作为 L2 autoAllocateStaffing 的排序依据。 */
   const setStaffPriority = (id: RegionId, priority: StaffingPriority) => {
     if (observerMode) return
     const region = regions.find(item => item.id === id)!
@@ -1256,6 +1280,7 @@ function App() {
     writeLog(`${formatDay(day)}：${region.name}岗位优先级调整为 ${priority}。`)
   }
 
+  /** 【L1 manual】来访者交换：接受 offer（取/赠）并推进事件链。 */
   const acceptTrade = () => {
     if (observerMode) return
     if (!visitor || !canPay(resources, visitor.offer.take)) return
@@ -1269,6 +1294,7 @@ function App() {
     advanceEncounter(visitor)
   }
 
+  /** 【L1 manual】来访者留任：支付留任费并入职对应设施。 */
   const employ = () => {
     if (observerMode) return
     if (!visitor) return
@@ -1280,17 +1306,19 @@ function App() {
     advanceEncounter(visitor, visitor.chain.arc === 'simple')
   }
 
+  /** 【L1 manual】来访者礼送：无代价结束事件。观察者模式下由 effect 自动调用。 */
   const dismiss = () => {
     if (visitor) writeLog(`${formatDay(day)}：${visitor.name}离开了月面，信标从本轮记录中熄灭。`)
     if (visitor) advanceEncounter(visitor, true)
   }
 
-  // 观察者模式下访客来函自动礼送，避免阻塞自动推进
+  // 【L3 接管】观察者模式下访客来函自动礼送，避免阻塞自动推进（事件效果被整体跳过，见冲突汇报 C4）。
   useEffect(() => {
     if (observerMode && visitor) dismiss()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [observerMode, visitor])
 
+  /** 【L1 manual】单笔星港交易：立即结算（买入/卖出一次）。 */
   const executeTrade = (name: string, input: Partial<Resources>, output: Partial<Resources>) => {
     if (observerMode) return
     if (!canExecuteStarportTrade(resources, input)) {
@@ -1305,6 +1333,7 @@ function App() {
     writeLog(`${formatDay(day)}：星海交易港完成「${name}」。`)
   }
 
+  /** 【L2 automation】预约每日重复交易：玩家设定固定买卖量，此后每个御日自动执行（见 advanceDay 中的执行段）。 */
   const scheduleDailyTrade = (key: ResourceKey, dir: 'buy' | 'sell', qty: number, input: Partial<Resources>, output: Partial<Resources>) => {
     if (observerMode) return
     if (!canExecuteStarportTrade(resources, input)) {
@@ -1318,6 +1347,7 @@ function App() {
     })
   }
 
+  /** 【L2 automation】取消每日重复交易预约。 */
   const cancelDailyTrade = (key: ResourceKey) => {
     if (observerMode) return
     setDailyManualTrades(previous => {
@@ -1328,6 +1358,7 @@ function App() {
     })
   }
 
+  /** 【L3 激活】开始/继续执政：observerMode=true 时激活 crown-steward 优化器并自动运行；否则回到 L1/L2 手动模式。 */
   const startGame = (options: StartOptions) => {
     setDifficulty(options.difficulty)
     setObserverMode(options.observerMode)

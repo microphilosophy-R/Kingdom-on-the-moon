@@ -4,13 +4,14 @@ import { bundleDelta, emptyTradeDelta, emergencyCreditBatchLimit, emergencyCredi
 import type { AutoTrade, FacilityState, ResourceKey, Resources } from './types'
 
 /**
- * 自动贸易保护 —— 系统自带的便捷工具（完全手动启停）。
+ * 【L2 automation】自动贸易保护 —— 系统自带的便捷工具（完全手动启停）。
  * 默认补齐低于目标的物资（通常是维生与星舰/生态环材料），
  * 并在货币赤字时先售卖盈余物资换取货币，减少对信贷的依赖。
  *
  * 冲突说明：本工具是「按固定目标被动补资源」的系统默认口径；
- * 优化器使用 optimizer.ts 内的 planAutoTradesForCost 自主决定购入/卖出数量，
+ * 优化器使用 optimizer.ts 内的 planAutoTradesForCost（L3）自主决定购入/卖出数量，
  * 启用优化器时应停用本工具，避免两套贸易策略同时争抢库存。
+ * 现状：App.tsx 的 autoTradeProtectionEnabled 默认开启且优化器激活时不会自动关闭（见 App 冲突）。
  */
 export function planAutoTradesForDeficits(
   resources: Resources,

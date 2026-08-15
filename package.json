@@ -17,6 +17,7 @@
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "styled-components": "^6.5.2",
     "three": "^0.185.1",
     "typescript": "^7.0.2",
     "vite": "latest"
@@ -25,6 +26,7 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@types/styled-components": "^5.1.36",
     "playwright": "^1.62.1",
     "vitest": "^4.1.10"
   }

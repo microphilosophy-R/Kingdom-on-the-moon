@@ -10,6 +10,7 @@ const populationPolicyOrder: Record<PopulationPolicy, FacilityId[]> = {
   festival: ['H', 'K', 'M'],
 }
 
+/** 【L1 系统结算】人口安置与生命维持的每日模拟（策略顺序定居 + 移民/减员），L1/L2/L3 共用同一条结算。 */
 export function projectPopulationSystem(context: PopulationContext): PopulationProjection {
   const capacity = (['K', 'H', 'M'] as FacilityId[]).reduce(
     (sum, id) => sum + getHousingCapacity(id, context.facilities[id]?.level ?? 0),

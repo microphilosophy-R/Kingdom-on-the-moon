@@ -6,13 +6,14 @@ import { resourceDebtLimits } from './trade'
 import type { FacilityId, FacilityState, ProductionMethodId, Resources } from './types'
 
 /**
- * 人力自动纠正 —— 系统自带的便捷工具（完全手动启停）。
+ * 【L2 automation】人力自动纠正 —— 系统自带的便捷工具（完全手动启停）。
  * 当物质资源跌破债务上限时，精确撤走最大消耗设施中对应数量的岗位，
  * 并按优先级将释放的人力重分配到有闲置容量的设施。
  * 返回调整后的人力配置和释放总数。
  *
- * 冲突说明：本工具与优化器内置的 rebalanceStaffing（高级评分分配）是两套互相冲突的分配口径，
+ * 冲突说明：本工具与优化器内置的 rebalanceStaffing（L3，高级评分分配）是两套互相冲突的分配口径，
  * 启用优化器时应停用本工具，改用 rebalanceStaffing，避免两套算法同时争夺人力。
+ * 现状：App.tsx 在优化器激活时已停用本工具，但 rebalanceStaffing 尚未接入（见 optimizer.ts 备注）。
  */
 export function autoCorrectStaffing(
   resources: Resources,

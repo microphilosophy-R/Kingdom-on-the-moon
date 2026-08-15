@@ -8,7 +8,7 @@ import { projectFacilityCost, projectFacilityNet, projectTechnologyCost } from '
 import { eventChains, getCurrentGameEra } from '../events'
 import type { AutoTrade, AutomationAction, AutomationPlan, FacilityId, FacilityModifiers, FacilityState, MethodAutomationAction, PopulationProjection, ProductionMethodId, ResourceKey, Resources, StaffingAction, TechnologyAutomationAction, TechnologySpec } from './types'
 
-/** 优化器内部：按建造成本与储备线买入缺料（仅买入，不做售卖）。 */
+/** 【L3 内部】优化器按建造成本与储备线买入缺料（仅买入，不做售卖）。 */
 const planAutoBuyForCost = (
   resources: Resources,
   cost: Partial<Resources>,
@@ -50,9 +50,10 @@ const planAutoBuyForCost = (
 }
 
 /**
- * 优化器高级贸易策略：自主决策购入与卖出的数量。
+ * 【L3 optimizer】优化器高级贸易策略：自主决策购入与卖出的数量。
  * 先按建造成本与储备线计算缺料所需的货币；若可用货币不足，
  * 则售卖高于储备线的盈余物资补足货币，再完成买入。
+ * 与 L2 的 planAutoTradesForDeficits（固定目标被动补货）口径互斥。
  */
 export function planAutoTradesForCost(
   resources: Resources,
@@ -408,6 +409,7 @@ export type PlanInput = {
   chainProgress?: Record<string, number>
 }
 
+/** 【L3 optimizer】优化器主入口：在给定库存/科技/人力下自主决策扩建、科技、生产方式与贸易计划。 */
 export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   const reserveFloors = { ...defaultReserveFloors, ...input.reserveFloors } as Resources
   const weights = { ...resourceWeights, ...input.weights } as Resources
@@ -833,6 +835,7 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
   }
 
   if (initialBreach && !actions.length && !technologyActions.length) {
+    // mode='manual'：优化器因初始资源缺口主动让位（与 L1 玩家手动操作无关，仅表达「本轮无可执行计划」）。
     return {
       mode: 'manual',
       reason: `${resourceMeta[initialBreach].label} 低于最低要求`,
@@ -846,8 +849,8 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
     }
   }
 
-  // 人力分配已由 rebalanceStaffing 在每日循环中统一执行（人口可重分配），
-  // 优化器不再做“空余人口自动分配”这种低级补位。
+  // 人力分配：L3 的 rebalanceStaffing 设计为每日循环统一执行，但当前 App.tsx 尚未接入
+  // （优化器激活时仍由 L2 的 autoAllocateStaffing 按优先级分配），故此处不再产出 staffingActions。
   const staffingActions: StaffingAction[] = []
 
   return {
@@ -863,14 +866,15 @@ export function planFacilityAutomation(input: PlanInput): AutomationPlan {
 }
 
 /**
- * 人力再平衡 —— 优化器自有的人力分配工具（高级评分分配）。
+ * 【L3 optimizer】人力再平衡 —— 优化器自有的人力分配工具（高级评分分配）。
  * 将人力视为随时可调的生产比例杠杆。
  * 每个御日根据当前库存与净产出，把劳动力按“基础价值 + 赤字溢价”重新分配到各生产设施，
  * 使赤字资源的生产者获得更高优先级、赤字资源的消费者被压低优先级，从而在赤字出现时及时纠偏，
  * 而不是等到跌破债务上限才被动撤人。
  *
- * 冲突说明：与系统自带的 autoCorrectStaffing（债务上限触发式撤人）是两套互相冲突的分配口径，
+ * 冲突说明：与系统自带的 autoCorrectStaffing（L2，债务上限触发式撤人）是两套互相冲突的分配口径，
  * 启用优化器时应停用 autoCorrectStaffing，统一使用本函数。
+ * 现状：本函数已导出但 App.tsx 未调用（优化器激活时人力仍走 L2 的 autoAllocateStaffing）。
  */
 export function rebalanceStaffing(
   resources: Resources,
