@@ -1,4 +1,4 @@
-﻿/* Settings and time controls. */
+/* Settings and time controls. */
 .app-shell {
   padding-bottom: 7.4rem;
 }
@@ -405,14 +405,14 @@
 
 .settings-main-actions .primary-action {
   width: 100%;
-  border-color: var(--ui-brass-dark);
-  background: var(--ui-brass);
+  border-color: oklch(43% .074 var(--action-hue, 76));
+  background: oklch(54% .082 var(--action-hue, 76));
   color: oklch(97% .012 86);
   box-shadow: none;
 }
 
 .settings-main-actions .primary-action:hover:not(:disabled) {
-  background: oklch(60% .11 76);
+  background: oklch(60% .11 var(--action-hue, 76));
   color: oklch(98% .01 86);
 }
 
@@ -1199,8 +1199,8 @@
 .event-modal .letter-actions .primary,
 .upgrade-button,
 .trade-offer-list button {
-  border-color: oklch(43% .086 76);
-  background: linear-gradient(180deg, oklch(57% .095 76), oklch(49% .086 76));
+  border-color: oklch(43% .086 var(--action-hue, 76));
+  background: linear-gradient(180deg, oklch(57% .095 var(--action-hue, 76)), oklch(49% .086 var(--action-hue, 76)));
   color: oklch(97% .012 86);
   font-weight: 700;
 }
@@ -1210,8 +1210,13 @@
 .event-modal .letter-actions .primary:hover,
 .upgrade-button:hover:not(:disabled),
 .trade-offer-list button:hover:not(:disabled) {
-  background: linear-gradient(180deg, oklch(61% .102 76), oklch(52% .092 76));
+  background: linear-gradient(180deg, oklch(61% .102 var(--action-hue, 76)), oklch(52% .092 var(--action-hue, 76)));
   color: oklch(98% .010 86);
+}
+
+/* 与开始执政共用同一套 primary-action 样式，仅通过 --action-hue 变色 */
+.primary-action {
+  box-shadow: 0 0 0 2px oklch(55% .105 var(--action-hue, 76) / .16), 0 8px 20px oklch(45% .08 var(--action-hue, 76) / .12);
 }
 
 .facility-actions button:nth-child(-n + 2) {

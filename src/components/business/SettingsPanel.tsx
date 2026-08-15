@@ -1,6 +1,6 @@
-import { Check, FolderOpen, LogOut, Pencil, Play, Save, Volume2, X } from 'lucide-react'
+import { Check, FolderOpen, LogOut, Pencil, Play, Save, Trash2, Volume2, X } from 'lucide-react'
 import { useState } from 'react'
-import { IconButton } from '../ui'
+import { Button, IconButton } from '../ui'
 import type { SaveSlotMeta } from '../../types/game'
 
 export interface SettingsPanelProps {
@@ -14,6 +14,8 @@ export interface SettingsPanelProps {
   onLoad: (slotIndex: number) => void
   onRename: (slotIndex: number, name: string) => void
   onExit: () => void
+  onSaveAndExit?: () => void
+  onClearAndExit?: () => void
 }
 
 const formatSlotTime = (iso: string) => {
@@ -33,6 +35,8 @@ export function SettingsPanel({
   onLoad,
   onRename,
   onExit,
+  onSaveAndExit,
+  onClearAndExit,
 }: SettingsPanelProps) {
   const [editingSlot, setEditingSlot] = useState<number | null>(null)
   const [editName, setEditName] = useState('')
@@ -129,8 +133,15 @@ export function SettingsPanel({
         </section>
 
         <section className="settings-actions settings-main-actions">
-          <button className="primary-action" onClick={onContinue}><Play size={15} />继续游戏</button>
-          <button onClick={onExit}><LogOut size={15} />退出游戏</button>
+          <Button variant="primary" onClick={onContinue}><Play size={15} />继续游戏</Button>
+          {onSaveAndExit ? (
+            <Button variant="continue" onClick={onSaveAndExit}><Save size={15} />保存并退出</Button>
+          ) : (
+            <Button onClick={onExit}><LogOut size={15} />退出游戏</Button>
+          )}
+          {onClearAndExit && (
+            <Button variant="danger" onClick={onClearAndExit}><Trash2 size={15} />清除并退出</Button>
+          )}
         </section>
       </aside>
     </div>

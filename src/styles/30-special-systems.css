@@ -181,6 +181,15 @@
   background: oklch(95% .036 78);
 }
 
+.difficulty-chip:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+.difficulty-chip:disabled:hover {
+  background: var(--ui-raised);
+}
+
 .difficulty-chip.active {
   background: var(--ui-brass);
   color: oklch(20% .03 78);
@@ -195,6 +204,18 @@
   height: 18px;
   accent-color: var(--ui-brass);
   cursor: pointer;
+}
+
+.toggle-row input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+.start-autosave-hint {
+  margin: .1rem 0 0;
+  color: oklch(50% .05 205);
+  font-size: var(--font-note);
+  line-height: 1.55;
 }
 
 .start-actions {

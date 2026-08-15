@@ -237,6 +237,25 @@ const saveMetaKey = (slotIndex: number) => `lunar-crown-save-meta-${slotIndex}`
 const maxSaveSlots = 6
 const musicVolumeKey = 'lunar-crown-music-volume'
 const tutorialSeenKey = 'lunar-crown-tutorial-seen'
+const autoSaveKey = 'lunar-crown-autosave-v6'
+
+const readAutoSave = (): GameSaveState | null => {
+  try {
+    const raw = window.localStorage.getItem(autoSaveKey)
+    if (!raw) return null
+    return JSON.parse(raw) as GameSaveState
+  } catch {
+    return null
+  }
+}
+
+const writeAutoSave = (save: GameSaveState) => {
+  window.localStorage.setItem(autoSaveKey, JSON.stringify(save))
+}
+
+const clearAutoSave = () => {
+  window.localStorage.removeItem(autoSaveKey)
+}
 
 const readSaveSlotMeta = (slotIndex: number): SaveSlotMeta | null => {
   try {
@@ -381,6 +400,7 @@ function App() {
   const [saveStatus, setSaveStatus] = useState('本机多槽存档')
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [saveSlotMetas, setSaveSlotMetas] = useState<(SaveSlotMeta | null)[]>(() => readAllSaveSlotMetas())
+  const [autoSaveState, setAutoSaveState] = useState<GameSaveState | null>(() => readAutoSave())
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const [showVictory, setShowVictory] = useState(false)
 
@@ -740,6 +760,8 @@ function App() {
     setConstruction(save.construction)
     setPopulationPressureDays(save.populationPressureDays)
     setActiveOptimizerId(save.activeOptimizerId ?? 'none')
+    setDifficulty(save.difficulty ?? defaultDifficulty)
+    setObserverMode(save.observerMode ?? false)
     setAutoEventsEnabled(save.autoEventsEnabled ?? false)
     setAutoTradeProtectionEnabled(save.autoTradeProtectionEnabled ?? true)
     setAutoTradeEnabled(save.autoTradeEnabled ?? {})
@@ -801,7 +823,45 @@ function App() {
     setToastMessage(`槽位 ${slotIndex + 1} 已重命名为「${newName}」`)
   }
 
-  const exitGame = () => {
+  const saveAutoSave = () => {
+    const snapshot = currentSave()
+    try {
+      writeAutoSave(snapshot)
+      setAutoSaveState(snapshot)
+      setToastMessage(`已自动存档：${formatSaveSlotDay(snapshot.day)}`)
+      setSaveStatus(`已自动存档：${formatSaveSlotDay(snapshot.day)}`)
+    } catch {
+      setToastMessage('自动存档失败：浏览器存储异常')
+    }
+  }
+
+  const continueGame = (options: Pick<StartOptions, 'observerMode'>) => {
+    const save = readAutoSave()
+    if (!save) return
+    if (![4, 5, 6].includes(save.version) || !save.resources || !save.regionLevels || !save.construction || !save.reignReportBaseline) {
+      clearAutoSave()
+      setAutoSaveState(null)
+      setToastMessage('自动存档损坏，已清除')
+      return
+    }
+    const savedObserverMode = save.observerMode ?? false
+    applySave({ ...save, observerMode: options.observerMode })
+    // 仅当玩家在开始界面改变了观察者开关时调整接管状态
+    if (options.observerMode && !savedObserverMode) {
+      setActiveOptimizerId('crown-steward')
+      setRunning(true)
+    } else if (!options.observerMode && savedObserverMode) {
+      setActiveOptimizerId('none')
+      setRunning(false)
+    }
+    setSettingsOpen(false)
+    setStartSettingsOpen(false)
+    setShowVictory(false)
+    setToastMessage(`已读档：自动存档（${formatSaveSlotDay(save.day)}）`)
+    setSaveStatus(`已读档：${formatSaveSlotDay(save.day)}`)
+  }
+
+  const exitToHome = () => {
     setRunning(false)
     setSettingsOpen(false)
     setShowVictory(false)
@@ -810,6 +870,18 @@ function App() {
     setObserverMode(false)
     setDifficulty(defaultDifficulty)
     audioRef.current?.pause()
+  }
+
+  const exitGame = (save = true) => {
+    if (save) saveAutoSave()
+    exitToHome()
+  }
+
+  const handleClearAndExit = () => {
+    clearAutoSave()
+    setAutoSaveState(null)
+    exitToHome()
+    setToastMessage('自动存档已清除，可开始新的试验')
   }
 
   const chooseVisitor = () => {
@@ -1266,7 +1338,13 @@ function App() {
       <>
         <StartGate
           planetTexture={planetTexture}
+          autoSave={autoSaveState ? {
+            difficulty: autoSaveState.difficulty ?? defaultDifficulty,
+            observerMode: autoSaveState.observerMode ?? false,
+            day: autoSaveState.day,
+          } : null}
           onStart={startGame}
+          onContinue={continueGame}
           onSettings={() => setStartSettingsOpen(true)}
         />
         {startSettingsOpen && (
@@ -1313,6 +1391,8 @@ function App() {
             onLoad={loadGame}
             onRename={renameSaveSlot}
             onExit={exitGame}
+            onSaveAndExit={() => exitGame(true)}
+            onClearAndExit={handleClearAndExit}
           />
         )}
       </>
@@ -1377,7 +1457,7 @@ function App() {
         roleCount={roster.length}
         knowledge={resources.knowledge}
         day={day}
-        onRestart={exitGame}
+        onRestart={() => { clearAutoSave(); setAutoSaveState(null); exitGame(false) }}
       />
     )}
 
@@ -1429,6 +1509,8 @@ function App() {
         onLoad={loadGame}
         onRename={renameSaveSlot}
         onExit={exitGame}
+        onSaveAndExit={() => exitGame(true)}
+        onClearAndExit={handleClearAndExit}
       />
     )}
 
