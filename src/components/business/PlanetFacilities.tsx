@@ -23,6 +23,7 @@ export interface PlanetFacilitiesProps {
   year: number
   techs: string[]
   habitatLevel: number
+  policy: 'ration' | 'mandate' | 'festival'
   productionMethods: Record<RegionId, ProductionMethodId>
   facilityOrders: Record<RegionId, FacilityOrderMode>
   facilityOrderStarted: Record<RegionId, number>
@@ -67,6 +68,7 @@ export function PlanetFacilities({
   year,
   techs,
   habitatLevel,
+  policy,
   productionMethods,
   facilityOrders,
   facilityOrderStarted,
@@ -104,6 +106,9 @@ export function PlanetFacilities({
   onAssignment,
   children,
 }: PlanetFacilitiesProps) {
+  const detailWorker = roster.find(item => item.id === assigned[selectedRegion.id])
+  const detailWorkerBoost = detailWorker?.specialty === selectedRegion.id ? 1 + (detailWorker.boost ?? 0) : 1
+  const detailWorkerName = detailWorker?.specialty === selectedRegion.id ? detailWorker.name : undefined
   if (!docked) {
     return (
       <div className={styles['planet-home']}>
@@ -160,6 +165,9 @@ export function PlanetFacilities({
           year={year}
           techs={techs}
           habitatLevel={habitatLevel}
+          policy={policy}
+          workerBoost={detailWorkerBoost}
+          workerName={detailWorkerName}
           productionMethods={productionMethods}
           facilityOrders={facilityOrders}
           facilityOrderStarted={facilityOrderStarted}

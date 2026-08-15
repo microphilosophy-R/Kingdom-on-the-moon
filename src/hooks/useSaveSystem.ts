@@ -51,8 +51,7 @@ export interface SaveSystemState {
   assigned: Record<RegionId, string | undefined>
   chainProgress: Record<string, number>
   techs: string[]
-  activeResearch: TechnologyId
-  researchProgress: Partial<Record<TechnologyId, number>>
+  preUnlockTech: TechnologyId | null
   productionMethods: Record<RegionId, ProductionMethodId>
   staffing: Record<RegionId, number>
   staffingPriorities: Record<RegionId, StaffingPriority>
@@ -93,8 +92,7 @@ export interface SaveSystemSetters {
   setAssigned: (value: Record<RegionId, string | undefined>) => void
   setChainProgress: (value: Record<string, number>) => void
   setTechs: (value: string[]) => void
-  setActiveResearch: (value: TechnologyId) => void
-  setResearchProgress: (value: Partial<Record<TechnologyId, number>>) => void
+  setPreUnlockTech: (value: TechnologyId | null) => void
   setProductionMethods: (value: Record<RegionId, ProductionMethodId>) => void
   setStaffingPriorities: (value: Record<RegionId, StaffingPriority>) => void
   setFacilityOrders: (value: Record<RegionId, FacilityOrderMode>) => void
@@ -150,8 +148,7 @@ export function useSaveSystem(state: SaveSystemState, setters: SaveSystemSetters
     assigned: state.assigned,
     chainProgress: state.chainProgress,
     techs: state.techs,
-    activeResearch: state.activeResearch,
-    researchProgress: state.researchProgress,
+    preUnlockTech: state.preUnlockTech,
     productionMethods: state.productionMethods,
     staffing: state.staffing,
     staffingPriorities: state.staffingPriorities,
@@ -195,8 +192,7 @@ export function useSaveSystem(state: SaveSystemState, setters: SaveSystemSetters
     setters.setAssigned(save.assigned)
     setters.setChainProgress(save.chainProgress)
     setters.setTechs(save.techs)
-    setters.setActiveResearch(save.activeResearch)
-    setters.setResearchProgress(save.researchProgress)
+    setters.setPreUnlockTech(save.preUnlockTech ?? null)
     setters.setProductionMethods(save.productionMethods)
     setters.setStaffingPriorities(normalizeStaffingPriorities(save.staffingPriorities))
     setters.setFacilityOrders(save.facilityOrders)

@@ -61,7 +61,7 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
   oxygen: {
     label: '氧气',
     category: 'life',
-    source: '水培生态球、天工精炼署、日冕能源署、伊犁河谷、月穹生态环、星海交易港',
+    source: '水培生态球、日冕能源署、伊犁河谷、月穹生态环、星海交易港',
     coreUse: '生命维持与生产。月面上每一口氧气都是造出来的。',
     deficit: '人口下降，相关建筑重新调整直到恢复盈余。',
     tradeRule: '可交易，可由交易港补充。',
@@ -110,7 +110,7 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     label: '量子计算核心',
     category: 'science',
     source: '问天研究实验室、星海交易港',
-    coreUse: '高级工业品、后期高级建筑与星舰材料。御座号王座核心最稀缺的那块骨头。',
+    coreUse: '高级工业品、后期高级建筑升级与星舰材料。御座号王座核心最稀缺的那块骨头。',
     deficit: '相关高阶建筑停止运行，直到恢复盈余。',
     tradeRule: '可交易，是后期高价值资源。',
     autoBuyRule: '仅在交易港有库存与货币时补入。',
@@ -158,7 +158,7 @@ export const resourceMeta: Record<ResourceKey, ResourceSpec> = {
     label: '艺术奢侈品',
     category: 'culture',
     source: '翡翠宫、星海交易港',
-    coreUse: '外星人需求、贸易与外交。',
+    coreUse: '外星事件需求、外交与贸易。稀有高值，多用于事件，是后期外交的硬通货。',
     deficit: '部分外星人事件无法满足，贸易收益下降。',
     tradeRule: '解锁 TS-3 玫瑰星球后可在交易港处理艺术奢侈品双向贸易。',
     autoBuyRule: '低优先级自动购买。',
@@ -199,12 +199,18 @@ export const resourceWeights: Resources = {
   biomass: 5.0,
   regolith: 2.0,
   alloy: 8.0,
-  quantumCore: 150.0,
+  quantumCore: 320.0,
   currency: 1.0,
   population: 200.0,
   knowledge: 8.0,
-  luxury: 10.0,
+  luxury: 1600.0,
 }
+
+/** 稀有高值资源：单件价值极高、日产量极小，配方展示采用 50 御日（王月）粒度。 */
+export const rareResourceKeys: ResourceKey[] = ['quantumCore', 'luxury']
+
+/** 配方展示的周期天数（一个王月） */
+export const recipePeriodDays = 50
 
 export const resourceText = (bundle: Partial<Resources>) =>
   resourceOrder

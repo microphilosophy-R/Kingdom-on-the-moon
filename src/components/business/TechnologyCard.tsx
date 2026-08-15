@@ -1,4 +1,4 @@
-import { BookOpen, FlaskConical, Lock } from 'lucide-react'
+import { BookOpen, FlaskConical, Lock, Zap } from 'lucide-react'
 import { hasTech, technologyCatalog } from '../../economy'
 import { displayCopy } from '../../utils/format'
 import { hasResearchPrerequisites, techLabel, technologyCategoryLabel } from '../../utils/game'
@@ -8,49 +8,58 @@ import styles from './TechnologyCard.module.css'
 export interface TechnologyCardProps {
   techId: TechnologyId
   techs: string[]
-  activeResearch: TechnologyId
-  researchProgress: Partial<Record<TechnologyId, number>>
-  onResearch: (techId: TechnologyId) => void
+  knowledge: number
+  preUnlockTech: TechnologyId | null
+  onOpen: (techId: TechnologyId) => void
 }
 
-export function TechnologyCard({ techId, techs, activeResearch, researchProgress, onResearch }: TechnologyCardProps) {
+export function TechnologyCard({ techId, techs, knowledge, preUnlockTech, onOpen }: TechnologyCardProps) {
   const tech = technologyCatalog[techId]
   const completed = hasTech(techs, techId)
   const prerequisitesReady = hasResearchPrerequisites(techId, techs)
-  const active = activeResearch === techId && !completed
+  const preUnlocked = preUnlockTech === techId && !completed
   const locked = !completed && !prerequisitesReady
   const requiredKnowledge = tech.researchCost ?? 0
-  const progress = completed ? requiredKnowledge : (researchProgress[techId] ?? 0)
-  const progressPercent = requiredKnowledge ? Math.min(100, Math.round(progress / requiredKnowledge * 100)) : 100
+  const affordable = knowledge >= requiredKnowledge
   const prerequisites = tech.prerequisites ?? []
   const categoryLabel = technologyCategoryLabel[tech.category ?? 'global']
 
+  let status: { text: string; icon: React.ReactNode } = { text: '可解锁', icon: <Zap size={10} /> }
+  if (locked) status = { text: '前置未满足', icon: <Lock size={10} /> }
+  else if (completed) status = { text: '已完成', icon: <BookOpen size={10} /> }
+  else if (preUnlocked) status = { text: '已预解锁', icon: <Zap size={10} /> }
+  else if (!affordable) status = { text: '知识不足', icon: <FlaskConical size={10} /> }
+
   return (
     <button
-      className={`${styles['tech-card-compact']} ${completed ? styles.completed : ''} ${active ? styles.researching : ''} ${locked ? styles.locked : ''}`}
-      onClick={() => !completed && prerequisitesReady && onResearch(techId)}
-      disabled={completed || locked}
+      className={`${styles['tech-card-compact']} ${completed ? styles.completed : ''} ${preUnlocked ? styles.preunlocked : ''} ${locked ? styles.locked : ''}`}
+      onClick={() => onOpen(techId)}
     >
       <div className={styles['tech-card-compact-top']}>
-        <TechIcon category={tech.category ?? 'global'} active={active} />
+        <TechIcon category={tech.category ?? 'global'} active={preUnlocked} />
         <div className={styles['tech-card-compact-head']}>
           <h3>{tech.name}</h3>
           <span>{categoryLabel}</span>
         </div>
       </div>
-      <p className={styles['tech-card-compact-note']}>{displayCopy(tech.note)}</p>
+      <p className={styles['tech-card-compact-note']}>{compactConstructionNote(tech)}</p>
       <div className={styles['tech-card-compact-meta']}>
-        {prerequisites.length > 0 && <small>前置：{prerequisites.map(techLabel).join('、')}</small>}
+        <small>{prerequisites.length > 0 ? `前置：${prerequisites.map(techLabel).join('、')}` : '前置：无'}</small>
         <span className={styles['tech-card-compact-cost']}>
           <FlaskConical size={11} />{requiredKnowledge}
         </span>
         <span className={styles['tech-card-compact-status']}>
-          {locked ? <><Lock size={10} />前置未满足</> : completed ? <><BookOpen size={10} />已完成</> : active ? <>研究中 {progressPercent}%</> : <>可研究</>}
+          {status.icon}{status.text}
         </span>
       </div>
-      <div className={styles['tech-progress-mini']}><span style={{ width: `${progressPercent}%` }} /></div>
     </button>
   )
+}
+
+function compactConstructionNote(tech: { category?: string; note: string }): string {
+  // 建造许可类卡片：省略「解锁 X 建造权限」前缀，仅保留功能描述；剥离后为空则保留原文
+  if (tech.category !== 'construction') return displayCopy(tech.note)
+  return displayCopy(tech.note).replace(/^解锁 [A-Z0-9]+ [^。；]*建造(权限)?(；初始默认具备)?。?/, '').trim() || displayCopy(tech.note)
 }
 
 function TechIcon({ category, active }: { category: string; active: boolean }) {

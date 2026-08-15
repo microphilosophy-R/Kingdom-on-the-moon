@@ -20,7 +20,7 @@
   border-color: oklch(50% .1 76);
   background: oklch(95% .032 80);
 }
-.tech-card-compact.researching {
+.tech-card-compact.preunlocked {
   border-style: solid;
   border-width: 2px;
   border-color: oklch(54% .11 76);
@@ -50,9 +50,11 @@
   color: oklch(28% .035 250);
   font-size: var(--font-card);
   line-height: 1.28;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-height: 2.56em;
 }
 .tech-card-compact-head span {
   display: inline-block;
@@ -74,26 +76,31 @@
   line-height: 1.5;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  min-height: 3em;
 }
 
 .tech-card-compact-meta {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .18rem .5rem;
   align-items: center;
-  gap: .28rem .45rem;
   min-width: 0;
 }
 .tech-card-compact-meta small {
+  grid-column: 1 / -1;
   color: oklch(48% .023 250);
-  font-size: 9px;
-  line-height: 1.35;
+  font-size: var(--font-note);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .tech-card-compact-cost {
   display: inline-flex;
   align-items: center;
-  gap: .18rem;
+  gap: .2rem;
   color: oklch(48% .085 76);
-  font-size: var(--font-micro);
+  font-size: var(--font-note);
   font-weight: 700;
 }
 .tech-card-compact-status {
@@ -102,20 +109,10 @@
   gap: .14rem;
   margin-left: auto;
   color: oklch(45% .024 250);
-  font-size: 9px;
+  font-size: var(--font-note);
 }
-
-.tech-progress-mini {
-  position: relative;
-  height: 5px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: oklch(91% .018 82);
-}
-.tech-progress-mini > span {
-  display: block;
-  height: 100%;
-  border-radius: 3px;
-  background: oklch(65% .12 78 / .56);
+.tech-card-compact.preunlocked .tech-card-compact-status {
+  color: oklch(45% .09 76);
+  font-weight: 700;
 }
 

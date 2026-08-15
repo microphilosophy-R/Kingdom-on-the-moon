@@ -106,8 +106,12 @@ export type GameSaveState = {
   assigned: Record<RegionId, string | undefined>
   chainProgress: Record<string, number>
   techs: string[]
-  activeResearch: TechnologyId
-  researchProgress: Partial<Record<TechnologyId, number>>
+  /** 兼容旧存档：早期「自动研究」目标的存档字段，新机制不再写入 */
+  activeResearch?: TechnologyId
+  /** 兼容旧存档：早期「自动研究」进度的存档字段，新机制不再写入 */
+  researchProgress?: Partial<Record<TechnologyId, number>>
+  /** 预解锁目标：知识满足后自动解锁，全局唯一（设置新的会取消上一个） */
+  preUnlockTech?: TechnologyId | null
   productionMethods: Record<RegionId, ProductionMethodId>
   staffing: Record<RegionId, number>
   staffingPriorities?: Record<RegionId, StaffingPriority>

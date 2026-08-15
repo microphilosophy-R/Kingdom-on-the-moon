@@ -1,5 +1,5 @@
-import { useRef, useState, useEffect, type WheelEvent as ReactWheelEvent, type PointerEvent as ReactPointerEvent } from 'react'
-import { ArrowDown, ArrowDownUp, ArrowLeftRight, ArrowRight, ArrowUp, ArrowUpToLine, BookOpen, Check, Crown, FlaskConical, Lock, Maximize2, Minus, Plus, Repeat, Rocket, Trash2, Waves } from 'lucide-react'
+import { useRef, useState, useEffect, type CSSProperties, type WheelEvent as ReactWheelEvent, type PointerEvent as ReactPointerEvent } from 'react'
+import { ArrowDown, ArrowDownUp, ArrowLeftRight, ArrowRight, ArrowUp, ArrowUpToLine, BookOpen, Check, Crown, FlaskConical, Lock, Maximize2, Minus, Plus, Repeat, Rocket, Trash2, Waves, Zap } from 'lucide-react'
 import {
   canExecuteStarportTrade,
   currencyDebtInterestRate,
@@ -16,12 +16,12 @@ import {
   weightedValue,
 } from '../../economy'
 import type { PopulationProjection, ResourceKey, Resources, StarportTradeOffer, TechnologyId } from '../../economy'
-import { researchableTechIds, researchEraSections } from '../../data/eraSections'
+import { researchLines, researchLineProgress } from '../../data/researchLines'
 import type { ReignReport } from '../../types/game'
-import { displayCopy, fmt, fmtAmount, formatDay } from '../../utils/format'
-import { completedTechnologyIds, techLabel } from '../../utils/game'
+import { displayCopy, fmtAmount, formatDay } from '../../utils/format'
+import { completedTechnologyIds, hasResearchPrerequisites, techLabel, technologyCategoryLabel } from '../../utils/game'
 import { scaleResourceBundle } from '../../utils/trade'
-import { ResourceAtom, ResourceBundle, ResourceDeltaRows } from '../resources'
+import { ResourceAtom, ResourceBundle, ResourceDeltaRows, resourceUiMeta } from '../resources'
 import pillStyles from '../resources/ConstructionDaysPill.module.css'
 import { SectionHeading } from '../layout'
 import { InfoToggle } from './InfoToggle'
@@ -31,6 +31,25 @@ import styles from './SpecialBlocks.module.css'
 
 /* ===================== PalaceReportBlock ===================== */
 
+const REPORT_TREND_RESOURCES = [
+  'power', 'water', 'oxygen', 'biomass', 'regolith',
+  'alloy', 'currency', 'population', 'knowledge', 'luxury',
+] as const
+type ReportTrendResource = (typeof REPORT_TREND_RESOURCES)[number]
+
+const RESOURCE_TREND_COLORS: Record<ReportTrendResource, string> = {
+  power: 'oklch(55% .13 76)',
+  water: 'oklch(58% .12 205)',
+  oxygen: 'oklch(52% .10 225)',
+  biomass: 'oklch(55% .12 150)',
+  regolith: 'oklch(52% .07 70)',
+  alloy: 'oklch(58% .16 28)',
+  currency: 'oklch(62% .12 85)',
+  population: 'oklch(55% .14 142)',
+  knowledge: 'oklch(58% .14 296)',
+  luxury: 'oklch(58% .13 315)',
+}
+
 export interface PalaceReportBlockProps {
   day: number
   lastReignReport: ReignReport | null
@@ -39,16 +58,25 @@ export interface PalaceReportBlockProps {
 
 export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: PalaceReportBlockProps) {
   const reportProgress = Math.round((day % gameCalendar.reignMonthDays) / gameCalendar.reignMonthDays * 100)
-  const populationDelta = lastReignReport
-    ? `${lastReignReport.populationDelta >= 0 ? '+' : ''}${fmtAmount(lastReignReport.populationDelta)}`
-    : '0'
+  const [selectedTrend, setSelectedTrend] = useState<ReportTrendResource>('alloy')
 
-  // Mini trend series for palace preview
-  const miniSeries: TrendSeries[] = [
-    { key: 'alloy', label: '合金', color: 'oklch(58% .16 28)', accessor: p => p.alloy },
-    { key: 'currency', label: '货币', color: 'oklch(62% .12 85)', accessor: p => p.currency },
+  const populationMiniSeries: TrendSeries[] = [
     { key: 'population', label: '人口', color: 'oklch(55% .14 142)', accessor: p => p.population },
   ]
+
+  const points = lastReignReport?.trendPoints ?? []
+  const first = points[0]
+  const lastPt = points[points.length - 1]
+  const startVal = first ? first[selectedTrend] : null
+  const currentVal = lastPt ? lastPt[selectedTrend] : null
+  const delta = startVal !== null && currentVal !== null ? currentVal - startVal : null
+
+  const fallbackRows = lastReignReport
+    ? resourceOrder.filter(key => lastReignReport.resourceRows[key]).map(key => {
+        const row = lastReignReport.resourceRows[key]!
+        return { label: resourceMeta[key].label, produced: fmtAmount(row.produced), consumed: fmtAmount(row.consumed), net: `${row.net > 0 ? '+' : ''}${fmtAmount(row.net)}`, negative: row.net < 0 }
+      })
+    : []
 
   return (
     <section className={`${styles['special-content-block']} ${styles['palace-report-v2']}`}>
@@ -58,29 +86,74 @@ export function PalaceReportBlock({ day, lastReignReport, onOpenReport }: Palace
         {lastReignReport && <span style={{ color: 'var(--ui-muted)', fontSize: '10px' }}>{formatDay(lastReignReport.startDay)} 至 {formatDay(lastReignReport.endDay)}</span>}
       </div>
       {lastReignReport ? <>
-        <div className={styles['policy-status']}>
-          <div><span>人口变化</span><strong>{populationDelta}</strong><small>{fmt(lastReignReport.populationEnd)}/{fmtAmount(lastReignReport.housingCapacity)} 人</small></div>
-          <div><span>GDP</span><strong>{lastReignReport.gdp.toFixed(1)}</strong><small>{lastReignReport.gdpDelta >= 0 ? '+' : ''}{lastReignReport.gdpDelta.toFixed(1)} 星海货币/日</small></div>
-          <div><span>阶段</span><strong>{lastReignReport.monthNumber}</strong><small>{gameCalendar.monthName}</small></div>
-        </div>
         <div className={styles['palace-report-actions']}>
           <button className="primary-action" onClick={() => onOpenReport(lastReignReport)}><BookOpen size={15} />打开完整报告</button>
         </div>
         <div className={styles['palace-report-preview']}>
-          <section>
-            <h3>资源趋势</h3>
+          <div className={styles['report-main-col']}>
+            <div className={styles['report-chips']} role="group" aria-label="选择趋势资源">
+              {REPORT_TREND_RESOURCES.map(key => {
+                const meta = resourceUiMeta[key]
+                const Icon = meta.icon
+                const active = key === selectedTrend
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`${styles['report-chip']} ${active ? styles.active : ''}`}
+                    style={{ '--chip-color': RESOURCE_TREND_COLORS[key] } as CSSProperties}
+                    aria-pressed={active}
+                    onClick={() => setSelectedTrend(key)}
+                  >
+                    <Icon size={12} />{meta.label}
+                  </button>
+                )
+              })}
+            </div>
+            <div className={styles['report-summary']}>
+              <div><span>起始值</span><b>{startVal !== null ? fmtAmount(startVal) : '—'}</b></div>
+              <div><span>当前值</span><b>{currentVal !== null ? fmtAmount(currentVal) : '—'}</b></div>
+              <div><span>本王月变化</span>
+                <b className={delta !== null && delta < 0 ? styles.negative : ''}>
+                  {delta !== null ? `${delta >= 0 ? '+' : ''}${fmtAmount(delta)}` : '—'}
+                </b>
+              </div>
+            </div>
             <TrendChart
               data={lastReignReport.trendPoints}
-              series={miniSeries}
-              mini
+              series={[{ key: selectedTrend, label: resourceUiMeta[selectedTrend].label, color: RESOURCE_TREND_COLORS[selectedTrend], accessor: p => p[selectedTrend] }]}
+              title={`${resourceUiMeta[selectedTrend].label}库存趋势`}
+              fallbackRows={fallbackRows}
             />
-          </section>
-          <section>
-            <h3>建议</h3>
-            <ol>{lastReignReport.suggestions.map(item => <li key={item}>{item}</li>)}</ol>
-          </section>
+          </div>
+          <aside className={styles['report-side-col']}>
+            {lastReignReport.trendPoints.length > 0 && (
+              <section className={styles['report-side-card']}>
+                <h3>人口趋势</h3>
+                <TrendChart data={lastReignReport.trendPoints} series={populationMiniSeries} mini />
+              </section>
+            )}
+            <section className={styles['report-side-card']}>
+              <h3>本期建议</h3>
+              {lastReignReport.suggestions.length > 0 ? (
+                <ol>{lastReignReport.suggestions.slice(0, 2).map(item => <li key={item}>{item}</li>)}</ol>
+              ) : (
+                <p className={styles['report-suggestions-empty']}>本期无新增建议，各系统运转平稳。</p>
+              )}
+            </section>
+          </aside>
         </div>
-      </> : <div className={styles['palace-report-empty']}><BookOpen size={22} /><span>尚未形成可复核的{gameCalendar.monthName}报告。</span></div>}
+      </> : (
+        <div className={styles['palace-report-empty']}>
+          <BookOpen size={22} />
+          <span>尚未形成可复核的{gameCalendar.monthName}报告</span>
+          <div className={styles['report-countdown-bar']}><i style={{ width: `${reportProgress}%` }} /></div>
+          <small>
+            距首份报告归档还有 {gameCalendar.reignMonthDays - (day % gameCalendar.reignMonthDays)} 御日
+            · 已推进 御日 {day % gameCalendar.reignMonthDays} / {gameCalendar.reignMonthDays}
+          </small>
+        </div>
+      )}
     </section>
   )
 }
@@ -170,13 +243,16 @@ export function ShipProgressBlock({ shipProgress, shipProjectStages, activeStage
 
 export interface ResearchTreeBlockProps {
   techs: string[]
-  activeResearch: TechnologyId
-  researchProgress: Partial<Record<TechnologyId, number>>
-  onResearch: (techId: TechnologyId) => void
+  knowledge: number
+  preUnlockTech: TechnologyId | null
+  onUnlockNow: (techId: TechnologyId) => void
+  onPreUnlock: (techId: TechnologyId) => void
 }
 
-export function ResearchTreeBlock({ techs, activeResearch, researchProgress, onResearch }: ResearchTreeBlockProps) {
+export function ResearchTreeBlock({ techs, knowledge, preUnlockTech, onUnlockNow, onPreUnlock }: ResearchTreeBlockProps) {
   const completedIds = completedTechnologyIds(techs)
+  const lineProgress = researchLineProgress(techs)
+  const [expandedTechId, setExpandedTechId] = useState<TechnologyId | null>(null)
 
   // Tech tree zoom state
   const treeContainerRef = useRef<HTMLDivElement | null>(null)
@@ -197,8 +273,6 @@ export function ResearchTreeBlock({ techs, activeResearch, researchProgress, onR
       startScrollTop: scrollNode.scrollTop,
       moved: false,
     }
-    scrollNode.setPointerCapture(event.pointerId)
-    setTreeDragging(true)
   }
 
   const moveTreeDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -207,7 +281,12 @@ export function ResearchTreeBlock({ techs, activeResearch, researchProgress, onR
     if (!scrollNode || dragState.pointerId !== event.pointerId) return
     const deltaX = event.clientX - dragState.startX
     const deltaY = event.clientY - dragState.startY
-    if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) dragState.moved = true
+    if (!dragState.moved && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+      dragState.moved = true
+      // 仅在真正开始拖拽时才捕获指针，避免普通点击的 click 事件被重定向到容器
+      scrollNode.setPointerCapture(event.pointerId)
+      setTreeDragging(true)
+    }
     if (!dragState.moved) return
     event.preventDefault()
     scrollNode.scrollLeft = dragState.startScrollLeft - deltaX
@@ -223,7 +302,7 @@ export function ResearchTreeBlock({ techs, activeResearch, researchProgress, onR
     setTreeDragging(false)
     if (wasMoved) {
       suppressTechClickRef.current = true
-      window.setTimeout(() => { suppressTechClickRef.current = false }, 80)
+      window.setTimeout(() => { suppressTechClickRef.current = false }, 120)
     }
   }
 
@@ -234,8 +313,13 @@ export function ResearchTreeBlock({ techs, activeResearch, researchProgress, onR
     setTreeScale(prev => Math.min(1.6, Math.max(0.4, prev + delta)))
   }
 
-  const selectResearch = (techId: TechnologyId) => {
-    if (!suppressTechClickRef.current) onResearch(techId)
+  const openTechDetail = (techId: TechnologyId) => {
+    // 拖拽平移后紧随的一次 click 视为误触，消费掉；其余点击正常打开详情
+    if (suppressTechClickRef.current) {
+      suppressTechClickRef.current = false
+      return
+    }
+    setExpandedTechId(techId)
   }
 
   // Prevent default zoom on the tree container when ctrl+wheel
@@ -248,6 +332,8 @@ export function ResearchTreeBlock({ techs, activeResearch, researchProgress, onR
     node.addEventListener('wheel', handler, { passive: false })
     return () => node.removeEventListener('wheel', handler)
   }, [])
+
+  const expandedTech = expandedTechId ? technologyCatalog[expandedTechId] : null
 
   return (
     <section className={`${styles['special-content-block']} ${styles['technology-workbench-v2']}`}>
@@ -266,24 +352,154 @@ export function ResearchTreeBlock({ techs, activeResearch, researchProgress, onR
         onWheel={zoomTree}
       >
         <div className={styles['technology-tree-v2']} style={{ transform: `scale(${treeScale})`, transformOrigin: 'top left' }}>
-          {researchEraSections.map(section => {
-            const techIds = researchableTechIds.filter(id => (technologyCatalog[id].era ?? 'early') === section.id)
+          {researchLines.map(line => {
+            const progress = lineProgress[line.id]
             return (
-              <section className={styles['tech-era-column-v2']} key={section.id}>
-                <header><span>{section.label}</span><small>{section.note}</small></header>
-                {techIds.map(id => (
-                  <TechnologyCard key={id} techId={id} techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={selectResearch} />
+              <section className={styles['tech-line-column-v2']} key={line.id}>
+                <header>
+                  <div className={styles['tech-line-head']}>
+                    <span>{line.label}</span>
+                    <em>{progress.completed}/{progress.total}</em>
+                  </div>
+                  <div className={styles['tech-line-scopes']}>
+                    {line.scopes.map(scope => <b key={scope}>{scope === 'G' ? '全局' : scope}</b>)}
+                  </div>
+                  <small>{line.note}</small>
+                </header>
+                {line.techIds.map(id => (
+                  <TechnologyCard key={id} techId={id} techs={techs} knowledge={knowledge} preUnlockTech={preUnlockTech} onOpen={openTechDetail} />
                 ))}
               </section>
             )
           })}
         </div>
       </div>
+      {expandedTech && expandedTechId && (
+        <div className={styles['tech-detail-popout']} onClick={() => setExpandedTechId(null)}>
+          <div className={styles['tech-detail-card']} onClick={event => event.stopPropagation()}>
+            <TechDetailContent
+              techId={expandedTechId}
+              techs={techs}
+              knowledge={knowledge}
+              preUnlockTech={preUnlockTech}
+              onUnlockNow={onUnlockNow}
+              onPreUnlock={onPreUnlock}
+              onClose={() => setExpandedTechId(null)}
+            />
+          </div>
+        </div>
+      )}
       <aside className={styles['technology-book']}>
         <div><BookOpen size={17} /><span>科技书</span><small>已完成 {completedIds.length} 项</small></div>
         <div>{completedIds.map(id => <span key={id}>{techLabel(id)}</span>)}</div>
       </aside>
     </section>
+  )
+}
+
+function TechDetailContent({
+  techId, techs, knowledge, preUnlockTech, onUnlockNow, onPreUnlock, onClose,
+}: {
+  techId: TechnologyId
+  techs: string[]
+  knowledge: number
+  preUnlockTech: TechnologyId | null
+  onUnlockNow: (techId: TechnologyId) => void
+  onPreUnlock: (techId: TechnologyId) => void
+  onClose: () => void
+}) {
+  const tech = technologyCatalog[techId]
+  const completed = hasTech(techs, techId)
+  const prerequisitesReady = hasResearchPrerequisites(techId, techs)
+  const preUnlocked = preUnlockTech === techId && !completed
+  const locked = !completed && !prerequisitesReady
+  const requiredKnowledge = tech.researchCost ?? 0
+  const affordable = knowledge >= requiredKnowledge
+  const prerequisites = tech.prerequisites ?? []
+  const categoryLabel = technologyCategoryLabel[tech.category ?? 'global']
+  const canUnlock = prerequisitesReady && affordable && !completed
+  const canPreUnlock = prerequisitesReady && !completed
+
+  return (
+    <>
+      <div className={styles['tech-detail-head']}>
+        <TechDetailIcon category={tech.category ?? 'global'} />
+        <div>
+          <h3>{tech.name}</h3>
+          <span>{categoryLabel}{completed ? ' · 已完成' : preUnlocked ? ' · 已预解锁' : locked ? ' · 前置未满足' : ''}</span>
+        </div>
+        <button type="button" className={styles['tech-detail-close']} onClick={onClose} aria-label="关闭">×</button>
+      </div>
+      <div className={styles['tech-detail-facts']}>
+        <div className={styles['tech-detail-fact']}>
+          <small>知识成本</small>
+          <b><FlaskConical size={16} />{requiredKnowledge}</b>
+        </div>
+        <div className={styles['tech-detail-fact']}>
+          <small>前置科技</small>
+          <b className={styles['tech-detail-prereq']}>{prerequisites.length ? prerequisites.map(techLabel).join('、') : '无'}</b>
+        </div>
+      </div>
+      <div className={styles['tech-detail-desc']}>{displayCopy(tech.note)}</div>
+      <div className={styles['tech-detail-actions']}>
+        <button
+          type="button"
+          className={`${styles['tech-detail-unlock-now']} ${!canUnlock ? styles['tech-detail-btn-disabled'] : ''}`}
+          disabled={!canUnlock}
+          onClick={() => { onUnlockNow(techId); onClose() }}
+        >
+          <Zap size={15} />立即解锁{!completed && prerequisitesReady ? `（${requiredKnowledge} 知识）` : ''}
+        </button>
+        <button
+          type="button"
+          className={`${styles['tech-detail-preunlock']} ${preUnlocked ? styles['tech-detail-preunlock-on'] : ''} ${!canPreUnlock ? styles['tech-detail-btn-disabled'] : ''}`}
+          disabled={!canPreUnlock}
+          onClick={() => { onPreUnlock(techId); onClose() }}
+        >
+          <FlaskConical size={15} />{preUnlocked ? '取消预解锁' : '预解锁'}
+        </button>
+      </div>
+    </>
+  )
+}
+
+function TechDetailIcon({ category }: { category: string }) {
+  const stroke = 'oklch(54% .11 76)'
+  return (
+    <svg width="42" height="42" viewBox="0 0 28 28" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      {category === 'global' && <>
+        <circle cx="14" cy="14" r="10" />
+        <path d="M14 4v6M14 18v6M4 14h6M18 14h6" />
+        <circle cx="14" cy="14" r="3" />
+      </>}
+      {category === 'production' && <>
+        <rect x="4" y="6" width="8" height="7" rx="1" />
+        <rect x="16" y="6" width="8" height="7" rx="1" />
+        <path d="M8 13v9M20 13v9M4 26h20" />
+      </>}
+      {category === 'ecology' && <>
+        <path d="M4 20c3-6 8-10 10-10s7 4 10 10" />
+        <path d="M9 14c2-4 4-6 5-6s3 2 5 6" />
+        <line x1="14" y1="20" x2="14" y2="26" />
+      </>}
+      {category === 'trade' && <>
+        <path d="M18 6l4 4-4 4" />
+        <path d="M6 22l4-4 4 4" />
+        <line x1="22" y1="10" x2="6" y2="10" />
+        <line x1="12" y1="18" x2="22" y2="18" />
+      </>}
+      {category === 'ship' && <>
+        <path d="M4 16l8-12h4l8 12" />
+        <rect x="8" y="14" width="12" height="10" rx="2" />
+        <circle cx="10" cy="24" r="1" />
+        <circle cx="18" cy="24" r="1" />
+      </>}
+      {!['global','production','ecology','trade','ship'].includes(category) && <>
+        <circle cx="14" cy="14" r="9" />
+        <circle cx="14" cy="14" r="3" />
+        <line x1="14" y1="5" x2="14" y2="11" />
+      </>}
+    </svg>
   )
 }
 

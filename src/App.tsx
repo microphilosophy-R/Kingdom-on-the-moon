@@ -104,7 +104,6 @@ import {
 import { formatDay } from './utils/format'
 import { getPhaseGuidance, hasResearchPrerequisites, summarizeOptimizerDirections } from './utils/game'
 import { scaleResourceBundle } from './utils/trade'
-import { researchableTechIds } from './data/eraSections'
 import { planetTextures } from './PlanetScene'
 import type {
   AppView,
@@ -140,8 +139,7 @@ function App() {
   const [assigned, setAssigned] = useState<Record<RegionId, string | undefined>>(Object.fromEntries(facilityOrder.map(id => [id, undefined])) as Record<RegionId, string | undefined>)
   const [chainProgress, setChainProgress] = useState<Record<string, number>>({})
   const [techs, setTechs] = useState<string[]>(defaultStartingTechs)
-  const [activeResearch, setActiveResearch] = useState<TechnologyId>(researchableTechIds[0])
-  const [researchProgress, setResearchProgress] = useState<Partial<Record<TechnologyId, number>>>({})
+  const [preUnlockTech, setPreUnlockTech] = useState<TechnologyId | null>(null)
   const [productionMethods, setProductionMethods] = useState<Record<RegionId, ProductionMethodId>>(initialProductionMethods)
   const [staffingPriorities, setStaffingPriorities] = useState<Record<RegionId, StaffingPriority>>(initialStaffingPriorities)
   const [manualStaffing, setManualStaffing] = useState<Partial<Record<RegionId, number>>>({})
@@ -300,8 +298,7 @@ function App() {
     })
   }
 
-  const activeResearchSpec = technologyCatalog[activeResearch]
-  const researchThroughput = Math.max(1, Math.min(10, 1 + Math.floor((staffing.L ?? 0) * 0.5) + (hasTech(techs, 'TL-2') ? 1 : 0) + (hasTech(techs, 'TL-3') ? 2 : 0)))
+  const preUnlockSpec = preUnlockTech ? technologyCatalog[preUnlockTech] : undefined
 
   const facilityStates = useMemo<Record<RegionId, FacilityState>>(
     () => Object.fromEntries(regions.map(region => [
@@ -541,20 +538,14 @@ function App() {
     const startedActions: typeof automationPlan.actions = []
     const completedTechnologyActions: typeof automationPlan.technologyActions = []
 
-    // 【L2 自动研究】研究目标由 L1 选择（setActiveResearch），每日知识投入由本段自动执行，达标即解锁。
-    if (activeResearchSpec && !hasTech(techs, activeResearch) && hasResearchPrerequisites(activeResearch, techs)) {
-      const requiredKnowledge = activeResearchSpec.researchCost ?? 0
-      const currentProgress = researchProgress[activeResearch] ?? 0
-      const remainingKnowledge = Math.max(0, requiredKnowledge - currentProgress)
-      const spentKnowledge = Math.min(finalResources.knowledge, researchThroughput, remainingKnowledge)
-      if (spentKnowledge > 0 || requiredKnowledge === 0) {
-        const nextProgress = Math.min(requiredKnowledge, currentProgress + spentKnowledge)
-        finalResources = { ...finalResources, knowledge: finalResources.knowledge - spentKnowledge }
-        setResearchProgress(previous => ({ ...previous, [activeResearch]: nextProgress }))
-        if (nextProgress >= requiredKnowledge) {
-          setTechs(previous => previous.some(item => item.includes(activeResearch)) ? previous : [...previous, `${activeResearch} ${activeResearchSpec.name}`])
-          writeLog(`${formatDay(nextDay)}：问天研究实验室完成「${activeResearchSpec.name}」。`)
-        }
+    // 【预解锁】预解锁目标全局唯一：知识满足后自动消耗并解锁，解锁后清空目标。
+    if (preUnlockTech && preUnlockSpec && !hasTech(techs, preUnlockTech) && hasResearchPrerequisites(preUnlockTech, techs)) {
+      const requiredKnowledge = preUnlockSpec.researchCost ?? 0
+      if (finalResources.knowledge >= requiredKnowledge) {
+        finalResources = { ...finalResources, knowledge: finalResources.knowledge - requiredKnowledge }
+        setTechs(previous => previous.some(item => item.includes(preUnlockTech)) ? previous : [...previous, `${preUnlockTech} ${preUnlockSpec.name}`])
+        setPreUnlockTech(null)
+        writeLog(`${formatDay(nextDay)}：知识积累达标，自动解锁「${preUnlockSpec.name}」。`)
       }
     }
 
@@ -776,6 +767,28 @@ function App() {
     setDetailOpen(true)
   }
 
+  /** 【L1 manual】立即解锁：知识充足且前置满足时，消耗知识立即解锁科技。 */
+  const unlockTechNow = (techId: TechnologyId) => {
+    const spec = technologyCatalog[techId]
+    if (!spec || hasTech(techs, techId) || !hasResearchPrerequisites(techId, techs)) return
+    const requiredKnowledge = spec.researchCost ?? 0
+    if (resources.knowledge < requiredKnowledge) {
+      writeLog(`${formatDay(day)}：知识不足，无法立即解锁「${spec.name}」。`)
+      return
+    }
+    setResources(previous => ({ ...previous, knowledge: previous.knowledge - requiredKnowledge }))
+    setTechs(previous => previous.some(item => item.includes(techId)) ? previous : [...previous, `${techId} ${spec.name}`])
+    setPreUnlockTech(previous => previous === techId ? null : previous)
+    writeLog(`${formatDay(day)}：消耗 ${requiredKnowledge} 知识，立即解锁「${spec.name}」。`)
+  }
+
+  /** 【L1 manual】预解锁：全局唯一目标，设置新的预解锁自动取消上一个。 */
+  const togglePreUnlock = (techId: TechnologyId) => {
+    const spec = technologyCatalog[techId]
+    if (!spec || hasTech(techs, techId) || !hasResearchPrerequisites(techId, techs)) return
+    setPreUnlockTech(previous => previous === techId ? null : techId)
+  }
+
   // 【L3 门禁】观察者模式下拦截一切 L1/L2 玩家主动操作（建造/拆除/科研/贸易/人员/分配）。
   // 优化器（L3）接管期间，L1/L2 的 UI 入口全部失效，仅保留 L3 计划执行。
   const guarded = <Args extends unknown[]>(fn: (...args: Args) => void) => (...args: Args) => {
@@ -973,7 +986,7 @@ function App() {
   } = useSaveSystem({
     gameStarted, resources, regions, day, isRunning, speed, view, selected,
     planetDocked, detailOpen, dockCollapsed, planetTexture, visitor, roster, assigned,
-    chainProgress, techs, activeResearch, researchProgress, productionMethods,
+    chainProgress, techs, preUnlockTech, productionMethods,
     staffing, staffingPriorities, facilityOrders, facilityOrderStarted, construction,
     populationPressureDays, difficulty, observerMode, autoEventsEnabled,
     autoTradeProtectionEnabled, autoTradeEnabled, tradeSourcedResources, lastAutomatedAction,
@@ -981,7 +994,7 @@ function App() {
   }, {
     setGameStarted, setResources, setRegions, setDay, setRunning, setSpeed, setView, setSelected,
     setPlanetDocked, setDetailOpen, setDockCollapsed, setPlanetTexture, setVisitor, setRoster,
-    setAssigned, setChainProgress, setTechs, setActiveResearch, setResearchProgress,
+    setAssigned, setChainProgress, setTechs, setPreUnlockTech,
     setProductionMethods, setStaffingPriorities, setFacilityOrders, setFacilityOrderStarted,
     setConstruction, setPopulationPressureDays, setActiveOptimizerId, setDifficulty,
     setAutoEventsEnabled, setAutoTradeProtectionEnabled, setAutoTradeEnabled,
@@ -1067,9 +1080,9 @@ function App() {
       )}
 
       <section className="page-content">
-        {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} habitatLevel={habitatLevel} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} autoStaffingByFacility={autoStaffingByFacility} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={guarded((regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId })))} onStaffingSet={guarded((id, staff) => setManualStaffing(previous => ({ ...previous, [id]: staff })))} onClearAutoStaffing={handleToggleAutoStaffing} onHousingRedistribute={handleHousingRedistribute} onAssignment={guarded((visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId })))}>
+        {view === 'facilities' && <PlanetFacilities regions={regions} selected={selected} year={day} techs={techs} habitatLevel={habitatLevel} policy={policy} productionMethods={productionMethods} facilityOrders={facilityOrders} facilityOrderStarted={facilityOrderStarted} construction={construction} populationProjection={populationProjection} staffing={staffing} staffingPriorities={staffingPriorities} autoStaffingByFacility={autoStaffingByFacility} allocatedPopulation={allocatedPopulation} freePopulation={freePopulation} facilityModifiers={facilityModifiers} lastAutomatedAction={lastAutomatedAction} roster={roster} assigned={assigned} selectedRegion={selectedRegion} selectedCost={selectedCost} resources={resources} dailyNet={dailyNet} planetTexture={planetTexture} docked={planetDocked} detailOpen={detailOpen} dockCollapsed={dockCollapsed} onDock={() => setPlanetDocked(true)} onBack={() => setDetailOpen(false)} onToggleDockCollapse={() => setDockCollapsed(previous => !previous)} onSelect={selectFacility} onUpgrade={upgrade} onHold={holdFacility} onShrink={shrinkFacility} onPriority={setStaffPriority} onMethod={guarded((regionId: RegionId, methodId: ProductionMethodId) => setProductionMethods(previous => ({ ...previous, [regionId]: methodId })))} onStaffingSet={guarded((id, staff) => setManualStaffing(previous => ({ ...previous, [id]: staff })))} onClearAutoStaffing={handleToggleAutoStaffing} onHousingRedistribute={handleHousingRedistribute} onAssignment={guarded((visitorId: string | undefined) => setAssigned(previous => ({ ...previous, [selectedRegion.id]: visitorId })))}>
           {selected === 'K' && <PalaceReportBlock day={day} lastReignReport={lastReignReport} onOpenReport={setActiveReignReport} />}
-          {selected === 'L' && <ResearchTreeBlock techs={techs} activeResearch={activeResearch} researchProgress={researchProgress} onResearch={guarded(setActiveResearch)} />}
+          {selected === 'L' && <ResearchTreeBlock techs={techs} knowledge={resources.knowledge} preUnlockTech={preUnlockTech} onUnlockNow={guarded(unlockTechNow)} onPreUnlock={guarded(togglePreUnlock)} />}
           {selected === 'R' && <EcologyPhaseBlock phases={ecologyRingPhases} progress={selectedRegion.max > 0 ? Math.round(selectedRegion.level / selectedRegion.max * 100) : 0} activeStage={ecologyActiveStage} />}
           {selected === 'S' && <TradeBoardBlock resources={resources} populationProjection={populationProjection} techs={techs} autoTradeProtectionEnabled={autoTradeProtectionEnabled} autoTradeEnabled={autoTradeEnabled} dailyTrades={dailyManualTrades} onProtection={guarded(setAutoTradeProtectionEnabled)} onTrade={executeTrade} onScheduleDailyTrade={scheduleDailyTrade} onCancelDailyTrade={cancelDailyTrade} onAutoTrade={guarded((key, enabled) => setAutoTradeEnabled(previous => ({ ...previous, [key]: enabled })))} />}
           {selected === 'D' && <ShipProgressBlock shipProgress={shipProgress} shipProjectStages={shipProjectStages} activeStage={activeStage} />}

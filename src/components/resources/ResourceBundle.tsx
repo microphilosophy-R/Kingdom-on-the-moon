@@ -7,6 +7,7 @@ export interface ResourceBundleProps {
   empty?: string
   signed?: boolean
   boxedEmpty?: boolean
+  periodDays?: number
 }
 
 export function ResourceBundle({
@@ -14,6 +15,7 @@ export function ResourceBundle({
   empty = '无',
   signed = true,
   boxedEmpty = false,
+  periodDays,
 }: ResourceBundleProps) {
   const entries = resourceOrder.filter(key => bundle[key])
   if (!entries.length) {
@@ -28,6 +30,7 @@ export function ResourceBundle({
           value={bundle[key] ?? 0}
           compact
           signed={signed}
+          periodDays={periodDays}
         />
       ))}
     </span>

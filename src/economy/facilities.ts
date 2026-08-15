@@ -15,8 +15,8 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '月面首座能源设施。光伏阵列截获太渊光能并转化为殖民地基础电力，为早期生命维持体系提供最低限度电力保障。',
     productionMethods: [
-      { id: 'ME1-1', name: '光伏发电', input: {}, output: { power: 4.4 }, note: '无资源输入。光伏阵列截获太渊光能并输出电力，属无输入生产方式。' },
-      { id: 'ME1-2', name: '纳米光催化发电', input: { water: 0.6 }, output: { power: 4.4, oxygen: 1.4 }, unlockedBy: 'TE1-1', note: 'TE1-1 解锁后启用。以水资源作为光催化反应介质，输出电力的同时额外产出氧气。' },
+      { id: 'ME1-1', name: '光伏发电', input: {}, output: { power: 3.96 }, note: '无资源输入。光伏阵列截获太渊光能并输出电力，属无输入生产方式。' },
+      { id: 'ME1-2', name: '纳米光催化发电', input: { water: 0.6 }, output: { power: 3.96, oxygen: 1.26 }, unlockedBy: 'TE1-1', note: 'TE1-1 解锁后启用。以水资源作为光催化反应介质，输出电力的同时额外产出氧气。' },
     ],
   },
   E2: {
@@ -34,7 +34,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '采用 He3 聚变发电，以月壤为燃料来源，为中期工业体系提供电力支持。',
     productionMethods: [
-      { id: 'ME2-1', name: 'He3 聚变发电', input: { regolith: 1.4 }, output: { power: 11.6 }, note: '消耗月壤并输出电力。月壤为本生产方式唯一燃料输入。' },
+      { id: 'ME2-1', name: 'He3 聚变发电', input: { regolith: 1.4 }, output: { power: 10.44 }, note: '消耗月壤并输出电力。月壤为本生产方式唯一燃料输入。' },
     ],
   },
   E3: {
@@ -52,7 +52,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '由外星科技解锁的能源设施。通过微型黑洞压缩物质获取能量，不消耗常规库存资源。',
     productionMethods: [
-      { id: 'ME3-1', name: '微型黑洞压缩', input: {}, output: { power: 7.2 }, unlockedBy: 'TE3-0', note: 'TE3-0 解锁后启用。通过微型黑洞压缩物质输出电力，不消耗常规库存资源。' },
+      { id: 'ME3-1', name: '微型黑洞压缩', input: {}, output: { power: 6.48 }, unlockedBy: 'TE3-0', note: 'TE3-0 解锁后启用。通过微型黑洞压缩物质输出电力，不消耗常规库存资源。' },
     ],
   },
   C1: {
@@ -70,7 +70,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '本地月面采掘设施。静海采掘署位于月面尘壤盆地，承担前期水与月壤资源采掘任务。',
     productionMethods: [
-      { id: 'MC1-1', name: '静海月面采掘', input: { power: 1 }, output: { water: 1.2, regolith: 1.6 }, note: '本地月面开采。消耗电力，产出水与月壤。' },
+      { id: 'MC1-1', name: '静海月面采掘', input: { power: 1 }, output: { water: 1.08, regolith: 1.44 }, note: '本地月面开采。消耗电力，产出水与月壤。' },
     ],
   },
   C2: {
@@ -88,8 +88,8 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '小行星带远征采掘设施。西海采掘署负责太渊引力阱内小行星带资源的远征采掘，为中期水、月壤与合金资源的主要来源。',
     productionMethods: [
-      { id: 'MC2-1', name: '西海小行星带采掘', input: { power: 1.4, water: 0.3, oxygen: 0.4, biomass: 0.2 }, output: { water: 1.2, regolith: 1.6, alloy: 1.2 }, note: '小行星带开采。远征采掘需额外消耗水、氧气和生物质以维持补给，产出水、月壤与合金。' },
-      { id: 'MC2-2', name: '生态行星资源采集', input: { power: 1.4 }, output: { water: 1.0, regolith: 0.8, alloy: 0.8 }, unlockedBy: 'TC2-2', note: 'TC2-2 外星科技解锁后启用。经坐标导航确认宜居生态行星，远征采掘不再消耗生命维持补给。' },
+      { id: 'MC2-1', name: '西海小行星带采掘', input: { power: 1.4, oxygen: 0.4, biomass: 0.2 }, output: { water: 0.99, regolith: 1.17, alloy: 1.08 }, note: '小行星带开采。远征采掘消耗电力，并额外消耗氧气和生物质以维持补给；产出水、月壤与合金（水的补给与采掘产出已抵消为净额，且水产出提高、月壤产出降低，利润与默认持平）。' },
+      { id: 'MC2-2', name: '生态行星资源采集', input: { power: 1.4 }, output: { water: 1.62, regolith: 1.08, alloy: 1.26 }, unlockedBy: 'TC2-2', note: 'TC2-2 外星科技解锁后启用。经坐标导航确认宜居生态行星，远征采掘不再消耗生命维持补给，产出全面高于小行星带采掘（水产出提高、月壤产出降低，利润与默认持平）。' },
     ],
   },
   B: {
@@ -107,8 +107,8 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '生命维持设施。水培生态球承担氧气与生物质供给任务，为殖民地生命维持体系的重要组成部分。',
     productionMethods: [
-      { id: 'MB-1', name: '水培生态循环', input: { water: 0.8 }, output: { oxygen: 1.6, biomass: 1.0 }, note: '消耗水并培育藻膜，产出氧气与生物质。水为本生产方式唯一输入资源。' },
-      { id: 'MB-2', name: '无水栽培循环', input: { regolith: 0.6 }, output: { oxygen: 1.2, biomass: 0.8 }, unlockedBy: 'TB-2', note: 'TB-2 解锁后启用。以低价值月壤消耗替代水资源消耗，降低生命维持体系对水的依赖。' },
+      { id: 'MB-1', name: '水培生态循环', input: { water: 0.8 }, output: { oxygen: 1.17, biomass: 1.06 }, note: '消耗水并培育藻膜，产出氧气与生物质。水为本生产方式唯一输入资源（进一步降低氧气产出、提高生物质产出，利润与默认持平）。' },
+      { id: 'MB-2', name: '无水栽培循环', input: { regolith: 0.6 }, output: { oxygen: 0.81, biomass: 0.88 }, unlockedBy: 'TB-2', note: 'TB-2 解锁后启用。以低价值月壤消耗替代水资源消耗，降低生命维持体系对水的依赖（进一步降低氧气产出、提高生物质产出，利润与默认持平）。' },
     ],
   },
   F: {
@@ -124,10 +124,10 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     priority: 8,
     reserveFloor: { power: 10, regolith: 10 },
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
-    note: '工业精炼设施。天工精炼署以电力与月壤为投入，产出合金与少量氧气，为中期工业体系的核心环节。',
+    note: '工业精炼设施。天工精炼署以电力、月壤与氧气为投入，产出合金，为中期工业体系的核心环节。',
     productionMethods: [
-      { id: 'MF-1', name: '天工精炼', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 1.8, oxygen: 0.2 }, note: '消耗电力与月壤，精炼产出合金与少量氧气。' },
-      { id: 'MF-2', name: '重原子炼金', input: { power: 1.2, regolith: 1.6 }, output: { alloy: 1.8, oxygen: 0.2, currency: 1.2 }, unlockedBy: 'TF-1', note: 'TF-1 外星科技解锁后启用。在默认精炼产出基础上额外产出星海货币，属附加产出而非策略切换。' },
+      { id: 'MF-1', name: '天工精炼', input: { power: 1.2, regolith: 1.6, oxygen: 0.87 }, output: { alloy: 1.98 }, note: '消耗电力、月壤与氧气，精炼产出合金（提高氧气消耗与合金产出，利润与默认持平）。' },
+      { id: 'MF-2', name: '重原子炼金', input: { power: 1.2, regolith: 1.6, oxygen: 0.87 }, output: { alloy: 1.98, currency: 1.08 }, unlockedBy: 'TF-1', note: 'TF-1 外星科技解锁后启用。在默认精炼产出基础上额外产出星海货币，属附加产出而非策略切换。' },
     ],
   },
   P: {
@@ -145,8 +145,8 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '生态培育设施。伊犁河谷采用阶梯式培育床，以月壤和水为投入，产出生物质与氧气。',
     productionMethods: [
-      { id: 'MP-1', name: '河谷生态培育', input: { regolith: 1, water: 0.6 }, output: { biomass: 2, oxygen: 1.4 }, note: '默认生产方式。消耗月壤和水，在阶梯上培育生态，产出生物质与氧气。' },
-      { id: 'MP-2', name: '合金作物', input: { regolith: 1, water: 0.6 }, output: { biomass: 1.4, oxygen: 1.0, alloy: 0.6 }, unlockedBy: 'TP-1', note: 'TP-1 外星科技解锁后启用。产出较少生物质与氧气，并额外产出合金。' },
+      { id: 'MP-1', name: '河谷生态培育', input: { regolith: 1, water: 0.6 }, output: { biomass: 1.8, oxygen: 1.26 }, note: '默认生产方式。消耗月壤和水，在阶梯上培育生态，产出生物质与氧气。' },
+      { id: 'MP-2', name: '合金作物', input: { regolith: 1, water: 0.6 }, output: { biomass: 1.26, oxygen: 0.9, alloy: 0.54 }, unlockedBy: 'TP-1', note: 'TP-1 外星科技解锁后启用。产出较少生物质与氧气，并额外产出合金。' },
     ],
   },
   R: {
@@ -164,15 +164,15 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '特殊设施页展示四阶段工程进度、投入与回报。',
     note: '投资型项目：前期吸收多余资源，中期集中投入，后期释放产出。',
     productionMethods: [
-      { id: 'MR-1', name: '气候改造装置建设', input: { power: 10, water: 1.2, oxygen: 2.4, biomass: 2.2, regolith: 2.8, alloy: 2.2 }, output: {}, condition: '默认阶段', note: '第一阶段：消耗电力运行，并每日投入水、氧、生物质、月壤与合金（阶段总量见 ecologyRingPhases）。' },
-      { id: 'MR-2', name: '大气改造', input: { oxygen: 3 }, output: {}, condition: '阶段推进', autoSelect: false, note: '第二阶段：每日投入氧气。' },
-      { id: 'MR-3', name: '生态改造', input: { water: 3.6, regolith: 2.4, biomass: 2 }, output: {}, condition: '阶段推进', autoSelect: false, note: '第三阶段：每日投入水、月壤与生物质。' },
-      { id: 'MR-4', name: '回报阶段', input: {}, output: { water: 1.2, oxygen: 1.2, biomass: 1.0 }, condition: '阶段推进', autoSelect: false, note: '回报阶段：无消耗，持续产出水、氧气与生物质。' },
+      { id: 'MR-1', name: '气候改造装置建设', input: { power: 10, alloy: 14 }, output: {}, condition: '默认阶段', note: '第一阶段：消耗电力运行，并每日投入合金（阶段总量见 ecologyRingPhases）。' },
+      { id: 'MR-2', name: '大气改造', input: { power: 10, oxygen: 60 }, output: {}, condition: '阶段推进', autoSelect: false, note: '第二阶段：消耗电力运行，并每日投入大量氧气。' },
+      { id: 'MR-3', name: '生态改造', input: { power: 10, water: 20, oxygen: 20, biomass: 40 }, output: {}, condition: '阶段推进', autoSelect: false, note: '第三阶段：消耗电力运行，并每日投入水、氧气与生物质。' },
+      { id: 'MR-4', name: '回报阶段', input: {}, output: { water: 1.08, oxygen: 1.08, biomass: 0.9 }, condition: '阶段推进', autoSelect: false, note: '回报阶段：无消耗，持续产出水、氧气与生物质。' },
     ],
     phaseNotes: [
       { name: '气候改造装置建设阶段', note: '投入合金和能源，没有产出。' },
       { name: '大气改造阶段', note: '需要投入大量氧气。' },
-      { name: '生态改造阶段', note: '需要投入大量水，以及一定的月壤和生物质。' },
+      { name: '生态改造阶段', note: '需要投入大量水、氧气和生物质。' },
       { name: '回报阶段', note: '没有资源消耗，随着进度提高逐渐产出；解锁科技可以加速推进。' },
     ],
   },
@@ -238,8 +238,8 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '特殊设施页展示科技界面。',
     note: '可以解锁科技；前期产出知识，后期在相关科技解锁后可生产量子计算核心。',
     productionMethods: [
-      { id: 'ML-1', name: '基础研究', input: { power: 0.8 }, output: { knowledge: 1.0 }, note: '前期主要产出知识。' },
-      { id: 'ML-2', name: '原子阵列光刻', input: { power: 1.8, water: 0.5, oxygen: 0.5, alloy: 0.8 }, output: { quantumCore: 0.12 }, unlockedBy: 'TL-1', note: 'TL-1 解锁后生产量子计算核心。' },
+      { id: 'ML-1', name: '基础研究', input: { power: 0.8 }, output: { knowledge: 0.9 }, note: '前期主要产出知识。' },
+      { id: 'ML-2', name: '原子阵列光刻', input: { power: 1.8, water: 0.5, oxygen: 0.5, alloy: 0.8 }, output: { quantumCore: 0.050625 }, unlockedBy: 'TL-1', note: 'TL-1 解锁后生产量子计算核心。产量极小、单件价值极高（每岗每日 0.050625，约 2.53/50 御日），属后期稀有战略物资。' },
     ],
     phaseNotes: [
       { name: '前期', note: '主要产出知识。' },
@@ -261,7 +261,7 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     interfaceDuty: '展示光伏配方、当前产量、规模与扩建成本。',
     note: '中期人口建筑。翡翠宫单位人口资源消耗较高，相应产出艺术奢侈品，可用于贸易或满足特定外星文明需求。',
     productionMethods: [
-      { id: 'MH-1', name: '宫廷居住与供养', input: { water: 0.5, oxygen: 0.4, biomass: 0.5 }, output: { population: 1, luxury: 0.9, currency: 1.6 }, note: '中期人口容量建筑。宫廷居民消耗更高，会按居住人口产出艺术奢侈品并征税；税收低于维持成本，人口本身才是利润来源。' },
+      { id: 'MH-1', name: '宫廷居住与供养', input: { water: 0.5, oxygen: 0.4, biomass: 0.5 }, output: { population: 1, luxury: 0.005625, currency: 1.6 }, note: '中期人口容量建筑。宫廷居民消耗更高，会按居住人口产出艺术奢侈品并征税；奢侈品单件价值极高、产量极小（每居民每日 0.005625，约 0.28/50 御日），税收低于维持成本，人口本身才是利润来源。' },
     ],
   },
   M: {
@@ -299,12 +299,12 @@ export const facilityEconomySpecs: Record<FacilityId, FacilityEconomySpec> = {
     productionMethods: [
       { id: 'MD-1', name: '龙骨与生命舱', input: { power: 16, alloy: 10, oxygen: 10 }, output: {}, note: '第一阶段：消耗电力运行，并每日投入合金与氧气（阶段总量见 shipProjectStages）。' },
       { id: 'MD-2', name: '远航壳层与循环农场', input: { power: 18, alloy: 20, regolith: 50, biomass: 20 }, output: {}, unlockedBy: 'TD-1', note: '第二阶段：消耗电力运行，并每日投入合金、月壤与生物质。' },
-      { id: 'MD-3', name: '王座核心与深空储备', input: { power: 11, quantumCore: 0.0267, alloy: 30, water: 20, biomass: 30 }, output: {}, unlockedBy: 'TD-2', note: '第三阶段：消耗电力运行，并每日投入量子核心、合金、水与生物质。' },
+      { id: 'MD-3', name: '王座核心与深空储备', input: { power: 11, quantumCore: 0.32, luxury: 0.02, alloy: 30, water: 20, biomass: 30 }, output: {}, unlockedBy: 'TD-2', note: '第三阶段：消耗电力运行，并每日投入量子核心（大量）、奢侈品（少量点缀）与合金、水、生物质。' },
     ],
     phaseNotes: [
       { name: '第一阶段：龙骨与生命舱', note: '投入合金、氧气和电力，完成星舰基础结构与维生舱段。' },
       { name: '第二阶段：远航壳层与循环农场', note: '投入合金、电力、月壤和生物质，完成远航壳层与生态循环系统装配。' },
-      { name: '第三阶段：王座核心与深空储备', note: '投入量子计算核心、电力、合金、水和生物质，完成御座号核心系统与深空储备装配。' },
+      { name: '第三阶段：王座核心与深空储备', note: '投入量子计算核心、艺术奢侈品、电力、合金、水和生物质，完成御座号核心系统与深空储备装配。' },
     ],
   },
 }
@@ -329,9 +329,9 @@ export const shipProjectStages: ShipProjectStage[] = [
   {
     id: 3,
     name: '王座核心与深空储备',
-    input: { quantumCore: 16, alloy: 18000, water: 12000, biomass: 18000 },
+    input: { quantumCore: 192, luxury: 12, alloy: 18000, water: 12000, biomass: 18000 },
     cycleDays: 600,
-    note: '第三阶段投入量子计算核心、电力、合金、水和生物质，完成御座号核心。',
+    note: '第三阶段投入量子计算核心（大量，消耗后期产能）、艺术奢侈品（少量点缀）、电力、合金、水和生物质，完成御座号核心。',
   },
 ]
 
@@ -339,15 +339,15 @@ export const ecologyRingPhases: EcologyRingPhase[] = [
   {
     id: 1,
     name: '气候改造装置建设',
-    input: { water: 360, oxygen: 720, biomass: 660, regolith: 840, alloy: 660 },
+    input: { alloy: 4200 },
     output: {},
     cycleDays: 300,
-    note: '第一阶段投入水、氧气、生物质、月壤与合金，完成气候改造装置建设。',
+    note: '第一阶段投入合金与能源，完成气候改造装置建设。',
   },
   {
     id: 2,
     name: '大气改造',
-    input: { oxygen: 900 },
+    input: { oxygen: 18000 },
     output: {},
     cycleDays: 300,
     note: '第二阶段投入大量氧气，完成大气改造。',
@@ -355,16 +355,16 @@ export const ecologyRingPhases: EcologyRingPhase[] = [
   {
     id: 3,
     name: '生态改造',
-    input: { water: 1080, regolith: 720, biomass: 600 },
+    input: { water: 6000, oxygen: 6000, biomass: 12000 },
     output: {},
     cycleDays: 300,
-    note: '第三阶段投入水、月壤和生物质，完成生态改造。',
+    note: '第三阶段投入水、氧气和生物质，完成生态改造。',
   },
   {
     id: 4,
     name: '回报阶段',
     input: {},
-    output: { water: 1.2, oxygen: 1.2, biomass: 1.0 },
+    output: { water: 1.08, oxygen: 1.08, biomass: 0.9 },
     cycleDays: 0,
     note: '回报阶段：无投入，持续产出水、氧气与生物质。',
   },

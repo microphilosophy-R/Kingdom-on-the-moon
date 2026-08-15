@@ -310,6 +310,14 @@
   background: oklch(96% .014 205);
 }
 
+.method-rare-progress {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  margin-top: .5rem;
+  min-width: 0;
+}
+
 .method-staff {
   background: oklch(96% .016 78);
 }
@@ -323,8 +331,12 @@
 }
 
 .method-staff b {
+  display: inline-flex;
+  align-items: center;
+  gap: .32rem;
+  color: var(--ui-ink-strong);
   font-family: var(--ui-mono);
-  font-size: var(--font-data-xl);
+  font-size: var(--font-panel);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -406,6 +418,19 @@
 
 .staffing-slider:disabled::-webkit-slider-thumb {
   cursor: not-allowed;
+}
+
+/* 零级/无岗位容量：轨道置灰，表达不可调整 */
+.staffing-slider-empty {
+  background: oklch(76% .014 250);
+}
+
+.staffing-slider-empty::-webkit-slider-thumb {
+  border-color: oklch(66% .02 250);
+}
+
+.staffing-slider-empty::-moz-range-thumb {
+  border-color: oklch(66% .02 250);
 }
 
 .staffing-auto-toggle {
@@ -550,14 +575,14 @@
 
 /* ---- prev / next facility navigation ---- */
 .facility-nav {
-  position: absolute;
+  position: fixed;
   top: 50%;
-  z-index: 5;
+  z-index: 40;
   display: inline-grid;
   place-items: center;
-  width: 38px;
-  height: 72px;
-  margin-top: -36px;
+  width: 58px;
+  height: 96px;
+  margin-top: -48px;
   border: 1px solid oklch(70% .04 78 / .35);
   border-radius: 7px;
   padding: 0;
@@ -584,20 +609,20 @@
 }
 
 .facility-nav-prev {
-  left: -20px;
+  left: 96px;
 }
 
 .facility-nav-next {
-  right: -20px;
+  right: 96px;
 }
 
 @media (max-width: 1240px) {
   .facility-nav-prev {
-    left: 8px;
+    left: 56px;
   }
 
   .facility-nav-next {
-    right: 8px;
+    right: 56px;
   }
 
   .facility-nav.available {

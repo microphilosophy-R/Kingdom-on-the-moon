@@ -12,6 +12,9 @@ import {
   isHousingFacility,
   projectFacilityCost,
   projectFacilityFlow,
+  rareResourceKeys,
+  recipePeriodDays,
+  resourceMeta,
   resourceOrder,
   selectProductionMethod,
   technologyCatalog,
@@ -20,11 +23,11 @@ import { ResourceDeltaRows, CostResourceList, ConstructionDaysPill, FlowArrowSvg
 import { ProgressLine } from '../ui'
 import { FacilityOrderGlyph } from './FacilityOrderGlyph'
 import styles from './FacilityDetailPanel.module.css'
-import { displayCopy } from '../../utils/format'
+import { displayCopy, fmtCompactAmount } from '../../utils/format'
 import { orderLabel } from '../../utils/game'
 import { scaleResourceBundle } from '../../utils/trade'
 import { getFacilityArt } from '../../assets/facilityArt'
-import type { PopulationProjection, ProductionMethodId, Resources } from '../../economy'
+import type { PopulationProjection, ProductionMethodId, ResourceKey, Resources } from '../../economy'
 import type { Role } from '../../events'
 import type {
   ConstructionProject,
@@ -39,6 +42,9 @@ export interface FacilityDetailPanelProps {
   year: number
   techs: string[]
   habitatLevel: number
+  policy: 'ration' | 'mandate' | 'festival'
+  workerBoost: number
+  workerName?: string
   productionMethods: Record<RegionId, ProductionMethodId>
   facilityOrders: Record<RegionId, FacilityOrderMode>
   facilityOrderStarted: Record<RegionId, number>
@@ -77,6 +83,9 @@ export function FacilityDetailPanel({
   year,
   techs,
   habitatLevel,
+  policy,
+  workerBoost,
+  workerName,
   productionMethods,
   facilityOrders,
   construction,
@@ -130,6 +139,14 @@ export function FacilityDetailPanel({
         return flow
       })()
     : projectFacilityFlow(selectedSpec, assignedPopulation, selectedModifier, techs, selectedMethod.id, selectedRegion.level)
+  const dayInMonth = year % recipePeriodDays === 0 ? recipePeriodDays : year % recipePeriodDays
+  const rareProgressEntries = rareResourceKeys
+    .map(key => {
+      const rate = selectedFlow.production[key] ?? 0
+      if (rate <= 0) return null
+      return { key, quota: rate * recipePeriodDays, produced: rate * dayInMonth, pct: (dayInMonth / recipePeriodDays) * 100 }
+    })
+    .filter((entry): entry is { key: ResourceKey; quota: number; produced: number; pct: number } => entry !== null)
   const housingResidents = isHousingFacility(selectedRegion.id) ? (populationProjection.residentsByFacility[selectedRegion.id] ?? 0) : 0
   const isHousing = isHousingFacility(selectedRegion.id)
   const isStaffingAuto = autoStaffingByFacility[selectedRegion.id] !== false
@@ -212,6 +229,9 @@ export function FacilityDetailPanel({
           : '低效运转'
   const staffText = isHousingFacility(selectedRegion.id) ? `居民 ${housingResidents}/${housingCapacity}` : `${assignedPopulation}/${workCapacity}`
   const throughputText = selectedFixed ? '在线' : isHousingFacility(selectedRegion.id) ? `${housingCapacity > 0 ? Math.round(housingResidents / housingCapacity * 100) : 0}%` : `${Math.round(throughput * 100)}%`
+  const policyBonus = policy === 'mandate' ? 0.16 : policy === 'festival' ? 0.06 : 0
+  const policyLabel = policy === 'mandate' ? '政策·诏令' : policy === 'festival' ? '政策·庆典' : '政策·默认'
+  const workerBonus = workerBoost > 1 ? workerBoost - 1 : 0
 
   return (
     <aside
@@ -293,7 +313,18 @@ export function FacilityDetailPanel({
         <article className={styles['method-equation']}>
           <div className={styles['method-stage']}>
             <span className={styles['method-column-label']}>配方</span>
-            <div className={styles['method-formula']}><ResourceDeltaRows input={selectedMethod.input} output={selectedMethod.output} /></div>
+            <div className={styles['method-formula']}><ResourceDeltaRows input={selectedMethod.input} output={selectedMethod.output} periodDays={recipePeriodDays} /></div>
+            {rareProgressEntries.length > 0 && (
+              <div className={styles['method-rare-progress']}>
+                {rareProgressEntries.map(entry => (
+                  <ProgressLine
+                    key={entry.key}
+                    value={entry.pct}
+                    label={`${resourceMeta[entry.key].label} 本王月已产 ${fmtCompactAmount(entry.produced)} / 配额 ${fmtCompactAmount(entry.quota)}（${recipePeriodDays} 御日）`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
           <div className={styles['method-stage']}>
             <span className={styles['method-column-label']}>{staffColumnLabel}</span>
@@ -337,7 +368,27 @@ export function FacilityDetailPanel({
                   )}
                 </div>
               ) : (
-                <b>{staffText}</b>
+                <div className={styles['staffing-slider-row']}>
+                  <b><Users size={13} />{staffText}</b>
+                  <input
+                    type="range"
+                    min={0}
+                    max={0}
+                    value={0}
+                    disabled
+                    className={`${styles['staffing-slider']} ${styles['staffing-slider-empty']}`}
+                  />
+                  {!selectedFixed && (
+                    <label className={styles['staffing-auto-toggle']}>
+                      <input
+                        type="checkbox"
+                        checked={isStaffingAuto}
+                        onChange={() => onClearManualStaffing?.(selectedRegion.id, !isStaffingAuto)}
+                      />
+                      <span>自动调配</span>
+                    </label>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -347,8 +398,16 @@ export function FacilityDetailPanel({
               <b>{throughputText}</b>
               {!selectedFixed && !isHousingFacility(selectedRegion.id) && (
                 <div className={styles['throughput-inline-breakdown']}>
-                  <div className={styles['breakdown-row']}><span>基础效率</span><span className={styles['throughput-base']}>88%</span></div>
-                  <div className={styles['breakdown-row']}><span>└ 栖息地</span><span className={habitatLevel > 0 ? styles['throughput-bonus'] : styles['throughput-neutral']}>{habitatLevel > 0 ? '+' : ''}{(habitatLevel * 2.5).toFixed(1)}%</span></div>
+                  <div className={styles['breakdown-row']}><span>基础效率</span><span className={styles['throughput-base']}>100%</span></div>
+                  {habitatLevel > 0 && (
+                    <div className={styles['breakdown-row']}><span>└ 栖息地</span><span className={styles['throughput-bonus']}>+{(habitatLevel * 2.5).toFixed(1)}%</span></div>
+                  )}
+                  {policyBonus > 0 && (
+                    <div className={styles['breakdown-row']}><span>└ {policyLabel}</span><span className={styles['throughput-bonus']}>+{Math.round(policyBonus * 100)}%</span></div>
+                  )}
+                  {workerBonus > 0 && workerName && (
+                    <div className={styles['breakdown-row']}><span>└ 专家·{workerName}</span><span className={styles['throughput-bonus']}>+{Math.round(workerBonus * 100)}%</span></div>
+                  )}
                 </div>
               )}
             </div>
@@ -373,7 +432,7 @@ export function FacilityDetailPanel({
         disabled={!prevRegion}
         onClick={() => navigateTo(prevRegion)}
       >
-        <ChevronLeft size={22} />
+        <ChevronLeft size={32} strokeWidth={2.2} />
       </button>
       <button
         type="button"
@@ -383,7 +442,7 @@ export function FacilityDetailPanel({
         disabled={!nextRegion}
         onClick={() => navigateTo(nextRegion)}
       >
-        <ChevronRight size={22} />
+        <ChevronRight size={32} strokeWidth={2.2} />
       </button>
     </aside>
   )
