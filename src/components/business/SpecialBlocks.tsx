@@ -62,8 +62,9 @@ export function PalaceReportBlock({ day, lastReignReport, trendPoints, onOpenRep
   const reportProgress = Math.round((day % gameCalendar.reignMonthDays) / gameCalendar.reignMonthDays * 100)
   const [selectedTrend, setSelectedTrend] = useState<ReportTrendResource>('alloy')
 
-  // 首份月度报告（御日 50）归档后使用完整快照；未归档时使用运行中的每日趋势，报告相关区块置灰
-  const hasMonthlyReport = lastReignReport !== null && lastReignReport.trendPoints.length > 0
+  // 御日 1 的开场报告（无趋势数据，但含阶段目标与建议）同样可查看；完整月度报告归档后使用快照数据
+  const hasReport = lastReignReport !== null
+  const hasMonthlyReport = hasReport && lastReignReport.trendPoints.length > 0
   const chartData = hasMonthlyReport && lastReignReport ? lastReignReport.trendPoints : trendPoints
   const first = chartData[0]
   const lastPt = chartData[chartData.length - 1]
@@ -111,7 +112,7 @@ export function PalaceReportBlock({ day, lastReignReport, trendPoints, onOpenRep
           )
         })}
       </div>
-      <div className={`${styles['report-summary']} ${hasMonthlyReport ? '' : styles['report-summary-gray']}`}>
+      <div className={`${styles['report-summary']} ${hasReport ? '' : styles['report-summary-gray']}`}>
         <div><span>当前值</span><b>{currentVal !== null ? fmtAmount(currentVal) : '—'}</b></div>
         <div><span>本王月变化</span>
           <b className={delta !== null && delta < 0 ? styles.negative : ''}>
@@ -130,28 +131,26 @@ export function PalaceReportBlock({ day, lastReignReport, trendPoints, onOpenRep
         title={`${resourceUiMeta[selectedTrend].label}库存趋势`}
         fallbackRows={fallbackRows}
       />
-      <div className={styles['palace-report-footer']}>
-        <section className={`${styles['report-suggestions']} ${hasMonthlyReport ? '' : styles['report-suggestions-gray']}`}>
-          <h3>本期建议</h3>
-          {hasMonthlyReport && lastReignReport ? (
-            <ol>
-              {lastReignReport.suggestions.slice(0, 2).map(item => <li key={item}>{item}</li>)}
-            </ol>
-          ) : (
-            <p className={styles['report-suggestions-empty']}>首份报告归档后生成本期建议。</p>
-          )}
-        </section>
+      <section className={`${styles['report-suggestions']} ${hasReport ? '' : styles['report-suggestions-gray']}`}>
+        <h3>本期建议</h3>
+        {hasReport && lastReignReport ? (
+          <ol>
+            {lastReignReport.suggestions.slice(0, 2).map(item => <li key={item}>{item}</li>)}
+          </ol>
+        ) : (
+          <p className={styles['report-suggestions-empty']}>首份报告归档后生成本期建议。</p>
+        )}
         <div className={styles['report-footer-action']}>
           <button
             type="button"
-            className={`primary-action ${hasMonthlyReport ? '' : styles['report-action-disabled']}`}
-            disabled={!hasMonthlyReport}
+            className={`primary-action ${hasReport ? '' : styles['report-action-disabled']}`}
+            disabled={!hasReport}
             onClick={() => { if (lastReignReport) onOpenReport(lastReignReport) }}
           >
             <BookOpen size={15} />打开完整报告
           </button>
         </div>
-      </div>
+      </section>
     </section>
   )
 }

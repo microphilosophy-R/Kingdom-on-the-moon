@@ -1,4 +1,4 @@
-import { Play, Target, X } from 'lucide-react'
+import { Lightbulb, Play, Target, X } from 'lucide-react'
 import { gameCalendar, resourceMeta, resourceOrder } from '../../economy'
 import { fmt, fmtAmount } from '../../utils/format'
 import type { ReignReport } from '../../types/game'
@@ -68,38 +68,57 @@ export function ReignReportModal({ report, onClose }: ReignReportModalProps) {
           <div><span>阶段长度</span><strong>{report.endDay - report.startDay + 1}</strong><small>御日，50 御日为一王月</small></div>
         </div>
 
-        {report.phaseGuidance && (
+        {(report.phaseGuidance || report.suggestions.length > 0) && (
           <div className={styles['reign-phase-guidance']}>
-            <h3><Target size={15} />当前阶段目标：{report.phaseGuidance.title}</h3>
-            <p>{report.phaseGuidance.description}</p>
-            <ul>
-              {report.phaseGuidance.goals.map(goal => <li key={goal}>{goal}</li>)}
-            </ul>
+            {report.phaseGuidance && (
+              <>
+                <h3><Target size={15} />当前阶段目标：{report.phaseGuidance.title}</h3>
+                <p>{report.phaseGuidance.description}</p>
+                <ul>
+                  {report.phaseGuidance.goals.map(goal => <li key={goal}>{goal}</li>)}
+                </ul>
+              </>
+            )}
+            {report.suggestions.length > 0 && (
+              <div className={styles['reign-guidance-suggestions']}>
+                <h3><Lightbulb size={15} />本期建议</h3>
+                <ol>
+                  {report.suggestions.map(item => <li key={item}>{item}</li>)}
+                </ol>
+              </div>
+            )}
           </div>
         )}
 
         <div className={styles['reign-report-grid']}>
-          <div className={styles['reign-charts-panel']}>
-            <TrendChart
-              data={report.trendPoints}
-              series={populationSeries}
-              title="人口趋势"
-              fallbackRows={fallbackRows}
-            />
-            <TrendChart
-              data={report.trendPoints}
-              series={resourceSeries}
-              title="核心资源库存"
-              rightAxisKey="currency"
-              fallbackRows={fallbackRows}
-            />
-            <TrendChart
-              data={report.trendPoints}
-              series={netSeries}
-              title="日净产趋势"
-              fallbackRows={fallbackRows}
-            />
-          </div>
+          {report.trendPoints.length > 0 ? (
+            <div className={styles['reign-charts-panel']}>
+              <TrendChart
+                data={report.trendPoints}
+                series={populationSeries}
+                title="人口趋势"
+                fallbackRows={fallbackRows}
+              />
+              <TrendChart
+                data={report.trendPoints}
+                series={resourceSeries}
+                title="核心资源库存"
+                rightAxisKey="currency"
+                fallbackRows={fallbackRows}
+              />
+              <TrendChart
+                data={report.trendPoints}
+                series={netSeries}
+                title="日净产趋势"
+                fallbackRows={fallbackRows}
+              />
+            </div>
+          ) : (
+            <div className={styles['reign-report-no-data']}>
+              <p>本报告为开局简报，不含趋势数据。</p>
+              <small>完整趋势图将在首个王月（御日 50）归档后生成。</small>
+            </div>
+          )}
         </div>
 
         <footer>
